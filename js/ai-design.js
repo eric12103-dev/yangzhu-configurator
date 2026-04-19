@@ -3,6 +3,7 @@
 
 const AI_KEY_STORAGE = 'yz_openai_key';
 let lastAIOptions = [];
+let lastGeneratedImageDataURL = null;
 
 // ── 主要生成函式 ──────────────────────────────
 async function generateAIDesign() {
@@ -247,6 +248,72 @@ function clearAIKey() {
   document.getElementById('ai-results').classList.add('hidden');
   hideAIError();
   showAIError('✅ API Key 已清除，下次生成時重新輸入。');
+}
+
+// ── AI 生圖（DALL-E 3）────────────────────
+async function generateAIImage() {
+  const prompt = document.getElementById('ai-image-prompt').value.trim();
+  if (!prompt) {
+    document.getElementById('ai-image-prompt').focus();
+    return;
+  }
+
+  const p = PRODUCTS[STATE.productId] || {};
+  setAIImageLoading(true);
+  document.getElementById('ai-image-preview').classList.add('hidden');
+  document.getElementById('ai-image-error').classList.add('hidden');
+
+  try {
+    const resp = await fetch('/api/generate-image', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ prompt, productName: p.name || '客製化卡片' })
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || '生成失敗');
+
+    lastGeneratedImageDataURL = data.imageDataURL;
+
+    const previewEl = document.getElementById('ai-image-preview');
+    previewEl.innerHTML = `
+      <img src="${data.imageDataURL}" style="width:100%;border-radius:8px;margin-top:10px;display:block;">
+      <button class="btn btn-primary btn-sm" style="width:100%;margin-top:8px;" onclick="applyAIImage()">
+        套用至卡面 ↗
+      </button>
+    `;
+    previewEl.classList.remove('hidden');
+
+  } catch (err) {
+    const errEl = document.getElementById('ai-image-error');
+    errEl.textContent = '❌ ' + err.message;
+    errEl.classList.remove('hidden');
+  } finally {
+    setAIImageLoading(false);
+  }
+}
+
+function applyAIImage() {
+  if (!lastGeneratedImageDataURL || !canvas2d) return;
+  fabric.Image.fromURL(lastGeneratedImageDataURL, img => {
+    const w = canvas2d.getWidth();
+    const h = canvas2d.getHeight();
+    const scale = Math.min(w / img.width, h / img.height) * 0.95;
+    img.set({ left: w / 2, top: h / 2, originX: 'center', originY: 'center', scaleX: scale, scaleY: scale });
+    canvas2d.add(img);
+    canvas2d.setActiveObject(img);
+    canvas2d.renderAll();
+    canvas2d.sendToBack(img);   // 放到文字下方
+  });
+}
+
+function setAIImageLoading(on) {
+  const btn  = document.getElementById('ai-image-btn');
+  const text = document.getElementById('ai-image-btn-text');
+  const load = document.getElementById('ai-image-btn-loading');
+  if (!btn) return;
+  btn.disabled = on;
+  text?.classList.toggle('hidden',  on);
+  load?.classList.toggle('hidden', !on);
 }
 
 // ── 工具函式 ──────────────────────────────────

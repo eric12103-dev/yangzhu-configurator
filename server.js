@@ -100,6 +100,42 @@ app.get('/api/orders', (req, res) => {
   }
 });
 
+// ─── API：AI 生圖（DALL-E 3）──────────────
+app.post('/api/generate-image', async (req, res) => {
+  if (!openai) return res.status(503).json({ error: 'OpenAI API Key 未設定' });
+
+  const { prompt, productName } = req.body;
+  if (!prompt || prompt.trim().length < 2) {
+    return res.status(400).json({ error: '請輸入描述文字' });
+  }
+
+  const enhancedPrompt = `為「${productName || '客製化卡片'}」設計的精美印刷圖案：${prompt.trim()}。
+風格要求：高品質商業設計，適合卡片印刷，色彩鮮豔，構圖飽滿，無任何文字或數字，橫向構圖，專業插畫風格。`;
+
+  try {
+    const response = await openai.images.generate({
+      model:           'dall-e-3',
+      prompt:          enhancedPrompt,
+      n:               1,
+      size:            '1792x1024',
+      quality:         'standard',
+      response_format: 'b64_json'
+    });
+
+    const b64           = response.data[0].b64_json;
+    const revisedPrompt = response.data[0].revised_prompt || '';
+    res.json({
+      success:       true,
+      imageDataURL:  `data:image/png;base64,${b64}`,
+      revisedPrompt
+    });
+  } catch (err) {
+    console.error('[generate-image]', err.message);
+    if (err.status === 400) return res.status(400).json({ error: '圖片描述違反內容政策，請修改描述後再試' });
+    res.status(500).json({ error: '生成失敗，請稍後再試' });
+  }
+});
+
 // ─── API：AI 設計文字生成 ──────────────────
 app.post('/api/generate-design', async (req, res) => {
   const { userPrompt, productId, materialName, qty } = req.body;

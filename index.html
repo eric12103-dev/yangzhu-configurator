@@ -174,6 +174,27 @@
         <div id="ai-results" class="ai-results hidden"></div>
       </div>
 
+      <!-- ✨ AI 生圖區塊 -->
+      <div class="ai-section" id="ai-image-section" style="margin-top:12px;">
+        <div class="ai-header">
+          <span class="ai-badge">🎨 AI 生圖</span>
+          <span class="ai-model">DALL-E 3</span>
+        </div>
+        <p class="ai-desc">用文字描述想要的圖案，AI 直接生成並貼到設計稿（約 15~30 秒）</p>
+
+        <div class="ai-input-row">
+          <textarea id="ai-image-prompt" rows="2"
+            placeholder="例：水墨風格的竹子與山水&#10;例：可愛柴犬穿西裝，日本插畫風&#10;例：企業科技感幾何圖形，藍色調"></textarea>
+          <button class="btn btn-ai" id="ai-image-btn" onclick="generateAIImage()">
+            <span id="ai-image-btn-text">🎨 生圖</span>
+            <span id="ai-image-btn-loading" class="hidden">⏳ 生成中…</span>
+          </button>
+        </div>
+
+        <div id="ai-image-error" class="ai-error hidden"></div>
+        <div id="ai-image-preview" class="hidden"></div>
+      </div>
+
       <div class="design-layout">
 
         <!-- 工具面板 -->
