@@ -5,7 +5,7 @@ const AI_KEY_STORAGE = 'yz_openai_key';
 let lastAIOptions = [];
 let lastGeneratedImageDataURL = null;
 
-// ── 主要生成函式 ──────────────────────────────
+// ── 主要生成函式（透過伺服器 API Key）────────
 async function generateAIDesign() {
   const userPrompt = document.getElementById('ai-prompt').value.trim();
   if (!userPrompt) {
@@ -14,15 +14,10 @@ async function generateAIDesign() {
     return;
   }
 
-  // 取得或詢問 API Key
-  const apiKey = await getOrAskAPIKey();
-  if (!apiKey) return; // 使用者取消
-
   const p   = PRODUCTS[STATE.productId] || {};
   const mat = p.materials
     ? (p.materials.find(m => m.id === STATE.materialId) || p.materials[0])
     : {};
-  const productName = p.name || '客製化產品';
 
   setAILoading(true);
   hideAIError();
@@ -32,21 +27,26 @@ async function generateAIDesign() {
   resultsEl.innerHTML = '';
 
   try {
-    const result = await callOpenAI(apiKey, userPrompt, productName, mat.name || 'PVC', STATE.qty || 100);
-    lastAIOptions = result;
-    renderAIOptions(result);
+    const resp = await fetch('/api/generate-design', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({
+        userPrompt,
+        productId:    STATE.productId,
+        materialName: mat.name || 'PVC',
+        qty:          STATE.qty || 100
+      })
+    });
+
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || '生成失敗');
+
+    lastAIOptions = data.options || [];
+    renderAIOptions(lastAIOptions);
     resultsEl.classList.remove('hidden');
 
   } catch (err) {
-    if (err.message.includes('401')) {
-      // Key 無效 → 清除並重新詢問
-      localStorage.removeItem(AI_KEY_STORAGE);
-      showAIError('❌ API Key 無效或已過期，已清除。請重新點「生成」輸入正確的 Key。');
-    } else if (err.message.includes('insufficient_quota')) {
-      showAIError('💳 此 API Key 的帳戶額度不足，請至 platform.openai.com/settings/billing 加值後再試。');
-    } else if (err.message.includes('429')) {
-      showAIError('⏳ 請求過於頻繁，請稍後再試（OpenAI 速率限制）');
-    } else if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
+    if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
       showAIError('🌐 網路連線失敗，請確認網路後再試');
     } else {
       showAIError('生成失敗：' + err.message);

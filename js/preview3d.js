@@ -151,8 +151,8 @@ function buildCard(textureDataURL, finishId) {
   let frontMat;
 
   if (textureDataURL) {
-    // 先建立材質（無貼圖），img.onload 後再貼入
-    frontMat = makeFinishMaterial(finishId, null);
+    // 有設計圖：用 MeshBasicMaterial 保持顏色 100% 準確
+    frontMat = new THREE.MeshBasicMaterial();
     const _mat = frontMat;
 
     const img = new Image();
@@ -178,7 +178,7 @@ function buildCard(textureDataURL, finishId) {
     img.src = textureDataURL;
 
   } else {
-    // 無設計圖：用產品主色 + 材質效果
+    // 無設計圖：用 PBR 材質顯示材質感 + 產品主色
     frontMat = makeFinishMaterial(finishId, null);
     if (frontMat.color) frontMat.color = new THREE.Color(p.color);
   }
@@ -243,6 +243,7 @@ function buildCardSync(canvasEl, finishId) {
 
   let frontMat;
   if (canvasEl && canvasEl.width > 0) {
+    // 有設計圖：MeshBasicMaterial 保持顏色準確
     const tex = new THREE.CanvasTexture(canvasEl);
     tex.encoding     = THREE.sRGBEncoding;
     tex.minFilter    = THREE.LinearFilter;
@@ -252,8 +253,9 @@ function buildCardSync(canvasEl, finishId) {
     tex.repeat.set(1 / cardW, 1 / cardH);
     tex.offset.set(0.5, 0.5);
     tex.needsUpdate  = true;
-    frontMat = makeFinishMaterial(finishId, tex);
+    frontMat = new THREE.MeshBasicMaterial({ map: tex });
   } else {
+    // 無設計圖：PBR 材質 + 產品主色
     frontMat = makeFinishMaterial(finishId, null);
     if (frontMat.color) frontMat.color = new THREE.Color(p.color);
   }

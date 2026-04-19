@@ -44,6 +44,20 @@ function init2DCanvas(productId) {
     width: cw, height: ch, backgroundColor: '#ffffff'
   });
 
+  // ── 手機觸控優化 ──────────────────────────
+  fabric.Object.prototype.cornerSize          = 14;
+  fabric.Object.prototype.touchCornerSize     = 42;
+  fabric.Object.prototype.cornerStyle         = 'circle';
+  fabric.Object.prototype.transparentCorners  = false;
+  fabric.Object.prototype.cornerColor         = '#16a34a';
+  fabric.Object.prototype.borderColor         = '#16a34a';
+  fabric.Object.prototype.borderScaleFactor   = 2;
+
+  // 選取物件時顯示縮放控制列
+  canvas2d.on('selection:created', _showScaleBar);
+  canvas2d.on('selection:updated', _showScaleBar);
+  canvas2d.on('selection:cleared',  _hideScaleBar);
+
   // 用 after:render 將虛線外框覆蓋在最上層（永遠填滿整個 canvas）
   canvas2d.on('after:render', function() {
     if (!currentProduct || _suppressOverlay) return;
@@ -231,6 +245,25 @@ function get2DCanvas() {
   bgObjs.forEach(o => o.set('visible', true));
   canvas2d.renderAll();
   return copy;
+}
+
+// ─── 手機縮放控制列 ───────────────────────────────────────
+function _showScaleBar() {
+  const bar = document.getElementById('mobile-scale-bar');
+  if (bar) bar.style.display = 'flex';
+}
+function _hideScaleBar() {
+  const bar = document.getElementById('mobile-scale-bar');
+  if (bar) bar.style.display = 'none';
+}
+function scaleSelected(delta) {
+  if (!canvas2d) return;
+  const obj = canvas2d.getActiveObject();
+  if (!obj) return;
+  const cur = obj.scaleX || 1;
+  const s   = Math.max(0.05, cur + delta);
+  obj.set({ scaleX: s, scaleY: s });
+  canvas2d.requestRenderAll();
 }
 
 // ─── 刪除選取 ─────────────────────────────────────────────
