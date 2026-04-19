@@ -130,9 +130,12 @@ app.post('/api/generate-image', async (req, res) => {
       revisedPrompt
     });
   } catch (err) {
-    console.error('[generate-image]', err.message);
+    console.error('[generate-image]', err.status, err.message);
     if (err.status === 400) return res.status(400).json({ error: '圖片描述違反內容政策，請修改描述後再試' });
-    res.status(500).json({ error: '生成失敗，請稍後再試' });
+    if (err.status === 401) return res.status(401).json({ error: 'API Key 無效' });
+    if (err.status === 429) return res.status(429).json({ error: '請求過於頻繁，請稍後再試' });
+    if (err.status === 402) return res.status(402).json({ error: 'OpenAI 帳戶餘額不足，請至 platform.openai.com 儲值' });
+    res.status(500).json({ error: `生成失敗：${err.message}` });
   }
 });
 
