@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>線上客製化配置器 — 楊竹科技</title>
+  <meta name="description" content="楊竹科技線上客製化配置器：悠遊卡、一卡通、USB隨身碟，即時報價、即時預覽，快速詢價。">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;700&family=Noto+Serif+TC:wght@400;700&family=Zen+Old+Mincho:wght@400;700&family=LXGW+WenKai+TC&family=Zcool+KuaiLe&family=Zcool+QingKe+HuangYou&family=Ma+Shan+Zheng&family=Long+Cang&family=Oswald:wght@400;600&family=Playfair+Display:wght@400;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+  <!-- 隱藏的字體 select（供 JS 讀取） -->
+  <select id="design-font" style="display:none">
+    <option value="Noto Sans TC">思源黑體</option>
+    <option value="Noto Serif TC">思源宋體</option>
+    <option value="Zen Old Mincho">典雅明朝</option>
+    <option value="LXGW WenKai TC">霞鶩文楷</option>
+    <option value="Zcool KuaiLe">站酷快樂體</option>
+    <option value="Zcool QingKe HuangYou">站酷黃油體</option>
+    <option value="Ma Shan Zheng">馬善正楷</option>
+    <option value="Long Cang">龍藏手寫</option>
+    <option value="Oswald">Oswald</option>
+    <option value="Playfair Display">Playfair Display</option>
+    <option value="Bebas Neue">Bebas Neue</option>
+    <option value="Arial">Arial</option>
+  </select>
+
+  <!-- CDN Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ─── Header ─────────────────────────── -->
+<header class="site-header">
+  <a class="site-logo" href="https://www.yangzhu.com.tw" target="_blank" rel="noopener">
+    <svg class="logo-img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 178 48" width="178" height="48" aria-label="楊竹科技 YangZhu">
+      <text x="72" y="15"
+            font-family="'Noto Sans TC','Microsoft JhengHei',Arial,sans-serif"
+            font-size="12" font-weight="400" fill="#4d7c14" letter-spacing="3">楊竹科技</text>
+      <text x="1" y="45"
+            font-family="Georgia,'Palatino Linotype',serif"
+            font-size="32" font-style="italic" font-weight="700" fill="#4d7c14">YangZhu</text>
+    </svg>
+  </a>
+  <span class="header-badge">🏭 台灣製造 · 40年經驗</span>
+</header>
+
+<!-- ─── Main ────────────────────────────── -->
+<main class="main-container">
+
+  <div class="page-title">
+    <h1>線上客製化配置器</h1>
+    <p>選產品 → 設規格 → 設計 → 預覽 → 即時報價，5 步驟完成詢價</p>
+  </div>
+
+  <!-- 步驟進度條 -->
+  <div class="step-indicator">
+    <div class="step" data-step="1">
+      <div class="step-dot" onclick="goStep(1)">1</div>
+      <div class="step-label">選產品</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step" data-step="2">
+      <div class="step-dot" onclick="goStep(2)">2</div>
+      <div class="step-label">選規格</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step" data-step="3">
+      <div class="step-dot" onclick="goStep(3)">3</div>
+      <div class="step-label">設計稿</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step" data-step="4">
+      <div class="step-dot" onclick="goStep(4)">4</div>
+      <div class="step-label">預覽</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step" data-step="5">
+      <div class="step-dot" onclick="goStep(5)">5</div>
+      <div class="step-label">報價單</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════ -->
+  <!-- Step 1 — 選產品                        -->
+  <!-- ══════════════════════════════════════ -->
+  <div class="step-panel" data-step="1">
+    <div class="card">
+      <h2 style="font-size:18px;margin-bottom:6px;">選擇產品類型</h2>
+      <p style="font-size:13px;color:var(--gray-400);margin-bottom:20px;">點選後自動進入下一步</p>
+      <div id="product-grid"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════ -->
+  <!-- Step 2 — 選規格                        -->
+  <!-- ══════════════════════════════════════ -->
+  <div class="step-panel hidden" data-step="2">
+    <div class="card">
+      <h2 style="font-size:18px;margin-bottom:20px;">規格選擇</h2>
+
+      <div class="spec-section">
+        <h4>材質</h4>
+        <div class="spec-options" id="spec-materials"></div>
+      </div>
+
+      <div class="spec-section">
+        <h4>表面工藝</h4>
+        <div class="spec-options" id="spec-finishes"></div>
+      </div>
+
+      <div class="spec-section hidden" id="spec-capacity-section">
+        <h4>容量</h4>
+        <div class="spec-options" id="spec-capacities"></div>
+      </div>
+
+      <div class="spec-section">
+        <h4>數量</h4>
+        <div class="qty-wrap">
+          <input type="range" id="spec-qty" min="1" max="2000" step="1" value="100">
+          <div>
+            <span class="qty-display" id="spec-qty-display">100</span>
+            <span class="qty-unit"> 個</span>
+          </div>
+        </div>
+        <p style="font-size:11px;color:var(--gray-400);margin-top:6px;">數量越多、單價越優惠</p>
+      </div>
+
+      <div class="live-quote-card">
+        <h4>💰 即時估價</h4>
+        <div id="live-quote"></div>
+      </div>
+
+      <div class="step-nav">
+        <button class="btn btn-secondary" onclick="prevStep()">← 上一步</button>
+        <button class="btn btn-primary" onclick="nextStep()">下一步：設計稿 →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════ -->
+  <!-- Step 3 — 設計稿                        -->
+  <!-- ══════════════════════════════════════ -->
+  <div class="step-panel hidden" data-step="3">
+    <div class="card">
+      <h2 style="font-size:18px;margin-bottom:6px;">設計稿編輯</h2>
+      <p style="font-size:13px;color:var(--gray-400);margin-bottom:20px;">
+        簡易示意稿，讓業務了解您的設計方向。正式稿可於確認後提供 AI / EPS 檔。
+      </p>
+
+      <!-- ✨ AI 文字生成區塊 -->
+      <div class="ai-section" id="ai-section">
+        <div class="ai-header">
+          <span class="ai-badge">✨ AI 輔助生成</span>
+          <span class="ai-model">gpt-4o-mini</span>
+        </div>
+        <p class="ai-desc">用一句話描述你的需求，AI 自動生成 3 種設計文案方案</p>
+
+        <div class="ai-input-row">
+          <textarea id="ai-prompt" rows="2"
+            placeholder="例：科技公司 2025 年會紀念品，現代簡約風格&#10;例：婚禮回禮小物，溫馨浪漫，附新人名字"></textarea>
+          <button class="btn btn-ai" id="ai-generate-btn" onclick="generateAIDesign()">
+            <span id="ai-btn-text">✨ 生成</span>
+            <span id="ai-btn-loading" class="hidden">⏳ 生成中…</span>
+          </button>
+        </div>
+
+        <div id="ai-error" class="ai-error hidden"></div>
+
+        <!-- 生成結果 -->
+        <div id="ai-results" class="ai-results hidden"></div>
+      </div>
+
+      <div class="design-layout">
+
+        <!-- 工具面板 -->
+        <div class="design-tools">
+
+          <div class="tool-section">
+            <h4>文字（手動輸入 或 從 AI 方案套用）</h4>
+
+            <div class="form-group">
+              <label>字體</label>
+              <button type="button" class="font-select-btn" id="font-select-btn" onclick="toggleFontPicker()">
+                <span id="font-select-label">思源黑體</span>
+                <span class="font-select-arrow">▼</span>
+              </button>
+              <div class="font-grid" id="font-grid"></div>
+            </div>
+
+            <div class="form-group">
+              <label>主標題 <span style="font-size:10px;color:var(--gray-400)">（顯示於卡面上方）</span></label>
+              <input type="text" id="design-text1" placeholder="例：公司名稱 / 活動主題">
+            </div>
+            <div class="form-group">
+              <label>副標題 <span style="font-size:10px;color:var(--gray-400)">（顯示於卡面下方）</span></label>
+              <input type="text" id="design-text2" placeholder="例：2025年會紀念">
+            </div>
+            <div class="color-row" style="margin-bottom:6px;">
+              <label>文字顏色</label>
+              <input type="color" id="design-textcolor" value="#333333">
+            </div>
+
+            <!-- 背景顏色（移至此處） -->
+            <div style="margin-bottom:10px;">
+              <div class="color-row" style="margin-bottom:6px;">
+                <label>背景底色</label>
+                <input type="color" id="design-bgcolor" value="#ffffff" oninput="STATE.bgColor=this.value;setBackground2D(this.value)">
+              </div>
+              <div class="color-presets">
+                <button class="cp-btn" style="background:#ffffff;border:1px solid #ccc" onclick="applyBgPreset('#ffffff')" title="白色"></button>
+                <button class="cp-btn" style="background:#000000" onclick="applyBgPreset('#000000')" title="黑色"></button>
+                <button class="cp-btn" style="background:#f5f5f0" onclick="applyBgPreset('#f5f5f0')" title="米白"></button>
+                <button class="cp-btn" style="background:#1a2744" onclick="applyBgPreset('#1a2744')" title="深藍"></button>
+                <button class="cp-btn" style="background:#2D7D46" onclick="applyBgPreset('#2D7D46')" title="綠色"></button>
+                <button class="cp-btn" style="background:#c8102e" onclick="applyBgPreset('#c8102e')" title="紅色"></button>
+                <button class="cp-btn" style="background:#f5c518" onclick="applyBgPreset('#f5c518')" title="金黃"></button>
+                <button class="cp-btn" style="background:#f9a8d4" onclick="applyBgPreset('#f9a8d4')" title="粉紅"></button>
+                <button class="cp-btn" style="background:#7c3aed" onclick="applyBgPreset('#7c3aed')" title="紫色"></button>
+                <button class="cp-btn" style="background:#0ea5e9" onclick="applyBgPreset('#0ea5e9')" title="天藍"></button>
+              </div>
+            </div>
+
+            <button class="btn btn-primary btn-sm" style="width:100%" onclick="applyDesignText()">套用至卡面 ↗</button>
+          </div>
+
+          <div class="tool-section">
+            <h4>上傳 Logo / 圖片</h4>
+            <label class="upload-zone">
+              <input type="file" id="design-upload" accept="image/*">
+              <div style="font-size:28px;">📂</div>
+              <p>點擊上傳 PNG / JPG / SVG</p>
+              <p>建議尺寸：1000px 以上</p>
+            </label>
+          </div>
+
+          <div class="tool-actions">
+            <button class="btn btn-danger btn-sm" onclick="deleteSelected2D()">刪除選取</button>
+            <button class="btn btn-secondary btn-sm" onclick="clear2D()">清空重來</button>
+          </div>
+
+          <div style="background:var(--gray-100);border-radius:8px;padding:12px;font-size:12px;color:var(--gray-400);">
+            💡 拖拉畫布內元素可調整位置，點選後可縮放旋轉。
+          </div>
+        </div>
+
+        <!-- Canvas 預覽 -->
+        <div>
+          <div class="canvas-wrap">
+            <canvas id="canvas-2d"></canvas>
+          </div>
+          <p style="font-size:11px;color:var(--gray-400);text-align:center;margin-top:8px;">
+            虛線為刀模輪廓參考線
+          </p>
+        </div>
+
+      </div><!-- /design-layout -->
+
+      <div class="step-nav">
+        <button class="btn btn-secondary" onclick="prevStep()">← 上一步</button>
+        <button class="btn btn-primary" onclick="nextStep()">下一步：3D 預覽 →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════ -->
+  <!-- Step 4 — 3D 預覽                       -->
+  <!-- ══════════════════════════════════════ -->
+  <div class="step-panel hidden" data-step="4">
+    <div class="card">
+      <h2 style="font-size:18px;margin-bottom:20px;">3D 立體預覽</h2>
+
+      <div class="preview-layout">
+
+        <!-- 3D 視窗 -->
+        <div>
+          <div id="preview3d-container"></div>
+          <p style="font-size:11px;color:var(--gray-400);text-align:center;margin-top:8px;">
+            自動旋轉展示產品正反面效果
+          </p>
+          <div style="text-align:center;margin-top:6px;">
+            <button class="btn btn-secondary btn-sm" onclick="applyTexture3D()" title="若設計圖未顯示，點此手動套用">↺ 重新套用設計圖</button>
+          </div>
+        </div>
+
+        <!-- 規格摘要 -->
+        <div>
+          <h4 style="font-size:13px;margin-bottom:12px;font-weight:700;">訂單規格摘要</h4>
+          <div id="preview-spec-summary"></div>
+
+          <div style="margin-top:16px;padding:12px;background:var(--green-pale);border-radius:8px;font-size:12px;color:var(--green);">
+            ✅ 確認預覽後，點「下一步」填寫聯絡資料並取得完整報價單
+          </div>
+        </div>
+
+      </div><!-- /preview-layout -->
+
+      <div class="step-nav">
+        <button class="btn btn-secondary" onclick="prevStep()">← 修改設計</button>
+        <button class="btn btn-primary btn-lg" onclick="nextStep()">確認，前往報價單 →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════ -->
+  <!-- Step 5 — 報價單 + 聯絡資料             -->
+  <!-- ══════════════════════════════════════ -->
+  <div class="step-panel hidden" data-step="5">
+    <div class="card">
+      <h2 style="font-size:18px;margin-bottom:20px;">報價單 &amp; 送出詢價</h2>
+
+      <div class="quote-layout">
+
+        <!-- 報價摘要 -->
+        <div>
+          <h4 style="font-size:13px;font-weight:700;margin-bottom:12px;">訂單摘要</h4>
+          <div id="preview-spec-summary" style="margin-bottom:16px;"></div>
+
+          <div class="live-quote-card">
+            <h4>💰 最終估價</h4>
+            <div id="final-quote"></div>
+          </div>
+
+          <div style="margin-top:12px;padding:10px;background:var(--gray-100);border-radius:8px;font-size:11px;color:var(--gray-400);line-height:1.6;">
+            ・報價含製版費 NT$800<br>
+            ・不含 5% 營業稅<br>
+            ・數量越多優惠越多<br>
+            ・正式報價以業務確認為準
+          </div>
+        </div>
+
+        <!-- 聯絡資料 -->
+        <div>
+          <h4 style="font-size:13px;font-weight:700;margin-bottom:12px;">聯絡資料</h4>
+
+          <div class="form-group">
+            <label>姓名 / 公司名稱 <span class="required">*</span></label>
+            <input type="text" id="contact-name" placeholder="王小明 / 某某股份有限公司">
+          </div>
+
+          <div class="form-group">
+            <label>Email <span class="required">*</span></label>
+            <input type="email" id="contact-email" placeholder="your@email.com">
+          </div>
+
+          <div class="form-group">
+            <label>聯絡電話</label>
+            <input type="tel" id="contact-phone" placeholder="02-xxxx-xxxx / 0912-xxx-xxx">
+          </div>
+
+          <div class="form-group">
+            <label>備註（設計需求、特殊要求等）</label>
+            <textarea id="contact-note" placeholder="例：需要特殊包裝、指定 Pantone 色號、附防偽標籤..."></textarea>
+          </div>
+
+          <button class="btn btn-primary btn-lg" style="width:100%" onclick="submitQuote()">
+            📩 送出詢價單
+          </button>
+
+          <p style="font-size:11px;color:var(--gray-400);text-align:center;margin-top:8px;">
+            點擊後將開啟 Email，請確認內容後送出
+          </p>
+        </div>
+
+      </div><!-- /quote-layout -->
+
+      <!-- 成功訊息 -->
+      <div id="quote-success" class="hidden">
+        <h3>✅ 詢價單已準備完成！</h3>
+        <p>請在您的 Email 客戶端確認內容後送出，楊竹業務將於 1 個工作天內回覆。</p>
+        <p style="margin-top:8px;">客服電話：<strong>02-2680-9966</strong></p>
+      </div>
+
+      <div class="step-nav">
+        <button class="btn btn-secondary" onclick="prevStep()">← 返回預覽</button>
+        <button class="btn btn-outline" onclick="goStep(1)">🔄 重新配置</button>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ─── Footer ──────────────────────────── -->
+<footer class="site-footer">
+  <p>
+    楊竹科技股份有限公司 ·
+    新北市樹林區柑園街2段122巷7號 ·
+    <a href="tel:0226809966">02-2680-9966</a> ·
+    <a href="mailto:sales@yangzhu.com.tw">sales@yangzhu.com.tw</a>
+  </p>
+  <p style="margin-top:4px;">悠遊卡官方授權製造廠 · 一卡通官方授權製造廠 · ISO 9000 認證</p>
+</footer>
+
+<!-- ─── Scripts ──────────────────────────── -->
+<script src="js/products.js"></script>
+<script src="js/preview2d.js"></script>
+<script src="js/preview3d.js"></script>
+<script src="js/configurator.js"></script>
+<script src="js/ai-design.js"></script>
+
+<script>
+  // Step 2 切入時 render 規格選項
+  const _goStep = goStep;
+  function goStep(n) {
+    if (n < 1 || n > 5) return;
+    if (n > 1 && !STATE.productId) { alert('請先選擇產品'); return; }
+    if (n > 2 && !STATE.materialId) { alert('請先完成規格選擇'); return; }
+    // 離開設計步驟前先快照（canvas 仍在畫面上時最可靠）
+    if (STATE.step === 3 && n !== 3) {
+      STATE.canvasJSON    = (typeof getCanvas2DJSON === 'function') ? getCanvas2DJSON()  : null;
+      STATE.designDataURL = (typeof get2DDataURL   === 'function') ? get2DDataURL()     : null;
+      console.log('[goStep] designDataURL length:', STATE.designDataURL ? STATE.designDataURL.length : 0);
+    }
+    STATE.step = n;
+    renderStep();
+    if (n === 2) renderSpecStep();
+  }
+
+  // Window resize → 3D 重新計算
+  window.addEventListener('resize', () => {
+    if (STATE.step === 4) resize3DPreview('preview3d-container');
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 44" width="44" height="44">
+  <rect width="44" height="44" rx="10" fill="#2D7D46"/>
+  <!-- 左竹節 -->
+  <rect x="11" y="7"  width="5" height="30" rx="2.5" fill="white" opacity="0.95"/>
+  <!-- 右竹節 -->
+  <rect x="28" y="7"  width="5" height="30" rx="2.5" fill="white" opacity="0.95"/>
+  <!-- 左節點 -->
+  <rect x="10" y="18" width="7" height="2.5" rx="1.25" fill="#1a5c34"/>
+  <!-- 右節點 -->
+  <rect x="27" y="24" width="7" height="2.5" rx="1.25" fill="#1a5c34"/>
+  <!-- 葉子 -->
+  <path d="M33 10 Q42 5 40 16 Q35 12 33 10Z" fill="white" opacity="0.75"/>
+</svg>

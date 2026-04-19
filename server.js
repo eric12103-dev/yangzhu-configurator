@@ -1,0 +1,186 @@
+// 楊竹科技配置器 — Express 後端
+require('dotenv').config();
+
+const express = require('express');
+const cors    = require('cors');
+const OpenAI  = require('openai');
+const path    = require('path');
+const fs      = require('fs');
+
+const app  = express();
+const port = process.env.PORT || 3000;
+
+// ─── 訂單資料夾（本機在上層，雲端在專案目錄內）──────────────
+const ORDER_DIR = process.env.NODE_ENV === 'production'
+  ? path.join(__dirname, '訂單資料')
+  : path.join(__dirname, '..', '訂單資料');
+if (!fs.existsSync(ORDER_DIR)) {
+  fs.mkdirSync(ORDER_DIR, { recursive: true });
+}
+
+app.use(cors());
+app.use(express.json({ limit: '10mb' }));  // 設計圖 dataURL 可能較大
+app.use(express.static(path.join(__dirname)));  // 提供前端靜態檔案
+
+// ─── OpenAI 初始化 ─────────────────────────
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+// ─── 產品中文名對照 ────────────────────────
+const PRODUCT_NAMES = {
+  easycard: '客製化悠遊卡',
+  ipass:    '客製化一卡通',
+  usb_bar:  'USB 隨身碟',
+  usb_card: '名片型隨身碟'
+};
+
+// ─── API：儲存訂單 ─────────────────────────
+app.post('/api/save-order', (req, res) => {
+  try {
+    const { contact, product, quote, designDataURL } = req.body;
+
+    // 產生時間戳檔名
+    const now    = new Date();
+    const ts     = now.toISOString().replace(/T/, '_').replace(/:/g, '-').slice(0, 19);
+    const safeEmail = (contact?.email || 'unknown').replace(/[^a-z0-9@._-]/gi, '_');
+    const baseName  = `${ts}_${safeEmail}`;
+
+    // 儲存設計圖 PNG（若有）
+    let designImageFile = null;
+    if (designDataURL && designDataURL.startsWith('data:image/')) {
+      const base64 = designDataURL.replace(/^data:image\/\w+;base64,/, '');
+      designImageFile = `${baseName}.png`;
+      fs.writeFileSync(path.join(ORDER_DIR, designImageFile), Buffer.from(base64, 'base64'));
+    }
+
+    // 儲存訂單 JSON
+    const orderRecord = {
+      orderId:     baseName,
+      savedAt:     now.toISOString(),
+      contact,
+      product,
+      quote,
+      designImageFile
+    };
+    fs.writeFileSync(
+      path.join(ORDER_DIR, `${baseName}.json`),
+      JSON.stringify(orderRecord, null, 2),
+      'utf8'
+    );
+
+    console.log(`[訂單] 已儲存：${baseName}.json`);
+    res.json({ success: true, orderId: baseName });
+
+  } catch (err) {
+    console.error('[save-order]', err.message);
+    res.status(500).json({ error: '訂單儲存失敗' });
+  }
+});
+
+// ─── API：列出訂單（內部查詢用）────────────────────────────
+app.get('/api/orders', (req, res) => {
+  try {
+    const files = fs.readdirSync(ORDER_DIR)
+      .filter(f => f.endsWith('.json'))
+      .sort()
+      .reverse()
+      .slice(0, 50);  // 最近 50 筆
+
+    const orders = files.map(f => {
+      try {
+        return JSON.parse(fs.readFileSync(path.join(ORDER_DIR, f), 'utf8'));
+      } catch { return null; }
+    }).filter(Boolean);
+
+    res.json({ success: true, count: orders.length, orders });
+  } catch (err) {
+    res.status(500).json({ error: '讀取失敗' });
+  }
+});
+
+// ─── API：AI 設計文字生成 ──────────────────
+app.post('/api/generate-design', async (req, res) => {
+  const { userPrompt, productId, materialName, qty } = req.body;
+
+  if (!userPrompt || userPrompt.trim().length < 2) {
+    return res.status(400).json({ error: '請輸入描述文字' });
+  }
+
+  if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY.startsWith('sk-xxx')) {
+    return res.status(503).json({ error: 'OpenAI API Key 尚未設定，請在 .env 填入 OPENAI_API_KEY' });
+  }
+
+  const productName = PRODUCT_NAMES[productId] || '客製化產品';
+
+  const systemPrompt = `你是楊竹科技的設計顧問，專門協助客戶設計客製化禮贈品的印刷文案。
+楊竹科技是台灣悠遊卡、一卡通官方授權製造廠，提供企業禮贈品客製服務。
+
+你的任務：根據客戶描述，生成適合印在產品上的設計文字方案。
+
+規則：
+- 文字要簡潔有力，適合印刷
+- 第一行（主標題）：10字以內，中文或中英混合
+- 第二行（副標題）：15字以內，可含英文日期、品牌名
+- 顏色建議：提供 HEX 色碼，要與產品相配
+- 提供 3 個不同風格的方案
+- 回傳純 JSON，不要有其他文字`;
+
+  const userMessage = `產品：${productName}（${materialName || 'PVC 標準'}）
+數量：${qty || 100} 個
+客戶需求：${userPrompt.trim()}
+
+請生成 3 個設計文字方案，以下列 JSON 格式回傳：
+{
+  "options": [
+    {
+      "style": "風格名稱",
+      "textLine1": "主標題",
+      "textLine2": "副標題",
+      "textColor": "#hex顏色",
+      "bgColor": "#hex顏色",
+      "reason": "這個方案的設計理念（一句話）"
+    }
+  ]
+}`;
+
+  try {
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user',   content: userMessage  }
+      ],
+      temperature: 0.85,
+      max_tokens: 800,
+      response_format: { type: 'json_object' }
+    });
+
+    const raw  = completion.choices[0].message.content;
+    const data = JSON.parse(raw);
+
+    res.json({ success: true, options: data.options || [], usage: completion.usage });
+
+  } catch (err) {
+    console.error('[OpenAI Error]', err.message);
+    if (err.status === 401) return res.status(401).json({ error: 'API Key 無效，請確認 .env 設定' });
+    if (err.status === 429) return res.status(429).json({ error: 'API 請求過於頻繁，請稍後再試' });
+    res.status(500).json({ error: '生成失敗，請稍後再試' });
+  }
+});
+
+// ─── 健康檢查 ──────────────────────────────
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    version: '1.0',
+    hasApiKey: !!(process.env.OPENAI_API_KEY && !process.env.OPENAI_API_KEY.startsWith('sk-xxx')),
+    orderCount: fs.readdirSync(ORDER_DIR).filter(f => f.endsWith('.json')).length
+  });
+});
+
+// ─── 啟動 ──────────────────────────────────
+app.listen(port, () => {
+  console.log('\n楊竹科技配置器已啟動');
+  console.log(`→ 瀏覽器開啟：http://localhost:${port}`);
+  console.log(`→ 訂單資料夾：${ORDER_DIR}`);
+  console.log(`→ API Key 狀態：${process.env.OPENAI_API_KEY ? '已設定' : '❌ 未設定（請建立 .env）'}\n`);
+});
