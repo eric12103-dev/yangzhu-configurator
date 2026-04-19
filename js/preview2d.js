@@ -57,6 +57,9 @@ function init2DCanvas(productId) {
   canvas2d.on('selection:created', _showScaleBar);
   canvas2d.on('selection:updated', _showScaleBar);
   canvas2d.on('selection:cleared',  _hideScaleBar);
+  // 拖拉縮放時同步更新滑桿
+  canvas2d.on('object:scaling',  _updateScaleSlider);
+  canvas2d.on('object:modified', _updateScaleSlider);
 
   // 用 after:render 將虛線外框覆蓋在最上層（永遠填滿整個 canvas）
   canvas2d.on('after:render', function() {
@@ -168,6 +171,7 @@ function _doAddText2D(text, color, size, font, role) {
   });
 
   canvas2d.add(t);
+  canvas2d.bringToFront(t);   // 文字永遠在最上層
   canvas2d.setActiveObject(t);
   canvas2d.renderAll();
   return t;
@@ -188,6 +192,7 @@ function uploadImage2D(file) {
         scaleX: scale, scaleY: scale
       });
       canvas2d.add(img);
+      canvas2d.sendToBack(img);   // 圖片在文字下方
       canvas2d.setActiveObject(img);
       canvas2d.renderAll();
       uploadedImage = img;
@@ -251,19 +256,30 @@ function get2DCanvas() {
 function _showScaleBar() {
   const bar = document.getElementById('mobile-scale-bar');
   if (bar) bar.style.display = 'flex';
+  _updateScaleSlider();
 }
 function _hideScaleBar() {
   const bar = document.getElementById('mobile-scale-bar');
   if (bar) bar.style.display = 'none';
 }
-function scaleSelected(delta) {
+function _updateScaleSlider() {
+  const obj    = canvas2d?.getActiveObject();
+  const slider = document.getElementById('scale-slider');
+  const pct    = document.getElementById('scale-pct');
+  if (!obj || !slider) return;
+  const val = Math.round((obj.scaleX || 1) * 100);
+  slider.value = Math.max(5, Math.min(300, val));
+  if (pct) pct.textContent = val + '%';
+}
+function scaleSelectedTo(scale) {
   if (!canvas2d) return;
   const obj = canvas2d.getActiveObject();
   if (!obj) return;
-  const cur = obj.scaleX || 1;
-  const s   = Math.max(0.05, cur + delta);
+  const s = Math.max(0.05, Math.min(3.0, parseFloat(scale)));
   obj.set({ scaleX: s, scaleY: s });
   canvas2d.requestRenderAll();
+  const pct = document.getElementById('scale-pct');
+  if (pct) pct.textContent = Math.round(s * 100) + '%';
 }
 
 // ─── 刪除選取 ─────────────────────────────────────────────

@@ -277,11 +277,17 @@
             虛線為刀模輪廓參考線
           </p>
           <!-- 手機縮放控制列（選取物件後顯示） -->
-          <div id="mobile-scale-bar" style="display:none;gap:10px;justify-content:center;align-items:center;margin-top:10px;flex-wrap:wrap;">
-            <button class="btn btn-secondary" onclick="scaleSelected(-0.08)" style="font-size:22px;width:52px;height:52px;padding:0;border-radius:50%;">−</button>
-            <span style="font-size:12px;color:var(--gray-400);">縮放</span>
-            <button class="btn btn-secondary" onclick="scaleSelected(0.08)" style="font-size:22px;width:52px;height:52px;padding:0;border-radius:50%;">+</button>
-            <button class="btn btn-danger btn-sm" onclick="deleteSelected2D()" style="height:52px;padding:0 18px;">刪除</button>
+          <div id="mobile-scale-bar" style="display:none;flex-direction:column;gap:8px;margin-top:10px;padding:8px 4px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="font-size:12px;color:var(--gray-400);white-space:nowrap;">縮放</span>
+              <input type="range" id="scale-slider" min="5" max="300" step="1" value="100"
+                     oninput="scaleSelectedTo(this.value/100)"
+                     style="flex:1;accent-color:#2D7D46;height:22px;cursor:pointer;">
+              <span id="scale-pct" style="font-size:13px;color:#2D7D46;font-weight:700;min-width:42px;text-align:right;">100%</span>
+            </div>
+            <div style="display:flex;justify-content:flex-end;">
+              <button class="btn btn-danger btn-sm" onclick="deleteSelected2D()" style="height:40px;padding:0 20px;">刪除選取</button>
+            </div>
           </div>
         </div>
 
