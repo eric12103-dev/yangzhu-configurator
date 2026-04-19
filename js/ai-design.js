@@ -177,10 +177,12 @@ function renderAIOptions(options) {
     <div style="font-size:12px;color:var(--gray-400);margin-bottom:6px;">
       ✅ 已生成 ${options.length} 個方案，點「套用」將文字填入設計區
     </div>
-    ${options.map((opt, i) => `
+    ${options.map((opt, i) => {
+      const fontFamily = (typeof STATE !== 'undefined' && STATE.font) ? STATE.font : 'Noto Sans TC';
+      return `
       <div class="ai-option-card" id="ai-opt-${i}">
         <div class="ai-option-preview"
-             style="background:${escHtml(opt.bgColor||'#fff')};color:${escHtml(opt.textColor||'#333')}">
+             style="background:${escHtml(opt.bgColor||'#fff')};color:${escHtml(opt.textColor||'#333')};font-family:'${escHtml(fontFamily)}',sans-serif">
           <div class="line1">${escHtml(opt.textLine1 || '')}</div>
           <div class="line2">${escHtml(opt.textLine2 || '')}</div>
         </div>
@@ -194,7 +196,7 @@ function renderAIOptions(options) {
         </div>
         <button class="ai-apply-btn" onclick="applyAIOption(${i})">套用</button>
       </div>
-    `).join('')}
+    `}).join('')}
     <div style="text-align:right;margin-top:4px;">
       <button onclick="clearAIKey()" style="font-size:11px;color:var(--gray-400);background:none;border:none;cursor:pointer;text-decoration:underline;">
         更換 API Key
