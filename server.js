@@ -22,8 +22,11 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));  // 設計圖 dataURL 可能較大
 app.use(express.static(path.join(__dirname)));  // 提供前端靜態檔案
 
-// ─── OpenAI 初始化 ─────────────────────────
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// ─── OpenAI 初始化（Key 可選，無 Key 時 AI 功能停用）──────────
+let openai = null;
+if (process.env.OPENAI_API_KEY && !process.env.OPENAI_API_KEY.startsWith('sk-xxx')) {
+  openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+}
 
 // ─── 產品中文名對照 ────────────────────────
 const PRODUCT_NAMES = {
@@ -105,8 +108,8 @@ app.post('/api/generate-design', async (req, res) => {
     return res.status(400).json({ error: '請輸入描述文字' });
   }
 
-  if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY.startsWith('sk-xxx')) {
-    return res.status(503).json({ error: 'OpenAI API Key 尚未設定，請在 .env 填入 OPENAI_API_KEY' });
+  if (!openai) {
+    return res.status(503).json({ error: 'OpenAI API Key 尚未設定，AI 功能暫不可用' });
   }
 
   const productName = PRODUCT_NAMES[productId] || '客製化產品';
