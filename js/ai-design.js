@@ -4,6 +4,8 @@
 const AI_KEY_STORAGE = 'yz_openai_key';
 let lastAIOptions = [];
 let lastGeneratedImageDataURL = null;
+let lastCartoonImageDataURL  = null;
+let cartoonSourceDataURL     = null;
 
 // ── 主要生成函式（透過伺服器 API Key）────────
 async function generateAIDesign() {
@@ -299,13 +301,107 @@ function applyAIImage() {
   fabric.Image.fromURL(lastGeneratedImageDataURL, img => {
     const w = canvas2d.getWidth();
     const h = canvas2d.getHeight();
-    const scale = Math.min(w / img.width, h / img.height) * 0.95;
+    // Math.max = 滿版填滿（超出邊緣自動裁切）
+    const scale = Math.max(w / img.width, h / img.height);
     img.set({ left: w / 2, top: h / 2, originX: 'center', originY: 'center', scaleX: scale, scaleY: scale });
     canvas2d.add(img);
+    canvas2d.sendToBack(img);   // 放到文字下方
+    canvas2d.renderAll();
+  });
+}
+
+// ── Q版卡通化 ──────────────────────────────────────────────
+async function compressImage(dataURL, maxWidth = 800) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, maxWidth / img.width);
+      const cvs = document.createElement('canvas');
+      cvs.width  = Math.round(img.width  * scale);
+      cvs.height = Math.round(img.height * scale);
+      cvs.getContext('2d').drawImage(img, 0, 0, cvs.width, cvs.height);
+      resolve(cvs.toDataURL('image/jpeg', 0.82));
+    };
+    img.src = dataURL;
+  });
+}
+
+function previewCartoonUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async e => {
+    cartoonSourceDataURL = await compressImage(e.target.result, 800);
+    const preview = document.getElementById('cartoon-upload-preview');
+    const hint    = document.getElementById('cartoon-upload-hint');
+    if (preview) preview.innerHTML = `<img src="${cartoonSourceDataURL}" style="max-width:100%;max-height:120px;border-radius:8px;object-fit:contain;display:block;margin:0 auto;">`;
+    if (hint)    hint.textContent  = '已選擇圖片，點擊可重新選擇';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function generateCartoonImage() {
+  if (!cartoonSourceDataURL) {
+    document.getElementById('cartoon-upload-input')?.click();
+    return;
+  }
+
+  setCartoonLoading(true);
+  document.getElementById('cartoon-preview').classList.add('hidden');
+  document.getElementById('cartoon-error').classList.add('hidden');
+
+  try {
+    const resp = await fetch('/api/cartoon-image', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ imageDataURL: cartoonSourceDataURL })
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || '生成失敗');
+
+    lastCartoonImageDataURL = data.imageDataURL;
+
+    const previewEl = document.getElementById('cartoon-preview');
+    previewEl.innerHTML = `
+      <img src="${data.imageDataURL}" style="width:100%;border-radius:8px;margin-top:10px;display:block;">
+      <button class="btn btn-primary btn-sm" style="width:100%;margin-top:8px;" onclick="applyCartoonImage()">
+        套用至卡面 ↗
+      </button>
+    `;
+    previewEl.classList.remove('hidden');
+
+  } catch (err) {
+    const errEl = document.getElementById('cartoon-error');
+    errEl.textContent = '❌ ' + err.message;
+    errEl.classList.remove('hidden');
+  } finally {
+    setCartoonLoading(false);
+  }
+}
+
+function applyCartoonImage() {
+  if (!lastCartoonImageDataURL || !canvas2d) return;
+  fabric.Image.fromURL(lastCartoonImageDataURL, img => {
+    const w = canvas2d.getWidth();
+    const h = canvas2d.getHeight();
+    // Q版圖為方形，用 contain 方式置中（保留白底，不裁切）
+    const scale = Math.min(w / img.width, h / img.height) * 0.88;
+    img.set({ left: w / 2, top: h / 2, originX: 'center', originY: 'center', scaleX: scale, scaleY: scale });
+    canvas2d.add(img);
+    canvas2d.sendToBack(img);
     canvas2d.setActiveObject(img);
     canvas2d.renderAll();
-    canvas2d.sendToBack(img);   // 放到文字下方
   });
+}
+
+function setCartoonLoading(on) {
+  const btn  = document.getElementById('cartoon-btn');
+  const text = document.getElementById('cartoon-btn-text');
+  const load = document.getElementById('cartoon-btn-loading');
+  if (!btn) return;
+  btn.disabled = on;
+  text?.classList.toggle('hidden',  on);
+  load?.classList.toggle('hidden', !on);
 }
 
 function setAIImageLoading(on) {

@@ -109,8 +109,7 @@ app.post('/api/generate-image', async (req, res) => {
     return res.status(400).json({ error: '請輸入描述文字' });
   }
 
-  const enhancedPrompt = `為「${productName || '客製化卡片'}」設計的精美印刷圖案：${prompt.trim()}。
-風格要求：高品質商業設計，適合卡片印刷，色彩鮮豔，構圖飽滿，無任何文字或數字，橫向構圖，專業插畫風格。`;
+  const enhancedPrompt = `設計一張橫向卡片背景印刷圖案（比例 85:54，類似悠遊卡/信用卡），圖案必須完整填滿整個畫面、四邊無任何留白，直接可印製在「${productName || '客製化卡片'}」上。主題內容：${prompt.trim()}。設計規範：色彩飽滿鮮豔，滿版構圖四邊無白邊，無任何文字數字，高品質商業插畫，橫向印刷適用。`;
 
   try {
     const response = await openai.images.generate({
@@ -206,6 +205,56 @@ app.post('/api/generate-design', async (req, res) => {
     if (err.status === 401) return res.status(401).json({ error: 'API Key 無效，請確認 .env 設定' });
     if (err.status === 429) return res.status(429).json({ error: 'API 請求過於頻繁，請稍後再試' });
     res.status(500).json({ error: '生成失敗，請稍後再試' });
+  }
+});
+
+// ─── API：Q版卡通化（GPT-4o 描述 + DALL-E 3 生成）──────────
+app.post('/api/cartoon-image', async (req, res) => {
+  if (!openai) return res.status(503).json({ error: 'OpenAI API Key 未設定' });
+
+  const { imageDataURL } = req.body;
+  if (!imageDataURL || !imageDataURL.startsWith('data:image/')) {
+    return res.status(400).json({ error: '請上傳圖片' });
+  }
+
+  try {
+    // Step 1：GPT-4o-mini 描述圖片主體
+    const visionResp = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'image_url', image_url: { url: imageDataURL, detail: 'low' } },
+          { type: 'text', text: 'Describe the main subject in this photo in English, under 60 words. Focus on appearance: species/type, colors, expression, clothing, pose. Be specific.' }
+        ]
+      }],
+      max_tokens: 120
+    });
+
+    const description = visionResp.choices[0].message.content.trim();
+
+    // Step 2：DALL-E 3 生成 Q版卡通
+    const cartoonPrompt = `Cute Japanese chibi Q-version cartoon illustration of: ${description}. Style: big round sparkling eyes, tiny round body, pastel colors, kawaii anime style, clean white background, no text, high quality digital art.`;
+
+    const imgResp = await openai.images.generate({
+      model:           'dall-e-3',
+      prompt:          cartoonPrompt,
+      n:               1,
+      size:            '1024x1024',
+      quality:         'standard',
+      response_format: 'b64_json'
+    });
+
+    const b64 = imgResp.data[0].b64_json;
+    res.json({ success: true, imageDataURL: `data:image/png;base64,${b64}` });
+
+  } catch (err) {
+    console.error('[cartoon-image]', err.status, err.message);
+    if (err.status === 400) return res.status(400).json({ error: '圖片內容違反政策，請換一張圖片' });
+    if (err.status === 401) return res.status(401).json({ error: 'API Key 無效' });
+    if (err.status === 429) return res.status(429).json({ error: '請求過於頻繁，請稍後再試' });
+    if (err.status === 402) return res.status(402).json({ error: 'OpenAI 帳戶餘額不足' });
+    res.status(500).json({ error: `生成失敗：${err.message}` });
   }
 });
 

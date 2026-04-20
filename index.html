@@ -180,7 +180,7 @@
           <span class="ai-badge">🎨 AI 生圖</span>
           <span class="ai-model">DALL-E 3</span>
         </div>
-        <p class="ai-desc">用文字描述想要的圖案，AI 直接生成並貼到設計稿（約 15~30 秒）</p>
+        <p class="ai-desc">用文字描述想要的圖案，AI 直接生成滿版卡面背景（約 15~30 秒）</p>
 
         <div class="ai-input-row">
           <textarea id="ai-image-prompt" rows="2"
@@ -193,6 +193,29 @@
 
         <div id="ai-image-error" class="ai-error hidden"></div>
         <div id="ai-image-preview" class="hidden"></div>
+      </div>
+
+      <!-- 🐾 Q版卡通化區塊 -->
+      <div class="ai-section" id="ai-cartoon-section" style="margin-top:12px;">
+        <div class="ai-header">
+          <span class="ai-badge">🐾 Q版卡通化</span>
+          <span class="ai-model">GPT-4o + DALL-E 3</span>
+        </div>
+        <p class="ai-desc">上傳人物/寵物/物品照片，AI 自動轉成可愛 Q版卡通圖貼到設計稿（約 30~50 秒）</p>
+
+        <label class="upload-zone" style="max-height:none;margin-bottom:10px;cursor:pointer;">
+          <input type="file" id="cartoon-upload-input" accept="image/*" onchange="previewCartoonUpload(this)" style="display:none;">
+          <div id="cartoon-upload-preview" style="font-size:32px;">📷</div>
+          <p id="cartoon-upload-hint">點擊上傳照片（人物 / 寵物 / 物品）</p>
+        </label>
+
+        <button class="btn btn-ai" id="cartoon-btn" onclick="generateCartoonImage()" style="width:100%;">
+          <span id="cartoon-btn-text">🐾 開始 Q版化</span>
+          <span id="cartoon-btn-loading" class="hidden">⏳ 生成中（約30~50秒）…</span>
+        </button>
+
+        <div id="cartoon-error" class="ai-error hidden"></div>
+        <div id="cartoon-preview" class="hidden"></div>
       </div>
 
       <div class="design-layout">
