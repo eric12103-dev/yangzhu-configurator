@@ -233,14 +233,14 @@ app.post('/api/cartoon-image', async (req, res) => {
 
     const description = visionResp.choices[0].message.content.trim();
 
-    // Step 2：DALL-E 3 生成 Q版卡通
-    const cartoonPrompt = `Cute Japanese chibi Q-version cartoon illustration of: ${description}. Style: big round sparkling eyes, tiny round body, pastel colors, kawaii anime style, clean white background, no text, high quality digital art.`;
+    // Step 2：DALL-E 3 生成 Q版卡通（橫向卡片格式）
+    const cartoonPrompt = `A cute Japanese chibi Q-version cartoon illustration of: ${description}. The artwork MUST fill the entire horizontal card frame (85:54 ratio, like a credit card), with NO white space or margins on any edge — the design bleeds to all four sides. Style: big round sparkling eyes, tiny round body, pastel colors, kawaii anime style, vibrant background pattern that fills the whole card, NO text, NO numbers, NO words anywhere, high quality print-ready digital art.`;
 
     const imgResp = await openai.images.generate({
       model:           'dall-e-3',
       prompt:          cartoonPrompt,
       n:               1,
-      size:            '1024x1024',
+      size:            '1792x1024',
       quality:         'standard',
       response_format: 'b64_json'
     });

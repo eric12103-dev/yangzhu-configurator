@@ -384,12 +384,11 @@ function applyCartoonImage() {
   fabric.Image.fromURL(lastCartoonImageDataURL, img => {
     const w = canvas2d.getWidth();
     const h = canvas2d.getHeight();
-    // Q版圖為方形，用 contain 方式置中（保留白底，不裁切）
-    const scale = Math.min(w / img.width, h / img.height) * 0.88;
+    // 滿版填滿（同 AI生圖）
+    const scale = Math.max(w / img.width, h / img.height);
     img.set({ left: w / 2, top: h / 2, originX: 'center', originY: 'center', scaleX: scale, scaleY: scale });
     canvas2d.add(img);
     canvas2d.sendToBack(img);
-    canvas2d.setActiveObject(img);
     canvas2d.renderAll();
   });
 }
