@@ -20,7 +20,11 @@ if (!fs.existsSync(ORDER_DIR)) {
 
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));  // 設計圖 dataURL 可能較大
-app.use(express.static(path.join(__dirname)));  // 提供前端靜態檔案
+app.use(express.static(path.join(__dirname), { index: false }));  // 靜態資源，不自動服務 index.html
+
+// ─── 頁面路由 ──────────────────────────────
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'landing.html')));
+app.get('/customize', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 
 // ─── OpenAI 初始化（Key 可選，無 Key 時 AI 功能停用）──────────
 let openai = null;

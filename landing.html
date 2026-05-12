@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>楊竹科技 — 企業禮贈品 AI 一條龍客製化服務</title>
+  <meta name="description" content="楊竹科技：台灣悠遊卡、一卡通官方授權製造廠。AI輔助設計、3D即時預覽、24小時AI客服，企業禮贈品客製化一站式解決方案。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green:      #2D7D46;
+      --green-dark: #1f5c33;
+      --green-light:#e8f5e9;
+      --green-logo: #4d7c14;
+      --gray-50:    #f9fafb;
+      --gray-100:   #f3f4f6;
+      --gray-400:   #9ca3af;
+      --gray-600:   #4b5563;
+      --gray-900:   #111827;
+      --white:      #ffffff;
+      --shadow-card:0 4px 24px rgba(0,0,0,0.08);
+      --shadow-green:0 8px 32px rgba(45,125,70,0.18);
+      --radius:     16px;
+    }
+
+    body {
+      font-family: 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
+      background: var(--white);
+      color: var(--gray-900);
+      line-height: 1.6;
+    }
+
+    /* ── Header ─────────────────────────── */
+    .site-header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+      padding: 0 24px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .site-logo { display: flex; flex-direction: column; text-decoration: none; line-height: 1.15; }
+    .logo-zh { font-size: 12px; font-weight: 600; color: var(--green-logo); letter-spacing: 3px; }
+    .logo-en { font-size: 20px; font-weight: 700; font-style: italic; color: var(--green-logo); font-family: Georgia, serif; }
+    .header-right { display: flex; align-items: center; gap: 12px; }
+    .header-badge { font-size: 12px; color: var(--gray-600); background: var(--gray-100); padding: 4px 10px; border-radius: 20px; }
+    .header-tel { font-size: 13px; color: var(--green); font-weight: 600; text-decoration: none; }
+    .header-tel:hover { text-decoration: underline; }
+
+    /* ── Hero ───────────────────────────── */
+    .hero {
+      padding: 120px 24px 80px;
+      text-align: center;
+      background: linear-gradient(180deg, #f0f9f2 0%, #ffffff 100%);
+      border-bottom: 1px solid #e8f5e9;
+    }
+    .hero-eyebrow {
+      display: inline-block;
+      background: var(--green-light);
+      color: var(--green);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 4px 14px;
+      border-radius: 20px;
+      margin-bottom: 20px;
+      letter-spacing: 1px;
+    }
+    .hero h1 {
+      font-size: clamp(30px, 6vw, 54px);
+      font-weight: 900;
+      line-height: 1.2;
+      color: var(--gray-900);
+      margin-bottom: 20px;
+    }
+    .hero h1 span { color: var(--green); }
+    .hero-sub {
+      font-size: 17px;
+      color: var(--gray-600);
+      margin: 0 auto 36px;
+      max-width: 540px;
+    }
+    .hero-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--green);
+      color: white;
+      font-size: 17px;
+      font-weight: 700;
+      padding: 16px 36px;
+      border-radius: 50px;
+      text-decoration: none;
+      transition: background .2s, transform .2s, box-shadow .2s;
+      box-shadow: 0 4px 16px rgba(45,125,70,.3);
+    }
+    .hero-cta:hover {
+      background: var(--green-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(45,125,70,.4);
+    }
+    .hero-meta { margin-top: 16px; font-size: 13px; color: var(--gray-400); }
+
+    /* ── Section共用 ────────────────────── */
+    .section-wrap { max-width: 1100px; margin: 0 auto; padding: 80px 24px; }
+    .section-header { text-align: center; margin-bottom: 48px; }
+    .section-label { font-size: 12px; color: var(--green); font-weight: 700; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 10px; }
+    .section-title { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: var(--gray-900); margin-bottom: 12px; }
+    .section-sub { font-size: 15px; color: var(--gray-600); max-width: 440px; margin: 0 auto; }
+
+    /* ── Service Cards ───────────────────── */
+    .service-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+    }
+    .service-card {
+      background: var(--white);
+      border: 1.5px solid #e5e7eb;
+      border-radius: var(--radius);
+      padding: 36px 32px;
+      transition: box-shadow .2s, border-color .2s, transform .2s;
+      display: flex;
+      flex-direction: column;
+    }
+    .service-card:hover {
+      box-shadow: var(--shadow-green);
+      border-color: var(--green);
+      transform: translateY(-4px);
+    }
+    .service-card.featured {
+      border-color: var(--green);
+      background: linear-gradient(135deg, #f0f9f2 0%, #ffffff 100%);
+    }
+    .service-icon {
+      width: 56px; height: 56px;
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px;
+      margin-bottom: 20px;
+      flex-shrink: 0;
+    }
+    .icon-green  { background: var(--green-light); }
+    .icon-blue   { background: #e0f2fe; }
+    .icon-purple { background: #f3e8ff; }
+
+    .service-badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-bottom: 10px;
+      width: fit-content;
+    }
+    .badge-live    { background: #d1fae5; color: #059669; }
+    .badge-dev     { background: #fef3c7; color: #d97706; }
+    .badge-online  { background: #ede9fe; color: #7c3aed; }
+
+    .service-card h3 { font-size: 20px; font-weight: 700; margin-bottom: 10px; }
+    .service-card p  { font-size: 14px; color: var(--gray-600); line-height: 1.7; margin-bottom: 20px; }
+    .feature-list    { list-style: none; margin-bottom: 28px; flex: 1; }
+    .feature-list li {
+      font-size: 13px;
+      color: var(--gray-600);
+      padding: 4px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .feature-list li::before { content: '✓'; color: var(--green); font-weight: 700; flex-shrink: 0; }
+
+    .svc-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 12px 24px;
+      border-radius: 50px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .2s;
+      text-decoration: none;
+      border: none;
+      font-family: inherit;
+      width: fit-content;
+    }
+    .svc-btn.primary  { background: var(--green); color: white; }
+    .svc-btn.primary:hover { background: var(--green-dark); }
+    .svc-btn.outline  { background: transparent; color: var(--green); border: 1.5px solid var(--green); }
+    .svc-btn.outline:hover { background: var(--green-light); }
+
+    /* ── Trust Stats ─────────────────────── */
+    .trust {
+      background: var(--gray-50);
+      border-top: 1px solid #e5e7eb;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 60px 24px;
+    }
+    .trust-grid {
+      max-width: 900px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 32px;
+      text-align: center;
+    }
+    .trust-item h4 { font-size: 36px; font-weight: 900; color: var(--green); line-height: 1; margin-bottom: 6px; }
+    .trust-item p  { font-size: 13px; color: var(--gray-600); }
+
+    /* ── Product Chips ───────────────────── */
+    .product-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      margin-top: 32px;
+    }
+    .product-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: white;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 50px;
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--gray-900);
+      cursor: pointer;
+      text-decoration: none;
+      transition: all .2s;
+    }
+    .product-chip:hover {
+      border-color: var(--green);
+      color: var(--green);
+      background: var(--green-light);
+    }
+
+    /* ── CTA Banner ──────────────────────── */
+    .cta-banner {
+      background: linear-gradient(135deg, var(--green) 0%, var(--green-dark) 100%);
+      padding: 80px 24px;
+      text-align: center;
+    }
+    .cta-banner h2 { font-size: clamp(22px, 4vw, 34px); font-weight: 800; color: white; margin-bottom: 14px; }
+    .cta-banner p  { font-size: 16px; color: rgba(255,255,255,.8); margin-bottom: 32px; }
+    .cta-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 16px;
+      font-weight: 700;
+      padding: 16px 36px;
+      border-radius: 50px;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all .2s;
+      margin: 6px;
+      font-family: inherit;
+      border: none;
+    }
+    .cta-btn.white { background: white; color: var(--green); }
+    .cta-btn.white:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.2); }
+    .cta-btn.ghost { background: transparent; color: white; border: 2px solid rgba(255,255,255,.6); }
+    .cta-btn.ghost:hover { background: rgba(255,255,255,.1); border-color: white; }
+
+    /* ── Footer ─────────────────────────── */
+    .site-footer {
+      background: var(--gray-900);
+      color: rgba(255,255,255,.45);
+      padding: 40px 24px;
+      text-align: center;
+      font-size: 13px;
+      line-height: 2;
+    }
+    .site-footer a { color: rgba(255,255,255,.6); text-decoration: none; }
+    .site-footer a:hover { color: white; }
+
+    /* ── Floating Chat Widget ────────────── */
+    #chat-widget { position: fixed; bottom: 24px; right: 24px; z-index: 1000; display: flex; flex-direction: column; align-items: flex-end; }
+    #chat-panel {
+      display: none;
+      width: 380px;
+      height: 560px;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.2);
+      overflow: hidden;
+      margin-bottom: 12px;
+      flex-direction: column;
+      border: 1px solid #e5e7eb;
+    }
+    #chat-panel.open { display: flex; }
+    .chat-header {
+      background: var(--green);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .chat-title { color: white; font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+    .chat-close {
+      background: none; border: none; color: rgba(255,255,255,.8);
+      font-size: 20px; cursor: pointer; padding: 2px 6px; border-radius: 6px; transition: background .2s;
+    }
+    .chat-close:hover { background: rgba(0,0,0,.2); color: white; }
+    #chat-iframe { flex: 1; border: none; width: 100%; }
+    #chat-toggle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--green);
+      color: white;
+      border: none;
+      padding: 14px 22px;
+      border-radius: 50px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(45,125,70,.4);
+      transition: all .2s;
+      font-family: inherit;
+    }
+    #chat-toggle:hover { background: var(--green-dark); transform: translateY(-2px); box-shadow: 0 8px 28px rgba(45,125,70,.5); }
+    .live-dot {
+      width: 10px; height: 10px;
+      background: #4ade80;
+      border-radius: 50%;
+      flex-shrink: 0;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity:1; transform:scale(1); }
+      50%      { opacity:.5; transform:scale(.75); }
+    }
+    @media (max-width: 600px) {
+      #chat-panel { width: calc(100vw - 48px); height: 480px; }
+      .site-header .header-badge { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ───────────────────────────── -->
+<header class="site-header">
+  <a class="site-logo" href="https://www.yangzhu.com.tw" target="_blank" rel="noopener">
+    <span class="logo-zh">楊竹科技</span>
+    <span class="logo-en">YangZhu</span>
+  </a>
+  <div class="header-right">
+    <span class="header-badge">🏭 台灣製造・40年經驗</span>
+    <a class="header-tel" href="tel:0226809966">📞 02-2680-9966</a>
+  </div>
+</header>
+
+<!-- ── Hero ─────────────────────────────── -->
+<section class="hero">
+  <div class="hero-eyebrow">悠遊卡・一卡通 官方授權製造廠</div>
+  <h1>企業禮贈品<br><span>AI 一條龍</span>客製化服務</h1>
+  <p class="hero-sub">從設計靈感到完成下單，全程數位化。<br>AI 輔助設計 × 即時報價 × 24 小時 AI 客服，讓企業採購簡單省時。</p>
+  <a href="/customize" class="hero-cta">🎨 立即開始客製化 →</a>
+  <p class="hero-meta">免費使用 · 無需帳號 · 1 分鐘完成詢價</p>
+</section>
+
+<!-- ── Services ──────────────────────────── -->
+<div class="section-wrap">
+  <div class="section-header">
+    <p class="section-label">三大服務</p>
+    <h2 class="section-title">一站式客製化體驗</h2>
+    <p class="section-sub">從設計靈感到正式下單，讓每個環節都更快、更簡單</p>
+  </div>
+
+  <div class="service-grid">
+
+    <!-- 1. AI 客製化 -->
+    <div class="service-card featured">
+      <div class="service-icon icon-green">🎨</div>
+      <span class="service-badge badge-live">✓ 立即可用</span>
+      <h3>AI 客製化配置器</h3>
+      <p>選產品、設規格、AI 輔助設計，五步驟完成詢價，不需任何設計經驗。</p>
+      <ul class="feature-list">
+        <li>悠遊卡 / 一卡通 / USB 多產品線</li>
+        <li>AI 文字設計 × DALL-E 3 生圖</li>
+        <li>即時 3D 立體預覽效果</li>
+        <li>一鍵生成完整報價單</li>
+      </ul>
+      <a href="/customize" class="svc-btn primary">開始設計 →</a>
+    </div>
+
+    <!-- 2. 3D 壓克力 -->
+    <div class="service-card">
+      <div class="service-icon icon-blue">🧊</div>
+      <span class="service-badge badge-dev">開發中</span>
+      <h3>壓克力切割 3D 預覽</h3>
+      <p>上傳設計圖，即時查看壓克力切割成品的立體效果，下單前看清楚每個細節。</p>
+      <ul class="feature-list">
+        <li>支援多種設計格式上傳</li>
+        <li>即時 3D 立體旋轉預覽</li>
+        <li>多種壓克力材質模擬</li>
+        <li>可匯出預覽截圖</li>
+      </ul>
+      <button class="svc-btn outline" onclick="openChat()">詢問小竹了解進度 →</button>
+    </div>
+
+    <!-- 3. 小竹客服 -->
+    <div class="service-card">
+      <div class="service-icon icon-purple">💬</div>
+      <span class="service-badge badge-online">24hr 上線中</span>
+      <h3>小竹 AI 客服</h3>
+      <p>報價、規格、交期、材質，任何問題都能立即回答，不需等待業務回電。</p>
+      <ul class="feature-list">
+        <li>24 小時 × 365 天即時回應</li>
+        <li>報價 / 規格 / 交期全知曉</li>
+        <li>複雜需求協助整理與轉達</li>
+        <li>無縫轉接業務人員跟進</li>
+      </ul>
+      <button class="svc-btn outline" onclick="openChat()">立即詢問 →</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── Trust Stats ────────────────────────── -->
+<div class="trust">
+  <div class="trust-grid">
+    <div class="trust-item">
+      <h4>40+</h4>
+      <p>年製造經驗</p>
+    </div>
+    <div class="trust-item">
+      <h4>2</h4>
+      <p>官方授權<br>（悠遊卡 + 一卡通）</p>
+    </div>
+    <div class="trust-item">
+      <h4>100+</h4>
+      <p>企業合作客戶</p>
+    </div>
+    <div class="trust-item">
+      <h4>ISO</h4>
+      <p>9000 品質認證</p>
+    </div>
+  </div>
+</div>
+
+<!-- ── Products ───────────────────────────── -->
+<div class="section-wrap" style="padding-top:60px;padding-bottom:60px;">
+  <div class="section-header">
+    <p class="section-label">產品線</p>
+    <h2 class="section-title">可客製化的產品</h2>
+    <p class="section-sub">點選產品直接進入 AI 配置器</p>
+  </div>
+  <div class="product-chips">
+    <a href="/customize" class="product-chip">💳 客製化悠遊卡</a>
+    <a href="/customize" class="product-chip">💳 客製化一卡通</a>
+    <a href="/customize" class="product-chip">💾 USB 隨身碟</a>
+    <a href="/customize" class="product-chip">📇 名片型隨身碟</a>
+    <a href="#" class="product-chip" onclick="openChat();return false;">🎁 禮盒包裝組合</a>
+    <a href="#" class="product-chip" onclick="openChat();return false;">🧊 壓克力客製品</a>
+    <a href="#" class="product-chip" onclick="openChat();return false;">📦 其他特殊需求</a>
+  </div>
+</div>
+
+<!-- ── CTA Banner ─────────────────────────── -->
+<div class="cta-banner">
+  <h2>準備好開始了嗎？</h2>
+  <p>免費試用，5 分鐘完成詢價。業務將於 1 個工作天內確認並回覆。</p>
+  <a href="/customize" class="cta-btn white">🎨 開始免費設計</a>
+  <button class="cta-btn ghost" onclick="openChat()">💬 先詢問小竹</button>
+</div>
+
+<!-- ── Footer ─────────────────────────────── -->
+<footer class="site-footer">
+  <p>楊竹科技股份有限公司</p>
+  <p>
+    新北市樹林區柑園街2段122巷7號 ·
+    <a href="tel:0226809966">02-2680-9966</a> ·
+    <a href="mailto:sales@yangzhu.com.tw">sales@yangzhu.com.tw</a>
+  </p>
+  <p style="margin-top:8px;font-size:11px;color:rgba(255,255,255,.25)">
+    悠遊卡官方授權製造廠 · 一卡通官方授權製造廠 · ISO 9000 認證
+  </p>
+</footer>
+
+<!-- ── Floating Chat Widget ───────────────── -->
+<div id="chat-widget">
+  <div id="chat-panel">
+    <div class="chat-header">
+      <div class="chat-title">
+        <span>💬</span> 小竹 AI 客服
+      </div>
+      <button class="chat-close" onclick="closeChat()">✕</button>
+    </div>
+    <iframe id="chat-iframe"
+            src="https://yangzhu-chatbot-production.up.railway.app"
+            title="小竹 AI 客服"
+            loading="lazy">
+    </iframe>
+  </div>
+  <button id="chat-toggle" onclick="toggleChat()">
+    <div class="live-dot"></div>
+    小竹客服
+  </button>
+</div>
+
+<script>
+  function toggleChat() {
+    document.getElementById('chat-panel').classList.toggle('open');
+  }
+  function openChat() {
+    document.getElementById('chat-panel').classList.add('open');
+  }
+  function closeChat() {
+    document.getElementById('chat-panel').classList.remove('open');
+  }
+</script>
+
+</body>
+</html>
