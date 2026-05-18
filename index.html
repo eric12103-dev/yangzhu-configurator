@@ -23,6 +23,13 @@
     <option value="Playfair Display">Playfair Display</option>
     <option value="Bebas Neue">Bebas Neue</option>
     <option value="Arial">Arial</option>
+    <option value="Amalfi Coast">Amalfi Coast</option>
+    <option value="Bacalisties">Bacalisties</option>
+    <option value="Chen Yuluoyan">陳宇洛燕體</option>
+    <option value="JF Open Huninn">俐方體</option>
+    <option value="Jinghong">驚鴻</option>
+    <option value="Meiyi">美意字</option>
+    <option value="Meiyi Mono">美意字等寬</option>
   </select>
 
   <!-- CDN Libraries -->
@@ -103,7 +110,7 @@
       <h2 style="font-size:18px;margin-bottom:20px;">規格選擇</h2>
 
       <div class="spec-section">
-        <h4>材質</h4>
+        <h4 id="spec-materials-label">材質</h4>
         <div class="spec-options" id="spec-materials"></div>
       </div>
 
@@ -146,76 +153,50 @@
   <!-- ══════════════════════════════════════ -->
   <div class="step-panel hidden" data-step="3">
     <div class="card">
-      <h2 style="font-size:18px;margin-bottom:6px;">設計稿編輯</h2>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
+        <button class="btn btn-secondary btn-sm" onclick="prevStep()" style="flex-shrink:0;">← 返回規格</button>
+        <h2 style="font-size:18px;margin:0;">設計稿編輯</h2>
+      </div>
       <p style="font-size:13px;color:var(--gray-400);margin-bottom:20px;">
         簡易示意稿，讓業務了解您的設計方向。正式稿可於確認後提供 AI / EPS 檔。
       </p>
 
-      <!-- ✨ AI 文字生成區塊 -->
-      <div class="ai-section" id="ai-section">
+      <!-- ✂️ 壓克力切割輪廓 -->
+      <div class="ai-section" id="acrylic-cut-section" style="margin-top:12px;">
         <div class="ai-header">
-          <span class="ai-badge">✨ AI 輔助生成</span>
-          <span class="ai-model">gpt-4o-mini</span>
+          <span class="ai-badge">✂️ 壓克力切割</span>
+          <span class="ai-model">純瀏覽器運算</span>
         </div>
-        <p class="ai-desc">用一句話描述你的需求，AI 自動生成 3 種設計文案方案</p>
-
-        <div class="ai-input-row">
-          <textarea id="ai-prompt" rows="2"
-            placeholder="例：科技公司 2025 年會紀念品，現代簡約風格&#10;例：婚禮回禮小物，溫馨浪漫，附新人名字"></textarea>
-          <button class="btn btn-ai" id="ai-generate-btn" onclick="generateAIDesign()">
-            <span id="ai-btn-text">✨ 生成</span>
-            <span id="ai-btn-loading" class="hidden">⏳ 生成中…</span>
-          </button>
-        </div>
-
-        <div id="ai-error" class="ai-error hidden"></div>
-
-        <!-- 生成結果 -->
-        <div id="ai-results" class="ai-results hidden"></div>
-      </div>
-
-      <!-- ✨ AI 生圖區塊 -->
-      <div class="ai-section" id="ai-image-section" style="margin-top:12px;">
-        <div class="ai-header">
-          <span class="ai-badge">🎨 AI 生圖</span>
-          <span class="ai-model">DALL-E 3</span>
-        </div>
-        <p class="ai-desc">用文字描述想要的圖案，AI 直接生成滿版卡面背景（約 15~30 秒）</p>
-
-        <div class="ai-input-row">
-          <textarea id="ai-image-prompt" rows="2"
-            placeholder="例：水墨風格的竹子與山水&#10;例：可愛柴犬穿西裝，日本插畫風&#10;例：企業科技感幾何圖形，藍色調"></textarea>
-          <button class="btn btn-ai" id="ai-image-btn" onclick="generateAIImage()">
-            <span id="ai-image-btn-text">🎨 生圖</span>
-            <span id="ai-image-btn-loading" class="hidden">⏳ 生成中…</span>
-          </button>
-        </div>
-
-        <div id="ai-image-error" class="ai-error hidden"></div>
-        <div id="ai-image-preview" class="hidden"></div>
-      </div>
-
-      <!-- 🐾 Q版卡通化區塊 -->
-      <div class="ai-section" id="ai-cartoon-section" style="margin-top:12px;">
-        <div class="ai-header">
-          <span class="ai-badge">🐾 Q版卡通化</span>
-          <span class="ai-model">GPT-4o + DALL-E 3</span>
-        </div>
-        <p class="ai-desc">上傳人物/寵物/物品照片，AI 自動轉成可愛 Q版卡通圖貼到設計稿（約 30~50 秒）</p>
+        <p class="ai-desc">上傳圖片，自動偵測輪廓並輸出雷射切割用 SVG 檔（支援 PNG 透明背景 / JPG 白底）</p>
 
         <label class="upload-zone" style="max-height:none;margin-bottom:10px;cursor:pointer;">
-          <input type="file" id="cartoon-upload-input" accept="image/*" onchange="previewCartoonUpload(this)" style="display:none;">
-          <div id="cartoon-upload-preview" style="font-size:32px;">📷</div>
-          <p id="cartoon-upload-hint">點擊上傳照片（人物 / 寵物 / 物品）</p>
+          <input type="file" id="acrylic-upload-input" accept="image/*" style="display:none;">
+          <div style="font-size:32px;">✂️</div>
+          <p>點擊上傳圖片</p>
         </label>
 
-        <button class="btn btn-ai" id="cartoon-btn" onclick="generateCartoonImage()" style="width:100%;">
-          <span id="cartoon-btn-text">🐾 開始 Q版化</span>
-          <span id="cartoon-btn-loading" class="hidden">⏳ 生成中（約30~50秒）…</span>
+        <div id="acrylic-preview-wrap" class="hidden" style="text-align:center;margin-bottom:10px;">
+          <img id="acrylic-preview-img" style="max-width:100%;max-height:180px;border-radius:8px;object-fit:contain;" alt="上傳圖片">
+        </div>
+
+        <button class="btn btn-ai" id="acrylic-detect-btn" onclick="detectAcrylicContour()" disabled style="width:100%;">
+          <span id="acrylic-detect-btn-text">✂️ 自動偵測輪廓</span>
+          <span id="acrylic-detect-btn-loading" class="hidden">⏳ 偵測中…</span>
         </button>
 
-        <div id="cartoon-error" class="ai-error hidden"></div>
-        <div id="cartoon-preview" class="hidden"></div>
+        <div id="acrylic-error" class="ai-error hidden"></div>
+
+        <div id="acrylic-result" class="hidden" style="margin-top:12px;">
+          <p style="font-size:12px;color:var(--gray-400);margin-bottom:8px;" id="acrylic-info"></p>
+          <canvas id="acrylic-canvas-preview" style="max-width:100%;border:1px solid #e5e7eb;border-radius:8px;display:block;margin:0 auto;"></canvas>
+          <a id="acrylic-download-btn" class="btn btn-primary"
+             style="display:block;text-align:center;margin-top:12px;text-decoration:none;padding:12px;">
+            ⬇ 下載 SVG（雷射切割用）
+          </a>
+          <p style="font-size:11px;color:var(--gray-400);text-align:center;margin-top:6px;">
+            紅線為切割輪廓，黑框為工作尺寸，可直接送雷射機
+          </p>
+        </div>
       </div>
 
       <div class="design-layout">
@@ -522,6 +503,7 @@
 <script src="js/preview3d.js"></script>
 <script src="js/configurator.js"></script>
 <script src="js/ai-design.js"></script>
+<script src="js/acrylic-cut.js"></script>
 
 <script>
   // Step 2 切入時 render 規格選項
@@ -545,6 +527,9 @@
   window.addEventListener('resize', () => {
     if (STATE.step === 4) resize3DPreview('preview3d-container');
   });
+
+  // 初始化壓克力切割上傳
+  initAcrylicCut();
 </script>
 
 </body>
