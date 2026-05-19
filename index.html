@@ -154,7 +154,7 @@
         <h2 style="font-size:18px;margin:0;">設計 &amp; 預覽</h2>
       </div>
       <p style="font-size:13px;color:var(--gray-400);margin-bottom:16px;">
-        左側編輯設計稿，套用後右側即時更新 3D 預覽。
+        輸入文字後點「套用至卡面」，即可在右側預覽效果。
       </p>
 
       <div class="design-preview-layout">
@@ -201,7 +201,7 @@
                 <button class="cp-btn" style="background:#0ea5e9" onclick="applyBgPreset('#0ea5e9')" title="天藍"></button>
               </div>
             </div>
-            <button class="btn btn-primary btn-sm" style="width:100%" onclick="applyDesignText();refreshPreview3D()">套用至卡面 ↗</button>
+            <button class="btn btn-primary btn-sm" style="width:100%" onclick="applyDesignText()">套用至卡面 ↗</button>
           </div>
 
           <div class="tool-section">
@@ -268,23 +268,6 @@
             <div style="display:flex;justify-content:flex-end;">
               <button class="btn btn-danger btn-sm" onclick="deleteSelected2D()" style="height:40px;padding:0 20px;">刪除選取</button>
             </div>
-          </div>
-        </div>
-
-        <!-- 欄 3：3D 預覽 + 規格摘要 -->
-        <div>
-          <h4 style="font-size:13px;font-weight:700;margin-bottom:8px;">即時 3D 預覽</h4>
-          <div id="preview3d-container"></div>
-          <p style="font-size:11px;color:var(--gray-400);text-align:center;margin-top:6px;">套用設計後自動更新</p>
-          <div style="text-align:center;margin-top:6px;">
-            <button class="btn btn-secondary btn-sm" onclick="refreshPreview3D()">↺ 重新套用設計圖</button>
-          </div>
-          <div style="margin-top:16px;">
-            <h4 style="font-size:13px;font-weight:700;margin-bottom:8px;">規格摘要</h4>
-            <div id="preview-spec-summary"></div>
-          </div>
-          <div style="margin-top:12px;padding:10px;background:var(--green-pale);border-radius:8px;font-size:12px;color:var(--green);">
-            ✅ 確認後點「前往報價單」填寫聯絡資料
           </div>
         </div>
 

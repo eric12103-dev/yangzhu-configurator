@@ -339,17 +339,9 @@ body {
 
 .design-preview-layout {
   display: grid;
-  grid-template-columns: 280px 1fr 1fr;
+  grid-template-columns: 280px 1fr;
   gap: 20px;
   align-items: start;
-}
-@media (max-width: 960px) {
-  .design-preview-layout {
-    grid-template-columns: 1fr 1fr;
-  }
-  .design-preview-layout > :nth-child(3) {
-    grid-column: 1 / -1;
-  }
 }
 @media (max-width: 640px) {
   .design-preview-layout { grid-template-columns: 1fr; }
