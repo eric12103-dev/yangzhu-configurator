@@ -415,12 +415,15 @@ function initPreviewStep() {
 }
 
 function downloadDesign() {
-  const dataURL = STATE.designDataURL || get2DDataURL();
-  if (!dataURL) { alert('尚無設計圖可下載'); return; }
+  const svg = get2DSVG();
+  if (!svg) { alert('尚無設計圖可下載'); return; }
+  const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = dataURL;
-  a.download = `楊竹設計-${STATE.productId || 'design'}.png`;
+  a.href = url;
+  a.download = `楊竹設計-${STATE.productId || 'design'}.svg`;
   a.click();
+  URL.revokeObjectURL(url);
 }
 
 function sendInquiry() {

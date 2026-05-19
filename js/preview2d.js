@@ -299,6 +299,20 @@ function get2DCanvas() {
   return copy;
 }
 
+// ─── 匯出 SVG ────────────────────────────────────────────
+function get2DSVG() {
+  if (!canvas2d) return null;
+  const bgObjs = canvas2d.getObjects().filter(o => !o.selectable && o.name !== 'bottle-bg');
+  bgObjs.forEach(o => o.set('visible', false));
+  _suppressOverlay = true;
+  canvas2d.renderAll();
+  const svg = canvas2d.toSVG();
+  _suppressOverlay = false;
+  bgObjs.forEach(o => o.set('visible', true));
+  canvas2d.renderAll();
+  return svg;
+}
+
 // ─── 手機縮放控制列 ───────────────────────────────────────
 function _showScaleBar() {
   const bar = document.getElementById('mobile-scale-bar');
