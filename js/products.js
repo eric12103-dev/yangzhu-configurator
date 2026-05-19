@@ -77,13 +77,13 @@ const PRODUCTS = {
     badgeColor: '#B87333',
     description: '304不鏽鋼真空保溫，雷射雕刻客製文字，送禮自用首選',
     size: { w: 600, h: 400, unit: '' },  // 對應背景圖橫向比例（1248×832），供 canvas 用
-    displaySize: '印刷範圍 234 × 130 mm',
-    // 印刷區（紅框）：保溫瓶測試合成圖 SVG 紅框 x=431.77,y=272.3,w=238.08,h=128.95 / viewBox 1125.77×796.01
-    labelArea: { xRatio: 0.384, yRatio: 0.342, wRatio: 0.211, hRatio: 0.162 },
-    // 文字放置位置（相對 canvas 高度）
+    displaySize: '印刷範圍 85 × 46.5 mm',
+    // 印刷區：85×46.5mm，對應橫向 canvas(600×400比例) — wRatio/hRatio = 85*400/(46.5*600) ≈ 1.219
+    labelArea: { xRatio: 0.410, yRatio: 0.358, wRatio: 0.158, hRatio: 0.130 },
+    // 文字放置位置（相對 canvas 高度，置於印刷框內）
     textLayout: {
-      title:    { yRatio: 0.400, sizeRatio: 0.055 },
-      subtitle: { yRatio: 0.450, sizeRatio: 0.040 }
+      title:    { yRatio: 0.400, sizeRatio: 0.050 },
+      subtitle: { yRatio: 0.455, sizeRatio: 0.038 }
     },
     materialLabel: '顏色',
     materials: [
