@@ -70,10 +70,9 @@ function init2DCanvas(productId) {
   canvas2d.on('object:scaling',  _updateScaleSlider);
   canvas2d.on('object:modified', _updateScaleSlider);
 
-  // after:render — 保溫杯只畫印刷區虛線框；其他產品畫全 canvas 圓角框
+  // after:render — 所有產品：有 labelArea 畫虛線印刷框；其他產品畫全 canvas 圓角框
   canvas2d.on('after:render', function() {
     if (!currentProduct || _suppressOverlay) return;
-    if (currentProduct.id === 'thermos') return;
     const ctx = canvas2d.contextContainer;
     const w   = canvas2d.getWidth();
     const h   = canvas2d.getHeight();
