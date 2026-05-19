@@ -342,3 +342,17 @@ function clear2D() {
     drawProductOutline(canvas2d.getWidth(), canvas2d.getHeight());
   }
 }
+
+// ─── 置中對齊 ─────────────────────────────────────────────
+function alignCenter2D(axis) {
+  if (!canvas2d) return;
+  const obj = canvas2d.getActiveObject();
+  if (!obj) return;
+  if (axis === 'h') {
+    obj.set({ left: canvas2d.getWidth() / 2, originX: 'center' });
+  } else {
+    obj.set({ top: canvas2d.getHeight() / 2, originY: 'center' });
+  }
+  obj.setCoords();
+  canvas2d.requestRenderAll();
+}
