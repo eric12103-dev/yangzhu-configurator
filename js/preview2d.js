@@ -163,32 +163,6 @@ function drawProductOutline(w, h) {
 }
 
 function addDefaultElements() {
-  const w = canvas2d.getWidth();
-  const h = canvas2d.getHeight();
-
-  let hintLeft, hintTop, hintSize;
-  if (currentProduct && currentProduct.labelArea) {
-    const la = currentProduct.labelArea;
-    hintLeft = w * (la.xRatio + la.wRatio / 2);
-    hintTop  = h * (la.yRatio + la.hRatio / 2);
-    hintSize = Math.max(9, Math.round(h * la.hRatio * 0.28));
-  } else {
-    hintLeft = w / 2;
-    hintTop  = h / 2;
-    hintSize = Math.round(h * 0.07);
-  }
-
-  const hint = new fabric.Text('輸入文字後點「套用文字」', {
-    left: hintLeft, top: hintTop,
-    originX: 'center', originY: 'center',
-    fontSize: hintSize,
-    fill: '#bbbbbb',
-    fontFamily: 'Arial',
-    fontStyle: 'italic',
-    selectable: false, evented: false,
-    name: 'hint'
-  });
-  canvas2d.add(hint);
   canvas2d.renderAll();
 }
 
