@@ -965,14 +965,21 @@ body {
   #chat-toggle .chat-live-dot { width: 8px; height: 8px; }
 }
 
-/* ─── 禁止非輸入元素顯示 I 字游標 ────────────────── */
-body { cursor: default; }
-p, h1, h2, h3, h4, h5, h6, span, label, div, li, td, th { cursor: default; }
+/* ─── 禁止非輸入元素顯示 I 字游標 & 文字選取 ────────────────── */
+body {
+  cursor: default;
+  user-select: none;
+  -webkit-user-select: none;
+}
 input[type="text"],
 input[type="email"],
 input[type="tel"],
 input[type="number"],
-textarea { cursor: text; }
+textarea {
+  cursor: text;
+  user-select: text;
+  -webkit-user-select: text;
+}
 button, a, select,
 input[type="color"],
 input[type="file"],
