@@ -458,17 +458,6 @@
     if (n === 2) renderSpecStep();
   }
 
-  // 即時刷新 3D 預覽（設計步驟內用）
-  function refreshPreview3D() {
-    STATE.designDataURL = (typeof get2DDataURL === 'function') ? get2DDataURL() : null;
-    if (typeof initPreviewStep === 'function') initPreviewStep();
-  }
-
-  // Window resize → 3D 重新計算
-  window.addEventListener('resize', () => {
-    if (STATE.step === 3) resize3DPreview('preview3d-container');
-  });
-
   // 初始化壓克力切割上傳
   initAcrylicCut();
 </script>

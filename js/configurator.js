@@ -50,8 +50,8 @@ function renderStep() {
     el.classList.toggle('hidden', el.dataset.step != STATE.step);
   });
 
-  // 各步驟初始化（Step 3 = 設計 + 預覽合併，Step 4 = 報價單）
-  if (STATE.step === 3) { initDesignStep(); setTimeout(() => initPreviewStep(), 300); }
+  // 各步驟初始化（Step 3 = 設計，Step 4 = 報價單）
+  if (STATE.step === 3) { initDesignStep(); }
   if (STATE.step === 4) initQuoteStep();
 
   window.scrollTo({ top: 0, behavior: 'smooth' });
