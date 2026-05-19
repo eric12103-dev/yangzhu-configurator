@@ -233,11 +233,11 @@ function initDesignStep() {
     if (el) el.style.display = isThermos ? 'none' : '';
   });
 
-  // 背景色選擇區：所有產品（含保溫杯）都顯示
+  // 背景色選擇區：保溫杯隱藏（印刷底色由杯身顏色決定）
   const bgColorEl = document.getElementById('design-bgcolor');
   if (bgColorEl) {
     const bgSection = bgColorEl.closest('.color-row')?.parentElement;
-    if (bgSection) bgSection.style.display = '';
+    if (bgSection) bgSection.style.display = isThermos ? 'none' : '';
   }
 
   // canvas 下方說明文字
