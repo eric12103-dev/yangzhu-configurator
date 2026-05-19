@@ -337,114 +337,29 @@ function applyBgPreset(color) {
 
 // ─── Step 4：預覽 ──────────────────────────────────────────
 function initPreviewStep() {
-  const dataURL  = STATE.designDataURL;
-  const finishId = STATE.finishId;
+  const isThermos = STATE.productId === 'thermos';
+  const flatEl    = document.getElementById('preview-flat');
+  const mockupDiv = document.getElementById('preview-mockup');
+  const btnDesign = document.getElementById('btn-download-design');
+  const btnMockup = document.getElementById('btn-download-mockup');
+  const dataURL   = get2DDataURL();
+  if (dataURL) STATE.designDataURL = dataURL;
 
-  if (STATE.productId === 'thermos') {
-    // 保溫杯：直接顯示含瓶身的設計合成圖
-    const container = document.getElementById('preview3d-container');
-    container.setAttribute('style',
-      'display:flex;align-items:center;justify-content:center;' +
-      'min-height:300px;padding:20px;background:#edf2f7;border-radius:12px;'
-    );
-    container.innerHTML = dataURL
-      ? `<div style="text-align:center;">
-           <img src="${dataURL}" alt="保溫杯設計預覽"
-                style="max-height:420px;max-width:100%;object-fit:contain;
-                       border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,.15);">
-           <p style="font-size:11px;color:#9aa5b4;margin-top:10px;">
-             雷射雕刻效果預覽 · 正式稿以業務確認為準
-           </p>
-         </div>`
-      : `<p style="color:#9aa5b4;font-size:14px;">請先在設計稿步驟輸入客製文字</p>`;
-  } else {
-    // 卡片 / USB：Three.js 3D 預覽
-    const container = document.getElementById('preview3d-container');
-    container.style = '';
-    setTimeout(() => {
-      init3DPreview('preview3d-container');
-      if (STATE.productId === 'usb_bar') {
-        buildUSB(finishId);
-      } else if (dataURL) {
-        buildCard(dataURL, finishId);
-      } else {
-        buildCard(null, finishId);
-      }
-    }, 150);
-  }
-
-  renderSpecSummary();
-}
-
-function renderSpecSummary() {
-  const p = PRODUCTS[STATE.productId];
-  if (!p) return;
-  const mat = p.materials.find(m => m.id === STATE.materialId) || p.materials[0];
-  const fin = p.finishes.find(f => f.id === STATE.finishId)     || p.finishes[0];
-  const cap = p.capacities ? (p.capacities.find(c => c.id === STATE.capacityId) || p.capacities[0]) : null;
-  const q   = calcQuote(STATE.productId, STATE.materialId, STATE.finishId, STATE.qty, STATE.capacityId);
-
-  const el = document.getElementById('preview-spec-summary');
-  if (el) {
-    el.innerHTML = `
-      <div class="summary-badge" style="background:${p.color}">${p.name}</div>
-      <table class="summary-table">
-        <tr><td>${p.materialLabel || '材質'}</td><td>${mat.name}</td></tr>
-        <tr><td>表面工藝</td><td>${fin.name}</td></tr>
-        ${cap ? `<tr><td>容量</td><td>${cap.name}</td></tr>` : ''}
-        <tr><td>數量</td><td>${STATE.qty.toLocaleString()} 個</td></tr>
-        <tr><td>預估單價</td><td>NT$ ${q ? q.unitPrice.toLocaleString() : '--'}</td></tr>
-        <tr><td>預估總計</td><td><strong>NT$ ${q ? q.total.toLocaleString() : '--'}</strong></td></tr>
-        <tr><td>預計交期</td><td>${p.leadDays} 個工作天</td></tr>
-      </table>
-    `;
-  }
-}
-
-// ─── Step 4：報價單 ────────────────────────────────────────
-function initPreviewStep() {
-  // 平面設計圖
-  const flatEl = document.getElementById('preview-flat');
-  const dataURL = get2DDataURL();
-  if (dataURL && flatEl) {
-    STATE.designDataURL = dataURL;
-    flatEl.innerHTML = `<img src="${dataURL}" style="max-width:100%;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.12);">`;
-  } else if (flatEl) {
-    flatEl.innerHTML = '<p style="color:var(--gray-400);">尚無設計圖，請返回編輯。</p>';
-  }
-
-  // 重置分頁到平面
-  switchPreviewTab('flat');
-
-  // 若是保溫杯，非同步合成 Mockup
-  if (STATE.productId === 'thermos' && dataURL) {
-    _buildMockup(dataURL);
-  } else {
-    // 非保溫杯：隱藏 Mockup 分頁按鈕
-    const tabMockup = document.getElementById('tab-mockup');
-    if (tabMockup) tabMockup.style.display = 'none';
-  }
-}
-
-function switchPreviewTab(tab) {
-  const flatDiv    = document.getElementById('preview-flat');
-  const mockupDiv  = document.getElementById('preview-mockup');
-  const tabFlat    = document.getElementById('tab-flat');
-  const tabMockup  = document.getElementById('tab-mockup');
-  const btnMockup  = document.getElementById('btn-download-mockup');
-
-  if (tab === 'flat') {
-    if (flatDiv)   flatDiv.style.display   = '';
-    if (mockupDiv) mockupDiv.style.display = 'none';
-    if (tabFlat)   tabFlat.className   = 'btn btn-primary btn-sm';
-    if (tabMockup) tabMockup.className = 'btn btn-secondary btn-sm';
-    if (btnMockup) btnMockup.style.display = 'none';
-  } else {
-    if (flatDiv)   flatDiv.style.display   = 'none';
+  if (isThermos) {
+    // 保溫杯：只顯示瓶身效果圖
+    if (flatEl)    flatEl.style.display    = 'none';
     if (mockupDiv) mockupDiv.style.display = '';
-    if (tabFlat)   tabFlat.className   = 'btn btn-secondary btn-sm';
-    if (tabMockup) tabMockup.className = 'btn btn-primary btn-sm';
-    if (btnMockup && STATE._mockupReady) btnMockup.style.display = '';
+    if (btnDesign) btnDesign.style.display = 'none';
+    if (dataURL)   _buildMockup(dataURL);
+  } else {
+    // 其他產品：只顯示平面設計圖
+    if (mockupDiv) mockupDiv.style.display = 'none';
+    if (btnMockup) btnMockup.style.display = 'none';
+    if (flatEl && dataURL) {
+      flatEl.innerHTML = `<img src="${dataURL}" style="max-width:100%;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.12);">`;
+    } else if (flatEl) {
+      flatEl.innerHTML = '<p style="color:var(--gray-400);">尚無設計圖，請返回編輯。</p>';
+    }
   }
 }
 

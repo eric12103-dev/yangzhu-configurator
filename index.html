@@ -292,12 +292,7 @@
       <h2 style="font-size:18px;margin-bottom:8px;">設計預覽</h2>
       <p style="font-size:13px;color:var(--gray-400);margin-bottom:20px;">確認設計效果後可下載</p>
 
-      <!-- 分頁切換 -->
-      <div style="display:flex;gap:8px;margin-bottom:16px;">
-        <button id="tab-flat" class="btn btn-primary btn-sm" onclick="switchPreviewTab('flat')">平面設計圖</button>
-        <button id="tab-mockup" class="btn btn-secondary btn-sm" onclick="switchPreviewTab('mockup')">瓶身效果圖</button>
-      </div>
-
+      <!-- 效果圖（保溫杯）/ 平面圖（其他產品） -->
       <div id="preview-flat" style="text-align:center;margin-bottom:24px;"></div>
       <div id="preview-mockup" style="text-align:center;margin-bottom:24px;display:none;">
         <div id="mockup-loading" style="color:var(--gray-400);padding:40px;">合成中...</div>
@@ -305,7 +300,7 @@
       </div>
 
       <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:20px;">
-        <button class="btn btn-outline btn-lg" onclick="downloadDesign()">⬇ 下載設計圖</button>
+        <button id="btn-download-design" class="btn btn-outline btn-lg" onclick="downloadDesign()">⬇ 下載設計圖</button>
         <button id="btn-download-mockup" class="btn btn-primary btn-lg" onclick="downloadMockup()" style="display:none;">⬇ 下載效果圖</button>
       </div>
 
