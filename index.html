@@ -110,19 +110,31 @@
     <div class="card">
       <h2 style="font-size:18px;margin-bottom:20px;">規格選擇</h2>
 
-      <div class="spec-section">
-        <h4 id="spec-materials-label">材質</h4>
-        <div class="spec-options" id="spec-materials"></div>
-      </div>
+      <div style="display:grid;grid-template-columns:1fr auto;gap:24px;align-items:start;">
+        <!-- 左：規格選項 -->
+        <div>
+          <div class="spec-section">
+            <h4 id="spec-materials-label">材質</h4>
+            <div class="spec-options" id="spec-materials"></div>
+          </div>
 
-      <div class="spec-section">
-        <h4>表面工藝</h4>
-        <div class="spec-options" id="spec-finishes"></div>
-      </div>
+          <div class="spec-section">
+            <h4>表面工藝</h4>
+            <div class="spec-options" id="spec-finishes"></div>
+          </div>
 
-      <div class="spec-section hidden" id="spec-capacity-section">
-        <h4>容量</h4>
-        <div class="spec-options" id="spec-capacities"></div>
+          <div class="spec-section hidden" id="spec-capacity-section">
+            <h4>容量</h4>
+            <div class="spec-options" id="spec-capacities"></div>
+          </div>
+        </div>
+
+        <!-- 右：顏色預覽圖 -->
+        <div id="spec-color-preview" style="display:none;text-align:center;min-width:220px;">
+          <img id="spec-color-img" src="" alt="顏色預覽"
+               style="max-height:320px;max-width:100%;object-fit:contain;border-radius:12px;">
+          <p id="spec-color-name" style="font-size:13px;color:var(--gray-700);margin-top:8px;font-weight:600;"></p>
+        </div>
       </div>
 
       <div class="step-nav">

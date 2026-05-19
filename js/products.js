@@ -87,10 +87,10 @@ const PRODUCTS = {
     },
     materialLabel: '顏色',
     materials: [
-      { id: 'mint_green',   name: '薄荷奶綠', priceBase: 480 },
-      { id: 'cherry_pink',  name: '櫻花淺粉', priceBase: 480 },
-      { id: 'oat_tea',      name: '燕麥奶茶', priceBase: 480 },
-      { id: 'milk_purple',  name: '夢幻奶紫', priceBase: 480 }
+      { id: 'mint_green',  name: '薄荷奶綠', priceBase: 480, image: 'assets/thermos/mint_green.png' },
+      { id: 'cherry_pink', name: '櫻花淺粉', priceBase: 480, image: 'assets/thermos/cherry_pink.png' },
+      { id: 'oat_tea',     name: '燕麥奶茶', priceBase: 480, image: 'assets/thermos/oat_tea.png' },
+      { id: 'milk_purple', name: '夢幻奶紫', priceBase: 480, image: 'assets/thermos/milk_purple.png' }
     ],
     finishes: [
       { id: 'uv_print', name: 'UV彩色噴印', price: 0 }

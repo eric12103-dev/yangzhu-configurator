@@ -100,8 +100,12 @@ function renderSpecStep() {
       matContainer.querySelectorAll('label').forEach(l => l.classList.remove('selected'));
       input.closest('label').classList.add('selected');
       updateLiveQuote();
+      _updateColorPreview(p);
     });
   });
+
+  // 初始顯示顏色預覽圖
+  _updateColorPreview(p);
 
   // 表面工藝
   const finContainer = document.getElementById('spec-finishes');
@@ -544,6 +548,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
   renderStep();
 });
+
+// 顏色預覽圖切換（僅保溫杯）
+function _updateColorPreview(p) {
+  const wrap = document.getElementById('spec-color-preview');
+  const img  = document.getElementById('spec-color-img');
+  const name = document.getElementById('spec-color-name');
+  if (!wrap || !img) return;
+  const mat = p.materials.find(m => m.id === STATE.materialId);
+  if (mat && mat.image) {
+    img.src = mat.image;
+    if (name) name.textContent = mat.name;
+    wrap.style.display = 'block';
+  } else {
+    wrap.style.display = 'none';
+  }
+}
 
 // Step 2 切入時需重新渲染
 const _origGoStep = goStep;
