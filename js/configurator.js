@@ -451,13 +451,15 @@ function switchPreviewTab(tab) {
 async function _buildMockup(designDataURL) {
   STATE._mockupReady = false;
   const colorId = STATE.materialId || 'oat_tea';
+  // 使用透明底版本，讓設計直接融入瓶身
+  const transparentDataURL = get2DDataURLTransparent() || designDataURL;
   try {
     const mc = document.getElementById('mockup-canvas');
     const ml = document.getElementById('mockup-loading');
     if (ml) ml.style.display = '';
     if (mc) mc.style.display = 'none';
 
-    const result = await renderMockup(colorId, designDataURL);
+    const result = await renderMockup(colorId, transparentDataURL);
     if (!result) return;
 
     if (mc) {

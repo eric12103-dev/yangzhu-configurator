@@ -94,40 +94,29 @@ async function renderMockup(colorId, designDataURL) {
   // ── 底層：瓶身照片 ──────────────────────────
   ctx.drawImage(bottleImg, 0, 0, W, H);
 
-  // ── 中層：設計圖（perspectiveTransform + multiply）──
+  // ── 中層：設計圖（透明底，直接疊在瓶身上）──
   const corners = [label.tl, label.tr, label.br, label.bl];
   const dw = designImg.width  || 850;
   const dh = designImg.height || 465;
 
-  // 把設計圖畫到 offscreen canvas
   const off = document.createElement('canvas');
   off.width  = dw;
   off.height = dh;
   off.getContext('2d').drawImage(designImg, 0, 0);
 
-  // 用 CSS matrix3d 在臨時 div 做透視，再 drawImage 回主 canvas
-  const mat = _perspectiveMatrix(dw, dh, corners);
-  const tmpDiv = document.createElement('div');
-  tmpDiv.style.cssText = `position:fixed;left:-9999px;top:-9999px;width:${W}px;height:${H}px;`;
   const tmpCanvas = document.createElement('canvas');
   tmpCanvas.width = W; tmpCanvas.height = H;
-  tmpDiv.appendChild(tmpCanvas);
-  document.body.appendChild(tmpDiv);
-
   const tc = tmpCanvas.getContext('2d');
   tc.save();
-  // 手動套用 projective transform（掃描線法）
   _drawProjective(tc, off, corners, dw, dh);
   tc.restore();
 
-  // 合成到主 canvas（multiply 混合）
+  // source-over：透明底設計直接疊在瓶身，dark 元素自然融入
   ctx.save();
-  ctx.globalCompositeOperation = 'multiply';
-  ctx.globalAlpha = 0.88;
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.globalAlpha = 0.92;
   ctx.drawImage(tmpCanvas, 0, 0);
   ctx.restore();
-
-  document.body.removeChild(tmpDiv);
 
   // ── 上層：圓柱高光（程式生成）──────────────────
   _drawHighlight(ctx, corners, W, H);

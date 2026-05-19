@@ -268,6 +268,23 @@ function get2DDataURL() {
   return dataURL;
 }
 
+// ─── 取得透明底 DataURL（供 Mockup 合成用）──────────────────────
+function get2DDataURLTransparent() {
+  if (!canvas2d) return null;
+  const origBg = canvas2d.backgroundColor;
+  const bgObjs = canvas2d.getObjects().filter(o => !o.selectable);
+  bgObjs.forEach(o => o.set('visible', false));
+  _suppressOverlay = true;
+  canvas2d.setBackgroundColor('rgba(0,0,0,0)', () => {});
+  canvas2d.renderAll();
+  const dataURL = canvas2d.toDataURL({ format: 'png', multiplier: 2 });
+  _suppressOverlay = false;
+  canvas2d.setBackgroundColor(origBg, () => {});
+  bgObjs.forEach(o => o.set('visible', true));
+  canvas2d.renderAll();
+  return dataURL;
+}
+
 // ─── Canvas JSON 存取（供返回設計稿時還原使用）─────────────────
 function getCanvas2DJSON() {
   if (!canvas2d) return null;
