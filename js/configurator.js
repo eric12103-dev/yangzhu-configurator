@@ -91,7 +91,6 @@ function renderSpecStep() {
     <label class="spec-option ${m.id === STATE.materialId ? 'selected' : ''}">
       <input type="radio" name="material" value="${m.id}" ${m.id === STATE.materialId ? 'checked' : ''}>
       <span class="spec-label">${m.name}</span>
-      <span class="spec-price">NT$${m.priceBase}/個起</span>
     </label>
   `).join('');
 
