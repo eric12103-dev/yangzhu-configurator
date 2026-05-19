@@ -66,7 +66,7 @@
 
   <div class="page-title">
     <h1>線上客製化配置器</h1>
-    <p>選產品 → 選規格 → 設計 &amp; 預覽 → 報價，4 步驟完成詢價</p>
+    <p>選產品 → 選規格 → 編輯 → 預覽，4 步驟完成詢價</p>
   </div>
 
   <!-- 步驟進度條 -->
@@ -88,7 +88,7 @@
     <div class="step-line"></div>
     <div class="step" data-step="4">
       <div class="step-dot" onclick="goStep(4)">4</div>
-      <div class="step-label">報價單</div>
+      <div class="step-label">預覽</div>
     </div>
   </div>
 
@@ -275,79 +275,28 @@
 
       <div class="step-nav">
         <button class="btn btn-secondary" onclick="prevStep()">← 上一步</button>
-        <button class="btn btn-primary btn-lg" onclick="nextStep()">確認，前往報價單 →</button>
+        <button class="btn btn-primary btn-lg" onclick="nextStep()">確認，前往預覽 →</button>
       </div>
     </div>
   </div>
 
   <!-- ══════════════════════════════════════ -->
-  <!-- Step 5 — 報價單 + 聯絡資料             -->
+  <!-- Step 4 — 設計預覽                      -->
   <!-- ══════════════════════════════════════ -->
   <div class="step-panel hidden" data-step="4">
     <div class="card">
-      <h2 style="font-size:18px;margin-bottom:20px;">報價單 &amp; 送出詢價</h2>
+      <h2 style="font-size:18px;margin-bottom:8px;">設計預覽</h2>
+      <p style="font-size:13px;color:var(--gray-400);margin-bottom:20px;">確認設計圖後可下載或送出詢價</p>
 
-      <div class="quote-layout">
+      <div id="preview-result" style="text-align:center;margin-bottom:24px;"></div>
 
-        <!-- 報價摘要 -->
-        <div>
-          <h4 style="font-size:13px;font-weight:700;margin-bottom:12px;">訂單摘要</h4>
-          <div id="quote-spec-summary" style="margin-bottom:16px;"></div>
-
-          <div class="live-quote-card">
-            <h4>💰 最終估價</h4>
-            <div id="final-quote"></div>
-          </div>
-
-          <div style="margin-top:12px;padding:10px;background:var(--gray-100);border-radius:8px;font-size:11px;color:var(--gray-400);line-height:1.6;">
-            ・報價含製版費 NT$800<br>
-            ・不含 5% 營業稅<br>
-            ・數量越多優惠越多<br>
-            ・正式報價以業務確認為準
-          </div>
-        </div>
-
-        <!-- 聯絡資料 -->
-        <div>
-          <h4 style="font-size:13px;font-weight:700;margin-bottom:12px;">聯絡資料</h4>
-
-          <div class="form-group">
-            <label>姓名 / 公司名稱 <span class="required">*</span></label>
-            <input type="text" id="contact-name" placeholder="王小明 / 某某股份有限公司" autocomplete="name">
-          </div>
-
-          <div class="form-group">
-            <label>Email <span class="required">*</span></label>
-            <input type="email" id="contact-email" placeholder="your@email.com" autocomplete="email" inputmode="email">
-          </div>
-
-          <div class="form-group">
-            <label>聯絡電話</label>
-            <input type="tel" id="contact-phone" placeholder="02-xxxx-xxxx / 0912-xxx-xxx" autocomplete="tel" inputmode="tel">
-          </div>
-
-          <div class="form-group">
-            <label>備註（設計需求、特殊要求等）</label>
-            <textarea id="contact-note" placeholder="例：需要特殊包裝、指定 Pantone 色號、附防偽標籤..."></textarea>
-          </div>
-
-          <button class="btn btn-primary btn-lg" style="width:100%" onclick="submitQuote()">
-            📩 送出詢價單
-          </button>
-
-          <p style="font-size:11px;color:var(--gray-400);text-align:center;margin-top:8px;">
-            點擊後將開啟 Email，請確認內容後送出
-          </p>
-        </div>
-
-      </div><!-- /quote-layout -->
-
-      <!-- 成功訊息 -->
-      <div id="quote-success" class="hidden">
-        <h3>✅ 詢價單已準備完成！</h3>
-        <p>請在您的 Email 客戶端確認內容後送出，楊竹業務將於 1 個工作天內回覆。</p>
-        <p style="margin-top:8px;">客服電話：<strong>02-2680-9966</strong></p>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:8px;">
+        <button class="btn btn-outline btn-lg" onclick="downloadDesign()">⬇ 下載設計圖</button>
+        <button class="btn btn-primary btn-lg" onclick="sendInquiry()">📩 送出詢價</button>
       </div>
+      <p style="font-size:11px;color:var(--gray-400);text-align:center;margin-bottom:20px;">
+        點擊「送出詢價」將開啟 Email，請確認內容後送出
+      </p>
 
       <div class="step-nav">
         <button class="btn btn-secondary" onclick="prevStep()">← 返回設計</button>

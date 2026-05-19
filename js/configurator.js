@@ -52,7 +52,7 @@ function renderStep() {
 
   // 各步驟初始化（Step 3 = 設計，Step 4 = 報價單）
   if (STATE.step === 3) { initDesignStep(); }
-  if (STATE.step === 4) initQuoteStep();
+  if (STATE.step === 4) initPreviewStep();
 
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -402,108 +402,49 @@ function renderSpecSummary() {
 }
 
 // ─── Step 4：報價單 ────────────────────────────────────────
-function initQuoteStep() {
-  // 在報價單頁也顯示規格摘要（用 quote-spec-summary）
-  const p = PRODUCTS[STATE.productId];
-  if (p) {
-    const mat = p.materials.find(m => m.id === STATE.materialId) || p.materials[0];
-    const fin = p.finishes.find(f => f.id === STATE.finishId)     || p.finishes[0];
-    const cap = p.capacities ? (p.capacities.find(c => c.id === STATE.capacityId) || p.capacities[0]) : null;
-    const q   = calcQuote(STATE.productId, STATE.materialId, STATE.finishId, STATE.qty, STATE.capacityId);
-    const el  = document.getElementById('quote-spec-summary');
-    if (el) {
-      el.innerHTML = `
-        <div class="summary-badge" style="background:${p.color}">${p.name}</div>
-        <table class="summary-table">
-          <tr><td>${p.materialLabel || '材質'}</td><td>${mat.name}</td></tr>
-          <tr><td>表面工藝</td><td>${fin.name}</td></tr>
-          ${cap ? `<tr><td>容量</td><td>${cap.name}</td></tr>` : ''}
-          <tr><td>數量</td><td>${STATE.qty.toLocaleString()} 個</td></tr>
-          <tr><td>預估總計</td><td><strong>NT$ ${q ? q.total.toLocaleString() : '--'}</strong></td></tr>
-          <tr><td>預計交期</td><td>${p.leadDays} 個工作天</td></tr>
-        </table>
-      `;
-    }
-  }
-
-  const q = calcQuote(STATE.productId, STATE.materialId, STATE.finishId, STATE.qty, STATE.capacityId);
-  const quoteEl = document.getElementById('final-quote');
-  if (quoteEl && q) {
-    quoteEl.innerHTML = `
-      <div class="quote-row"><span>單價</span><strong>NT$ ${q.unitPrice.toLocaleString()}</strong></div>
-      <div class="quote-row"><span>小計（× ${q.qty.toLocaleString()}）</span><strong>NT$ ${q.subtotal.toLocaleString()}</strong></div>
-      <div class="quote-row"><span>製版費</span><strong>NT$ ${q.setupFee.toLocaleString()}</strong></div>
-      <div class="quote-row total"><span>預估總計（未稅）</span><strong>NT$ ${q.total.toLocaleString()}</strong></div>
-      <p class="quote-disclaimer">※ 以上為估算報價，實際金額以業務確認為準。含稅報價另計。</p>
-    `;
+function initPreviewStep() {
+  const el = document.getElementById('preview-result');
+  if (!el) return;
+  const dataURL = get2DDataURL();
+  if (dataURL) {
+    STATE.designDataURL = dataURL;
+    el.innerHTML = `<img src="${dataURL}" style="max-width:100%;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.12);">`;
+  } else {
+    el.innerHTML = '<p style="color:var(--gray-400);">尚無設計圖，請返回編輯。</p>';
   }
 }
 
-// 送出詢價
-async function submitQuote() {
-  const name  = document.getElementById('contact-name').value.trim();
-  const email = document.getElementById('contact-email').value.trim();
-  const phone = document.getElementById('contact-phone').value.trim();
-  const note  = document.getElementById('contact-note').value.trim();
+function downloadDesign() {
+  const dataURL = STATE.designDataURL || get2DDataURL();
+  if (!dataURL) { alert('尚無設計圖可下載'); return; }
+  const a = document.createElement('a');
+  a.href = dataURL;
+  a.download = `楊竹設計-${STATE.productId || 'design'}.png`;
+  a.click();
+}
 
-  if (!name || !email) { alert('請填寫姓名與 Email'); return; }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { alert('Email 格式不正確'); return; }
-
+function sendInquiry() {
   const p   = PRODUCTS[STATE.productId];
-  const q   = calcQuote(STATE.productId, STATE.materialId, STATE.finishId, STATE.qty, STATE.capacityId);
+  if (!p) return;
   const mat = p.materials.find(m => m.id === STATE.materialId) || p.materials[0];
   const fin = p.finishes.find(f => f.id === STATE.finishId)     || p.finishes[0];
   const cap = p.capacities ? (p.capacities.find(c => c.id === STATE.capacityId) || p.capacities[0]) : null;
+  const q   = calcQuote(STATE.productId, STATE.materialId, STATE.finishId, STATE.qty, STATE.capacityId);
 
-  // ── 儲存訂單資料至伺服器 ──
-  try {
-    await fetch('/api/save-order', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contact: { name, email, phone, note },
-        product: {
-          id: p.id, name: p.name,
-          material: mat.name,
-          finish: fin.name,
-          capacity: cap ? cap.name : null,
-          qty: STATE.qty
-        },
-        quote: q,
-        designDataURL: STATE.designDataURL || null
-      })
-    });
-  } catch (e) {
-    // 儲存失敗不阻止送出流程
-    console.warn('[submitQuote] 訂單儲存失敗（不影響送出）', e);
-  }
-
-  // ── 開啟 mailto ──
   const subject = encodeURIComponent(`[楊竹科技詢價] ${p.name} × ${STATE.qty} 個`);
   const body = encodeURIComponent(
 `楊竹科技線上詢價單
 ==================
-聯絡人：${name}
-Email：${email}
-電話：${phone || '未填寫'}
-
 產品：${p.name}
 ${p.materialLabel || '材質'}：${mat.name}
 工藝：${fin.name}${cap ? `\n容量：${cap.name}` : ''}
 數量：${STATE.qty.toLocaleString()} 個
 預估總計：NT$ ${q ? q.total.toLocaleString() : '--'}（未稅，含製版費）
 
-備註：
-${note || '無'}
-
 --
 此詢價單由楊竹科技線上配置器自動產生
 `);
-
   window.location.href = `mailto:sales@yangzhu.com.tw?subject=${subject}&body=${body}`;
-
-  // 顯示成功訊息
-  document.getElementById('quote-success').classList.remove('hidden');
 }
 
 // ─── 初始化 ───────────────────────────────────────────────
