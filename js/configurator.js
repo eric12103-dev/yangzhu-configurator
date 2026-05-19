@@ -240,17 +240,20 @@ function initDesignStep() {
     if (bgSection) bgSection.style.display = isThermos ? 'none' : '';
   }
 
-  // 保溫杯：更新 canvas 下方說明文字
+  // canvas 下方說明文字
   const canvasNote = document.querySelector('.canvas-wrap + p');
   if (canvasNote) {
     canvasNote.textContent = isThermos
-      ? '虛線框為印刷範圍 · 文字套用後即出現在瓶身圖上'
+      ? '虛線為印刷邊界（85 × 46.5 mm），設計完成後確認送出'
       : '虛線為刀模輪廓參考線';
   }
 
-  // 移除舊的參考圖 block（現在瓶身在 canvas 裡）
-  const oldRef = document.getElementById('thermos-ref-block');
-  if (oldRef) oldRef.remove();
+  // 保溫杯：開放背景色選擇
+  const bgColorEl = document.getElementById('design-bgcolor');
+  if (bgColorEl) {
+    const bgSection = bgColorEl.closest('.color-row')?.parentElement;
+    if (bgSection) bgSection.style.display = '';
+  }
 }
 
 function initFontGrid() {

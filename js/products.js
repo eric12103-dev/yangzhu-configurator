@@ -76,14 +76,14 @@ const PRODUCTS = {
     badge: '台灣製造',
     badgeColor: '#B87333',
     description: '304不鏽鋼真空保溫，雷射雕刻客製文字，送禮自用首選',
-    size: { w: 600, h: 400, unit: '' },  // 對應背景圖橫向比例（1248×832），供 canvas 用
+    size: { w: 850, h: 465, unit: '' },  // canvas 比例 = 印刷尺寸 85×46.5mm
     displaySize: '印刷範圍 85 × 46.5 mm',
-    // 印刷區：85×46.5mm，對應橫向 canvas(600×400比例) — wRatio/hRatio = 85*400/(46.5*600) ≈ 1.219
-    labelArea: { xRatio: 0.410, yRatio: 0.358, wRatio: 0.158, hRatio: 0.130 },
-    // 文字放置位置（相對 canvas 高度，置於印刷框內）
+    // 印刷區 = 整個 canvas（邊緣留 2% 間距）
+    labelArea: { xRatio: 0.02, yRatio: 0.02, wRatio: 0.96, hRatio: 0.96 },
+    // 文字放置位置（相對 canvas 高度）
     textLayout: {
-      title:    { yRatio: 0.400, sizeRatio: 0.050 },
-      subtitle: { yRatio: 0.455, sizeRatio: 0.038 }
+      title:    { yRatio: 0.38, sizeRatio: 0.13 },
+      subtitle: { yRatio: 0.65, sizeRatio: 0.09 }
     },
     materialLabel: '顏色',
     materials: [

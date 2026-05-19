@@ -52,7 +52,7 @@ function init2DCanvas(productId) {
 
   canvas2d = new fabric.Canvas('canvas-2d', {
     width: cw, height: ch,
-    backgroundColor: isThermos ? null : '#ffffff'
+    backgroundColor: isThermos ? '#faf7f5' : '#ffffff'
   });
 
   // ── 手機觸控優化 ──────────────────────────
@@ -111,10 +111,16 @@ function init2DCanvas(productId) {
   });
 
   if (isThermos) {
-    // 優先使用選取顏色的圖片，否則 fallback 到示意圖
-    const mat = currentProduct.materials.find(m => m.id === (typeof STATE !== 'undefined' ? STATE.materialId : null));
-    const bgUrl = (mat && mat.image) ? mat.image : 'assets/thermos-bg.png';
-    _loadThermosBottleBg(cw, ch, true, bgUrl);
+    // Canvas = 印刷區，不載入瓶身照片，直接設定 clipPath 並初始化
+    const clipRect = new fabric.Rect({
+      left: Math.round(cw * 0.02),
+      top:  Math.round(ch * 0.02),
+      width:  Math.round(cw * 0.96),
+      height: Math.round(ch * 0.96),
+      absolutePositioned: true
+    });
+    canvas2d.clipPath = clipRect;
+    addDefaultElements();
   } else {
     addDefaultElements();
   }
@@ -264,7 +270,6 @@ function uploadImage2D(file) {
 // ─── 背景色 ──────────────────────────────────────────────
 function setBackground2D(color) {
   if (!canvas2d) return;
-  if (currentProduct && currentProduct.id === 'thermos') return; // 保溫杯保留瓶身圖
   canvas2d.setBackgroundColor(color, canvas2d.renderAll.bind(canvas2d));
 }
 
@@ -356,11 +361,8 @@ function clear2D() {
   if (!canvas2d) return;
   canvas2d.getObjects().slice().forEach(o => canvas2d.remove(o));
   if (currentProduct && currentProduct.id === 'thermos') {
-    canvas2d.clipPath = null;
-    canvas2d.setBackgroundImage(null, () => {});
-    const mat = currentProduct.materials.find(m => m.id === (typeof STATE !== 'undefined' ? STATE.materialId : null));
-    const bgUrl = (mat && mat.image) ? mat.image : 'assets/thermos-bg.png';
-    _loadThermosBottleBg(canvas2d.getWidth(), canvas2d.getHeight(), true, bgUrl);
+    canvas2d.setBackgroundColor('#faf7f5', () => { canvas2d.renderAll(); });
+    addDefaultElements();
   } else {
     canvas2d.setBackgroundColor('#ffffff', () => { canvas2d.renderAll(); });
     drawProductOutline(canvas2d.getWidth(), canvas2d.getHeight());
