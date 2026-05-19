@@ -66,7 +66,7 @@
 
   <div class="page-title">
     <h1>線上客製化配置器</h1>
-    <p>選產品 → 設規格 → 設計 → 預覽 → 即時報價，5 步驟完成詢價</p>
+    <p>選產品 → 選規格 → 設計 &amp; 預覽 → 報價，4 步驟完成詢價</p>
   </div>
 
   <!-- 步驟進度條 -->
@@ -110,7 +110,7 @@
     <div class="card">
       <h2 style="font-size:18px;margin-bottom:20px;">規格選擇</h2>
 
-      <div style="display:grid;grid-template-columns:1fr auto;gap:24px;align-items:start;">
+      <div class="spec-layout-grid" style="display:grid;grid-template-columns:1fr auto;gap:24px;align-items:start;">
         <!-- 左：規格選項 -->
         <div>
           <div class="spec-section">
@@ -330,17 +330,17 @@
 
           <div class="form-group">
             <label>姓名 / 公司名稱 <span class="required">*</span></label>
-            <input type="text" id="contact-name" placeholder="王小明 / 某某股份有限公司">
+            <input type="text" id="contact-name" placeholder="王小明 / 某某股份有限公司" autocomplete="name">
           </div>
 
           <div class="form-group">
             <label>Email <span class="required">*</span></label>
-            <input type="email" id="contact-email" placeholder="your@email.com">
+            <input type="email" id="contact-email" placeholder="your@email.com" autocomplete="email" inputmode="email">
           </div>
 
           <div class="form-group">
             <label>聯絡電話</label>
-            <input type="tel" id="contact-phone" placeholder="02-xxxx-xxxx / 0912-xxx-xxx">
+            <input type="tel" id="contact-phone" placeholder="02-xxxx-xxxx / 0912-xxx-xxx" autocomplete="tel" inputmode="tel">
           </div>
 
           <div class="form-group">
