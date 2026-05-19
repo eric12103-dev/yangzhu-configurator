@@ -487,16 +487,23 @@ function downloadMockup() {
   a.click();
 }
 
-function downloadDesign() {
-  const svg = get2DSVG();
-  if (!svg) { alert('尚無設計圖可下載'); return; }
-  const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `楊竹設計-${STATE.productId || 'design'}.svg`;
-  a.click();
-  URL.revokeObjectURL(url);
+async function downloadDesign() {
+  const btn = document.querySelector('[onclick="downloadDesign()"]');
+  const origText = btn ? btn.textContent : '';
+  if (btn) btn.textContent = '⏳ 嵌入字體中...';
+  try {
+    const svg = await get2DSVGWithFonts();
+    if (!svg) { alert('尚無設計圖可下載'); return; }
+    const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `楊竹設計-${STATE.productId || 'design'}.svg`;
+    a.click();
+    URL.revokeObjectURL(url);
+  } finally {
+    if (btn) btn.textContent = origText;
+  }
 }
 
 function sendInquiry() {

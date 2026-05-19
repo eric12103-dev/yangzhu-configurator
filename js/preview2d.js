@@ -316,7 +316,7 @@ function get2DCanvas() {
   return copy;
 }
 
-// ─── 匯出 SVG ────────────────────────────────────────────
+// ─── 匯出 SVG（基本，無字體嵌入）────────────────────────────
 function get2DSVG() {
   if (!canvas2d) return null;
   const bgObjs = canvas2d.getObjects().filter(o => !o.selectable && o.name !== 'bottle-bg');
@@ -328,6 +328,79 @@ function get2DSVG() {
   bgObjs.forEach(o => o.set('visible', true));
   canvas2d.renderAll();
   return svg;
+}
+
+// ─── 本地字體對應路徑 ─────────────────────────────────────
+const _LOCAL_FONTS = {
+  'Amalfi Coast':  '保溫杯/Amalfi Coast.ttf',
+  'Bacalisties':   '保溫杯/Bacalisties.ttf',
+  'Chen Yuluoyan': '保溫杯/ChenYuluoyan-2.0-Thin.ttf',
+  'JF Open Huninn':'保溫杯/jf-openhuninn-1.1.ttf',
+  'Jinghong':      '保溫杯/jinghong.ttf',
+  'Meiyi':         '保溫杯/meiyifont-proportional.ttf',
+  'Meiyi Mono':    '保溫杯/meiyifont-monospaced.ttf',
+};
+
+function _buf2b64(buf) {
+  const bytes = new Uint8Array(buf);
+  let b = '';
+  for (let i = 0; i < bytes.length; i += 8192)
+    b += String.fromCharCode(...bytes.subarray(i, Math.min(i + 8192, bytes.length)));
+  return btoa(b);
+}
+
+async function _fetchFontAsBase64(family, uniqueChars) {
+  // 本地字體：直接 fetch TTF
+  if (_LOCAL_FONTS[family]) {
+    const r = await fetch(_LOCAL_FONTS[family]);
+    if (!r.ok) return null;
+    const buf = await r.arrayBuffer();
+    return { data: 'data:font/truetype;base64,' + _buf2b64(buf), fmt: 'truetype' };
+  }
+
+  // Google Fonts：用 text 子集 API，只下載設計用到的字元
+  const chars = [...new Set(uniqueChars.split(''))].join('').substring(0, 300);
+  const cssUrl = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(family)}&text=${encodeURIComponent(chars)}`;
+  const cssResp = await fetch(cssUrl);
+  if (!cssResp.ok) return null;
+  const css = await cssResp.text();
+
+  // 取出 woff2 URL
+  const m = css.match(/url\(([^)]+)\)\s+format\('woff2'\)/);
+  if (!m) return null;
+  const url = m[1].replace(/['"]/g, '');
+  const fontResp = await fetch(url);
+  if (!fontResp.ok) return null;
+  const buf = await fontResp.arrayBuffer();
+  return { data: 'data:font/woff2;base64,' + _buf2b64(buf), fmt: 'woff2' };
+}
+
+// ─── 匯出 SVG（字體嵌入版）───────────────────────────────
+async function get2DSVGWithFonts() {
+  if (!canvas2d) return get2DSVG();
+  const svgStr = get2DSVG();
+  if (!svgStr) return null;
+
+  const objs = canvas2d.getObjects();
+  const fontFamilies = [...new Set(objs.filter(o => o.fontFamily).map(o => o.fontFamily))];
+  const allText = objs.filter(o => o.text).map(o => o.text).join('');
+
+  let fontCSS = '';
+  for (const family of fontFamilies) {
+    try {
+      const result = await _fetchFontAsBase64(family, allText);
+      if (result) {
+        fontCSS += `@font-face{font-family:'${family}';src:url('${result.data}') format('${result.fmt}');}\n`;
+      }
+    } catch(e) {
+      console.warn('[SVG font embed skipped]', family, e.message);
+    }
+  }
+
+  if (!fontCSS) return svgStr;
+  const style = `<style type="text/css">${fontCSS}</style>`;
+  if (svgStr.includes('<defs>')) return svgStr.replace('<defs>', '<defs>' + style);
+  return svgStr.replace(/(<svg[^>]*>)/, '$1<defs>' + style + '</defs>');
 }
 
 // ─── 手機縮放控制列 ───────────────────────────────────────
