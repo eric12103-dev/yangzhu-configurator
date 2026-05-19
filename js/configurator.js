@@ -233,11 +233,11 @@ function initDesignStep() {
     if (el) el.style.display = isThermos ? 'none' : '';
   });
 
-  // 保溫杯：隱藏背景色選擇（瓶身有固定圖案）
+  // 背景色選擇區：所有產品（含保溫杯）都顯示
   const bgColorEl = document.getElementById('design-bgcolor');
   if (bgColorEl) {
     const bgSection = bgColorEl.closest('.color-row')?.parentElement;
-    if (bgSection) bgSection.style.display = isThermos ? 'none' : '';
+    if (bgSection) bgSection.style.display = '';
   }
 
   // canvas 下方說明文字
@@ -246,13 +246,6 @@ function initDesignStep() {
     canvasNote.textContent = isThermos
       ? '虛線為印刷邊界（85 × 46.5 mm），設計完成後確認送出'
       : '虛線為刀模輪廓參考線';
-  }
-
-  // 保溫杯：開放背景色選擇
-  const bgColorEl = document.getElementById('design-bgcolor');
-  if (bgColorEl) {
-    const bgSection = bgColorEl.closest('.color-row')?.parentElement;
-    if (bgSection) bgSection.style.display = '';
   }
 }
 
