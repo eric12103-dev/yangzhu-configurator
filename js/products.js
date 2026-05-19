@@ -78,12 +78,12 @@ const PRODUCTS = {
     description: '304不鏽鋼真空保溫，雷射雕刻客製文字，送禮自用首選',
     size: { w: 337, h: 762, unit: '' },  // 對應保溫瓶示意圖比例，供 canvas 用
     displaySize: '印刷範圍 234 × 130 mm',
-    // 印刷區（紅框）：SVG x=20,y=145.4,w=238,h=129（用於提示文字定位，不再畫橘框）
-    labelArea: { xRatio: 0.0739, yRatio: 0.2437, wRatio: 0.8796, hRatio: 0.2162 },
+    // 印刷區（紅框）：保溫瓶測試合成圖 SVG 紅框 x=431.77,y=272.3,w=238.08,h=128.95 / viewBox 1125.77×796.01
+    labelArea: { xRatio: 0.384, yRatio: 0.342, wRatio: 0.211, hRatio: 0.162 },
     // 文字放置位置（相對 canvas 高度）
     textLayout: {
-      title:    { yRatio: 0.385, sizeRatio: 0.075 },
-      subtitle: { yRatio: 0.447, sizeRatio: 0.052 }
+      title:    { yRatio: 0.400, sizeRatio: 0.055 },
+      subtitle: { yRatio: 0.450, sizeRatio: 0.040 }
     },
     materialLabel: '顏色',
     materials: [

@@ -128,12 +128,12 @@ function _loadThermosBottleBg(cw, ch, withHint, imgUrl) {
     if (!canvas2d) return;
     img.set({ scaleX: cw / img.width, scaleY: ch / img.height });
     canvas2d.setBackgroundImage(img, () => {
-      // 紅框座標（SVG 270.6×596.8，內框 x=20,y=145.4,w=238,h=129）
+      // 紅框座標（保溫瓶測試合成圖 SVG，內框 x=431.77,y=272.3,w=238.08,h=128.95 / viewBox 1125.77×796.01）
       const clipRect = new fabric.Rect({
-        left:   Math.round(cw * 0.0739),
-        top:    Math.round(ch * 0.2437),
-        width:  Math.round(cw * 0.8796),
-        height: Math.round(ch * 0.2162),
+        left:   Math.round(cw * 0.384),
+        top:    Math.round(ch * 0.342),
+        width:  Math.round(cw * 0.211),
+        height: Math.round(ch * 0.162),
         absolutePositioned: true
       });
       canvas2d.clipPath = clipRect;
