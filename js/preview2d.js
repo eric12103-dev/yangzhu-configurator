@@ -112,15 +112,19 @@ function init2DCanvas(productId) {
   });
 
   if (isThermos) {
-    _loadThermosBottleBg(cw, ch, true);
+    // 優先使用選取顏色的圖片，否則 fallback 到示意圖
+    const mat = currentProduct.materials.find(m => m.id === (typeof STATE !== 'undefined' ? STATE.materialId : null));
+    const bgUrl = (mat && mat.image) ? mat.image : 'assets/thermos-bg.png';
+    _loadThermosBottleBg(cw, ch, true, bgUrl);
   } else {
     addDefaultElements();
   }
 }
 
-// 載入保溫杯瓶身 SVG 作為背景（不可選取）並限制編輯區在紅框內
-function _loadThermosBottleBg(cw, ch, withHint) {
-  fabric.Image.fromURL('assets/thermos-bg.png', img => {
+// 載入保溫杯瓶身圖片作為背景（不可選取）並限制編輯區在印刷範圍內
+function _loadThermosBottleBg(cw, ch, withHint, imgUrl) {
+  const url = imgUrl || 'assets/thermos-bg.png';
+  fabric.Image.fromURL(url, img => {
     if (!canvas2d) return;
     img.set({ scaleX: cw / img.width, scaleY: ch / img.height });
     canvas2d.setBackgroundImage(img, () => {
@@ -355,7 +359,9 @@ function clear2D() {
   if (currentProduct && currentProduct.id === 'thermos') {
     canvas2d.clipPath = null;
     canvas2d.setBackgroundImage(null, () => {});
-    _loadThermosBottleBg(canvas2d.getWidth(), canvas2d.getHeight(), true);
+    const mat = currentProduct.materials.find(m => m.id === (typeof STATE !== 'undefined' ? STATE.materialId : null));
+    const bgUrl = (mat && mat.image) ? mat.image : 'assets/thermos-bg.png';
+    _loadThermosBottleBg(canvas2d.getWidth(), canvas2d.getHeight(), true, bgUrl);
   } else {
     canvas2d.setBackgroundColor('#ffffff', () => { canvas2d.renderAll(); });
     drawProductOutline(canvas2d.getWidth(), canvas2d.getHeight());
