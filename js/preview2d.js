@@ -120,7 +120,7 @@ function init2DCanvas(productId) {
 
 // 載入保溫杯瓶身 SVG 作為背景（不可選取）並限制編輯區在紅框內
 function _loadThermosBottleBg(cw, ch, withHint) {
-  fabric.Image.fromURL('保溫杯/thermos-bg.png', img => {
+  fabric.Image.fromURL('assets/thermos-bg.png', img => {
     if (!canvas2d) return;
     img.set({ scaleX: cw / img.width, scaleY: ch / img.height });
     canvas2d.setBackgroundImage(img, () => {
