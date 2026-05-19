@@ -290,12 +290,23 @@
   <div class="step-panel hidden" data-step="4">
     <div class="card">
       <h2 style="font-size:18px;margin-bottom:8px;">設計預覽</h2>
-      <p style="font-size:13px;color:var(--gray-400);margin-bottom:20px;">確認設計圖後可下載</p>
+      <p style="font-size:13px;color:var(--gray-400);margin-bottom:20px;">確認設計效果後可下載</p>
 
-      <div id="preview-result" style="text-align:center;margin-bottom:24px;"></div>
+      <!-- 分頁切換 -->
+      <div style="display:flex;gap:8px;margin-bottom:16px;">
+        <button id="tab-flat" class="btn btn-primary btn-sm" onclick="switchPreviewTab('flat')">平面設計圖</button>
+        <button id="tab-mockup" class="btn btn-secondary btn-sm" onclick="switchPreviewTab('mockup')">瓶身效果圖</button>
+      </div>
+
+      <div id="preview-flat" style="text-align:center;margin-bottom:24px;"></div>
+      <div id="preview-mockup" style="text-align:center;margin-bottom:24px;display:none;">
+        <div id="mockup-loading" style="color:var(--gray-400);padding:40px;">合成中...</div>
+        <canvas id="mockup-canvas" style="max-width:100%;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.12);display:none;"></canvas>
+      </div>
 
       <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:20px;">
         <button class="btn btn-outline btn-lg" onclick="downloadDesign()">⬇ 下載設計圖</button>
+        <button id="btn-download-mockup" class="btn btn-primary btn-lg" onclick="downloadMockup()" style="display:none;">⬇ 下載效果圖</button>
       </div>
 
       <div class="step-nav">
@@ -385,6 +396,7 @@
 <!-- ─── Scripts ──────────────────────────── -->
 <script src="js/products.js"></script>
 <script src="js/preview2d.js"></script>
+<script src="js/mockup.js"></script>
 <script src="js/preview3d.js"></script>
 <script src="js/configurator.js"></script>
 <script src="js/ai-design.js"></script>

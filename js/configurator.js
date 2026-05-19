@@ -403,15 +403,86 @@ function renderSpecSummary() {
 
 // ─── Step 4：報價單 ────────────────────────────────────────
 function initPreviewStep() {
-  const el = document.getElementById('preview-result');
-  if (!el) return;
+  // 平面設計圖
+  const flatEl = document.getElementById('preview-flat');
   const dataURL = get2DDataURL();
-  if (dataURL) {
+  if (dataURL && flatEl) {
     STATE.designDataURL = dataURL;
-    el.innerHTML = `<img src="${dataURL}" style="max-width:100%;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.12);">`;
-  } else {
-    el.innerHTML = '<p style="color:var(--gray-400);">尚無設計圖，請返回編輯。</p>';
+    flatEl.innerHTML = `<img src="${dataURL}" style="max-width:100%;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.12);">`;
+  } else if (flatEl) {
+    flatEl.innerHTML = '<p style="color:var(--gray-400);">尚無設計圖，請返回編輯。</p>';
   }
+
+  // 重置分頁到平面
+  switchPreviewTab('flat');
+
+  // 若是保溫杯，非同步合成 Mockup
+  if (STATE.productId === 'thermos' && dataURL) {
+    _buildMockup(dataURL);
+  } else {
+    // 非保溫杯：隱藏 Mockup 分頁按鈕
+    const tabMockup = document.getElementById('tab-mockup');
+    if (tabMockup) tabMockup.style.display = 'none';
+  }
+}
+
+function switchPreviewTab(tab) {
+  const flatDiv    = document.getElementById('preview-flat');
+  const mockupDiv  = document.getElementById('preview-mockup');
+  const tabFlat    = document.getElementById('tab-flat');
+  const tabMockup  = document.getElementById('tab-mockup');
+  const btnMockup  = document.getElementById('btn-download-mockup');
+
+  if (tab === 'flat') {
+    if (flatDiv)   flatDiv.style.display   = '';
+    if (mockupDiv) mockupDiv.style.display = 'none';
+    if (tabFlat)   tabFlat.className   = 'btn btn-primary btn-sm';
+    if (tabMockup) tabMockup.className = 'btn btn-secondary btn-sm';
+    if (btnMockup) btnMockup.style.display = 'none';
+  } else {
+    if (flatDiv)   flatDiv.style.display   = 'none';
+    if (mockupDiv) mockupDiv.style.display = '';
+    if (tabFlat)   tabFlat.className   = 'btn btn-secondary btn-sm';
+    if (tabMockup) tabMockup.className = 'btn btn-primary btn-sm';
+    if (btnMockup && STATE._mockupReady) btnMockup.style.display = '';
+  }
+}
+
+async function _buildMockup(designDataURL) {
+  STATE._mockupReady = false;
+  const colorId = STATE.materialId || 'oat_tea';
+  try {
+    const mc = document.getElementById('mockup-canvas');
+    const ml = document.getElementById('mockup-loading');
+    if (ml) ml.style.display = '';
+    if (mc) mc.style.display = 'none';
+
+    const result = await renderMockup(colorId, designDataURL);
+    if (!result) return;
+
+    if (mc) {
+      mc.width  = result.width;
+      mc.height = result.height;
+      mc.getContext('2d').drawImage(result, 0, 0);
+      mc.style.display = '';
+      STATE._mockupReady = true;
+      STATE._mockupCanvas = result;
+    }
+    if (ml) ml.style.display = 'none';
+    const btnMockup = document.getElementById('btn-download-mockup');
+    if (btnMockup) btnMockup.style.display = '';
+  } catch(e) {
+    console.warn('[mockup]', e);
+  }
+}
+
+function downloadMockup() {
+  const c = STATE._mockupCanvas;
+  if (!c) { alert('效果圖尚未合成完成'); return; }
+  const a = document.createElement('a');
+  a.href = c.toDataURL('image/png');
+  a.download = `楊竹效果圖-${STATE.materialId || 'thermos'}.png`;
+  a.click();
 }
 
 function downloadDesign() {
