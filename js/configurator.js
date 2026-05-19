@@ -18,7 +18,7 @@ const STATE = {
   contactNote: ''
 };
 
-const TOTAL_STEPS = 5;
+const TOTAL_STEPS = 4;
 
 // ─── 步驟導覽 ──────────────────────────────────────────────
 function goStep(n) {
@@ -26,7 +26,7 @@ function goStep(n) {
   if (n > 1 && !STATE.productId) { alert('請先選擇產品'); return; }
   if (n > 2 && !STATE.materialId) { alert('請先完成規格選擇'); return; }
 
-  // 離開設計步驟前，先快照 2D 設計圖（canvas 還在畫面上時最可靠）
+  // 離開設計步驟前，先快照 2D 設計圖
   if (STATE.step === 3) {
     STATE.designDataURL = (typeof get2DDataURL === 'function') ? get2DDataURL() : null;
   }
@@ -50,10 +50,9 @@ function renderStep() {
     el.classList.toggle('hidden', el.dataset.step != STATE.step);
   });
 
-  // 各步驟初始化
-  if (STATE.step === 3) initDesignStep();
-  if (STATE.step === 4) initPreviewStep();
-  if (STATE.step === 5) initQuoteStep();
+  // 各步驟初始化（Step 3 = 設計 + 預覽合併，Step 4 = 報價單）
+  if (STATE.step === 3) { initDesignStep(); setTimeout(() => initPreviewStep(), 300); }
+  if (STATE.step === 4) initQuoteStep();
 
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -403,9 +402,30 @@ function renderSpecSummary() {
   }
 }
 
-// ─── Step 5：報價單 ────────────────────────────────────────
+// ─── Step 4：報價單 ────────────────────────────────────────
 function initQuoteStep() {
-  renderSpecSummary();
+  // 在報價單頁也顯示規格摘要（用 quote-spec-summary）
+  const p = PRODUCTS[STATE.productId];
+  if (p) {
+    const mat = p.materials.find(m => m.id === STATE.materialId) || p.materials[0];
+    const fin = p.finishes.find(f => f.id === STATE.finishId)     || p.finishes[0];
+    const cap = p.capacities ? (p.capacities.find(c => c.id === STATE.capacityId) || p.capacities[0]) : null;
+    const q   = calcQuote(STATE.productId, STATE.materialId, STATE.finishId, STATE.qty, STATE.capacityId);
+    const el  = document.getElementById('quote-spec-summary');
+    if (el) {
+      el.innerHTML = `
+        <div class="summary-badge" style="background:${p.color}">${p.name}</div>
+        <table class="summary-table">
+          <tr><td>${p.materialLabel || '材質'}</td><td>${mat.name}</td></tr>
+          <tr><td>表面工藝</td><td>${fin.name}</td></tr>
+          ${cap ? `<tr><td>容量</td><td>${cap.name}</td></tr>` : ''}
+          <tr><td>數量</td><td>${STATE.qty.toLocaleString()} 個</td></tr>
+          <tr><td>預估總計</td><td><strong>NT$ ${q ? q.total.toLocaleString() : '--'}</strong></td></tr>
+          <tr><td>預計交期</td><td>${p.leadDays} 個工作天</td></tr>
+        </table>
+      `;
+    }
+  }
 
   const q = calcQuote(STATE.productId, STATE.materialId, STATE.finishId, STATE.qty, STATE.capacityId);
   const quoteEl = document.getElementById('final-quote');

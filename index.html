@@ -84,16 +84,11 @@
     <div class="step-line"></div>
     <div class="step" data-step="3">
       <div class="step-dot" onclick="goStep(3)">3</div>
-      <div class="step-label">設計稿</div>
+      <div class="step-label">設計 & 預覽</div>
     </div>
     <div class="step-line"></div>
     <div class="step" data-step="4">
       <div class="step-dot" onclick="goStep(4)">4</div>
-      <div class="step-label">預覽</div>
-    </div>
-    <div class="step-line"></div>
-    <div class="step" data-step="5">
-      <div class="step-dot" onclick="goStep(5)">5</div>
       <div class="step-label">報價單</div>
     </div>
   </div>
@@ -162,58 +157,18 @@
     <div class="card">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
         <button class="btn btn-secondary btn-sm" onclick="prevStep()" style="flex-shrink:0;">← 返回規格</button>
-        <h2 style="font-size:18px;margin:0;">設計稿編輯</h2>
+        <h2 style="font-size:18px;margin:0;">設計 &amp; 預覽</h2>
       </div>
-      <p style="font-size:13px;color:var(--gray-400);margin-bottom:20px;">
-        簡易示意稿，讓業務了解您的設計方向。正式稿可於確認後提供 AI / EPS 檔。
+      <p style="font-size:13px;color:var(--gray-400);margin-bottom:16px;">
+        左側編輯設計稿，套用後右側即時更新 3D 預覽。
       </p>
 
-      <!-- ✂️ 壓克力切割輪廓 -->
-      <div class="ai-section" id="acrylic-cut-section" style="margin-top:12px;">
-        <div class="ai-header">
-          <span class="ai-badge">✂️ 壓克力切割</span>
-          <span class="ai-model">純瀏覽器運算</span>
-        </div>
-        <p class="ai-desc">上傳圖片，自動偵測輪廓並輸出雷射切割用 SVG 檔（支援 PNG 透明背景 / JPG 白底）</p>
+      <div class="design-preview-layout">
 
-        <label class="upload-zone" style="max-height:none;margin-bottom:10px;cursor:pointer;">
-          <input type="file" id="acrylic-upload-input" accept="image/*" style="display:none;">
-          <div style="font-size:32px;">✂️</div>
-          <p>點擊上傳圖片</p>
-        </label>
-
-        <div id="acrylic-preview-wrap" class="hidden" style="text-align:center;margin-bottom:10px;">
-          <img id="acrylic-preview-img" style="max-width:100%;max-height:180px;border-radius:8px;object-fit:contain;" alt="上傳圖片">
-        </div>
-
-        <button class="btn btn-ai" id="acrylic-detect-btn" onclick="detectAcrylicContour()" disabled style="width:100%;">
-          <span id="acrylic-detect-btn-text">✂️ 自動偵測輪廓</span>
-          <span id="acrylic-detect-btn-loading" class="hidden">⏳ 偵測中…</span>
-        </button>
-
-        <div id="acrylic-error" class="ai-error hidden"></div>
-
-        <div id="acrylic-result" class="hidden" style="margin-top:12px;">
-          <p style="font-size:12px;color:var(--gray-400);margin-bottom:8px;" id="acrylic-info"></p>
-          <canvas id="acrylic-canvas-preview" style="max-width:100%;border:1px solid #e5e7eb;border-radius:8px;display:block;margin:0 auto;"></canvas>
-          <a id="acrylic-download-btn" class="btn btn-primary"
-             style="display:block;text-align:center;margin-top:12px;text-decoration:none;padding:12px;">
-            ⬇ 下載 SVG（雷射切割用）
-          </a>
-          <p style="font-size:11px;color:var(--gray-400);text-align:center;margin-top:6px;">
-            紅線為切割輪廓，黑框為工作尺寸，可直接送雷射機
-          </p>
-        </div>
-      </div>
-
-      <div class="design-layout">
-
-        <!-- 工具面板 -->
+        <!-- 欄 1：工具面板 -->
         <div class="design-tools">
-
           <div class="tool-section">
             <h4>文字（手動輸入 或 從 AI 方案套用）</h4>
-
             <div class="form-group">
               <label>字體</label>
               <button type="button" class="font-select-btn" id="font-select-btn" onclick="toggleFontPicker()">
@@ -222,7 +177,6 @@
               </button>
               <div class="font-grid" id="font-grid"></div>
             </div>
-
             <div class="form-group">
               <label>主標題 <span style="font-size:10px;color:var(--gray-400)">（顯示於卡面上方）</span></label>
               <input type="text" id="design-text1" placeholder="例：公司名稱 / 活動主題">
@@ -235,8 +189,6 @@
               <label>文字顏色</label>
               <input type="color" id="design-textcolor" value="#333333">
             </div>
-
-            <!-- 背景顏色（移至此處） -->
             <div style="margin-bottom:10px;">
               <div class="color-row" style="margin-bottom:6px;">
                 <label>背景底色</label>
@@ -255,8 +207,7 @@
                 <button class="cp-btn" style="background:#0ea5e9" onclick="applyBgPreset('#0ea5e9')" title="天藍"></button>
               </div>
             </div>
-
-            <button class="btn btn-primary btn-sm" style="width:100%" onclick="applyDesignText()">套用至卡面 ↗</button>
+            <button class="btn btn-primary btn-sm" style="width:100%" onclick="applyDesignText();refreshPreview3D()">套用至卡面 ↗</button>
           </div>
 
           <div class="tool-section">
@@ -265,7 +216,6 @@
               <input type="file" id="design-upload" accept="image/*">
               <div style="font-size:28px;">📂</div>
               <p>點擊上傳 PNG / JPG / SVG</p>
-              <p>建議尺寸：1000px 以上</p>
             </label>
           </div>
 
@@ -274,27 +224,52 @@
             <button class="btn btn-secondary btn-sm" onclick="clear2D()">清空重來</button>
           </div>
 
-          <div style="background:var(--gray-100);border-radius:8px;padding:12px;font-size:12px;color:var(--gray-400);">
-            💡 拖拉畫布內元素可調整位置，點選後可縮放旋轉。
+          <div style="background:var(--gray-100);border-radius:8px;padding:10px;font-size:11px;color:var(--gray-400);">
+            💡 拖拉元素調整位置，點選後可縮放旋轉。
+          </div>
+
+          <!-- 壓克力切割（折疊） -->
+          <div class="ai-section" id="acrylic-cut-section" style="margin-top:0;">
+            <div class="ai-header">
+              <span class="ai-badge">✂️ 壓克力切割</span>
+              <span class="ai-model">純瀏覽器運算</span>
+            </div>
+            <label class="upload-zone" style="max-height:none;cursor:pointer;">
+              <input type="file" id="acrylic-upload-input" accept="image/*" style="display:none;">
+              <div style="font-size:24px;">✂️</div>
+              <p>上傳圖片自動偵測輪廓</p>
+            </label>
+            <div id="acrylic-preview-wrap" class="hidden" style="text-align:center;margin:6px 0;">
+              <img id="acrylic-preview-img" style="max-width:100%;max-height:120px;border-radius:8px;object-fit:contain;" alt="上傳圖片">
+            </div>
+            <button class="btn btn-ai" id="acrylic-detect-btn" onclick="detectAcrylicContour()" disabled style="width:100%;">
+              <span id="acrylic-detect-btn-text">✂️ 自動偵測輪廓</span>
+              <span id="acrylic-detect-btn-loading" class="hidden">⏳ 偵測中…</span>
+            </button>
+            <div id="acrylic-error" class="ai-error hidden"></div>
+            <div id="acrylic-result" class="hidden" style="margin-top:10px;">
+              <p style="font-size:11px;color:var(--gray-400);margin-bottom:6px;" id="acrylic-info"></p>
+              <canvas id="acrylic-canvas-preview" style="max-width:100%;border:1px solid #e5e7eb;border-radius:8px;display:block;margin:0 auto;"></canvas>
+              <a id="acrylic-download-btn" class="btn btn-primary" style="display:block;text-align:center;margin-top:10px;text-decoration:none;padding:10px;">
+                ⬇ 下載 SVG（雷射切割用）
+              </a>
+            </div>
           </div>
         </div>
 
-        <!-- Canvas 預覽 -->
+        <!-- 欄 2：2D Canvas -->
         <div>
           <div class="canvas-wrap">
             <canvas id="canvas-2d"></canvas>
           </div>
-          <p style="font-size:11px;color:var(--gray-400);text-align:center;margin-top:8px;">
-            虛線為刀模輪廓參考線
-          </p>
-          <!-- 手機縮放控制列（選取物件後顯示） -->
+          <p style="font-size:11px;color:var(--gray-400);text-align:center;margin-top:8px;">虛線為刀模輪廓參考線</p>
           <div id="mobile-scale-bar" style="display:none;flex-direction:column;gap:8px;margin-top:10px;padding:8px 4px;">
             <div style="display:flex;align-items:center;gap:10px;">
               <span style="font-size:12px;color:var(--gray-400);white-space:nowrap;">縮放</span>
               <input type="range" id="scale-slider" min="5" max="300" step="1" value="100"
                      oninput="scaleSelectedTo(this.value/100)"
-                     style="flex:1;accent-color:#2D7D46;height:22px;cursor:pointer;">
-              <span id="scale-pct" style="font-size:13px;color:#2D7D46;font-weight:700;min-width:42px;text-align:right;">100%</span>
+                     style="flex:1;accent-color:var(--green);height:22px;cursor:pointer;">
+              <span id="scale-pct" style="font-size:13px;color:var(--green);font-weight:700;min-width:42px;text-align:right;">100%</span>
             </div>
             <div style="display:flex;justify-content:flex-end;">
               <button class="btn btn-danger btn-sm" onclick="deleteSelected2D()" style="height:40px;padding:0 20px;">刪除選取</button>
@@ -302,49 +277,27 @@
           </div>
         </div>
 
-      </div><!-- /design-layout -->
+        <!-- 欄 3：3D 預覽 + 規格摘要 -->
+        <div>
+          <h4 style="font-size:13px;font-weight:700;margin-bottom:8px;">即時 3D 預覽</h4>
+          <div id="preview3d-container"></div>
+          <p style="font-size:11px;color:var(--gray-400);text-align:center;margin-top:6px;">套用設計後自動更新</p>
+          <div style="text-align:center;margin-top:6px;">
+            <button class="btn btn-secondary btn-sm" onclick="refreshPreview3D()">↺ 重新套用設計圖</button>
+          </div>
+          <div style="margin-top:16px;">
+            <h4 style="font-size:13px;font-weight:700;margin-bottom:8px;">規格摘要</h4>
+            <div id="preview-spec-summary"></div>
+          </div>
+          <div style="margin-top:12px;padding:10px;background:var(--green-pale);border-radius:8px;font-size:12px;color:var(--green);">
+            ✅ 確認後點「前往報價單」填寫聯絡資料
+          </div>
+        </div>
+
+      </div><!-- /design-preview-layout -->
 
       <div class="step-nav">
         <button class="btn btn-secondary" onclick="prevStep()">← 上一步</button>
-        <button class="btn btn-primary" onclick="nextStep()">下一步：3D 預覽 →</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══════════════════════════════════════ -->
-  <!-- Step 4 — 3D 預覽                       -->
-  <!-- ══════════════════════════════════════ -->
-  <div class="step-panel hidden" data-step="4">
-    <div class="card">
-      <h2 style="font-size:18px;margin-bottom:20px;">3D 立體預覽</h2>
-
-      <div class="preview-layout">
-
-        <!-- 3D 視窗 -->
-        <div>
-          <div id="preview3d-container"></div>
-          <p style="font-size:11px;color:var(--gray-400);text-align:center;margin-top:8px;">
-            自動旋轉展示產品正反面效果
-          </p>
-          <div style="text-align:center;margin-top:6px;">
-            <button class="btn btn-secondary btn-sm" onclick="applyTexture3D()" title="若設計圖未顯示，點此手動套用">↺ 重新套用設計圖</button>
-          </div>
-        </div>
-
-        <!-- 規格摘要 -->
-        <div>
-          <h4 style="font-size:13px;margin-bottom:12px;font-weight:700;">訂單規格摘要</h4>
-          <div id="preview-spec-summary"></div>
-
-          <div style="margin-top:16px;padding:12px;background:var(--green-pale);border-radius:8px;font-size:12px;color:var(--green);">
-            ✅ 確認預覽後，點「下一步」填寫聯絡資料並取得完整報價單
-          </div>
-        </div>
-
-      </div><!-- /preview-layout -->
-
-      <div class="step-nav">
-        <button class="btn btn-secondary" onclick="prevStep()">← 修改設計</button>
         <button class="btn btn-primary btn-lg" onclick="nextStep()">確認，前往報價單 →</button>
       </div>
     </div>
@@ -353,7 +306,7 @@
   <!-- ══════════════════════════════════════ -->
   <!-- Step 5 — 報價單 + 聯絡資料             -->
   <!-- ══════════════════════════════════════ -->
-  <div class="step-panel hidden" data-step="5">
+  <div class="step-panel hidden" data-step="4">
     <div class="card">
       <h2 style="font-size:18px;margin-bottom:20px;">報價單 &amp; 送出詢價</h2>
 
@@ -362,7 +315,7 @@
         <!-- 報價摘要 -->
         <div>
           <h4 style="font-size:13px;font-weight:700;margin-bottom:12px;">訂單摘要</h4>
-          <div id="preview-spec-summary" style="margin-bottom:16px;"></div>
+          <div id="quote-spec-summary" style="margin-bottom:16px;"></div>
 
           <div class="live-quote-card">
             <h4>💰 最終估價</h4>
@@ -420,7 +373,7 @@
       </div>
 
       <div class="step-nav">
-        <button class="btn btn-secondary" onclick="prevStep()">← 返回預覽</button>
+        <button class="btn btn-secondary" onclick="prevStep()">← 返回設計</button>
         <button class="btn btn-outline" onclick="goStep(1)">🔄 重新配置</button>
       </div>
     </div>
@@ -513,26 +466,31 @@
 <script src="js/acrylic-cut.js"></script>
 
 <script>
-  // Step 2 切入時 render 規格選項
+  // 覆寫 goStep，將 5 步改為 4 步
   const _goStep = goStep;
   function goStep(n) {
-    if (n < 1 || n > 5) return;
+    if (n < 1 || n > 4) return;
     if (n > 1 && !STATE.productId) { alert('請先選擇產品'); return; }
     if (n > 2 && !STATE.materialId) { alert('請先完成規格選擇'); return; }
-    // 離開設計步驟前先快照（canvas 仍在畫面上時最可靠）
+    // 離開設計步驟前快照
     if (STATE.step === 3 && n !== 3) {
       STATE.canvasJSON    = (typeof getCanvas2DJSON === 'function') ? getCanvas2DJSON()  : null;
       STATE.designDataURL = (typeof get2DDataURL   === 'function') ? get2DDataURL()     : null;
-      console.log('[goStep] designDataURL length:', STATE.designDataURL ? STATE.designDataURL.length : 0);
     }
     STATE.step = n;
     renderStep();
     if (n === 2) renderSpecStep();
   }
 
+  // 即時刷新 3D 預覽（設計步驟內用）
+  function refreshPreview3D() {
+    STATE.designDataURL = (typeof get2DDataURL === 'function') ? get2DDataURL() : null;
+    if (typeof initPreviewStep === 'function') initPreviewStep();
+  }
+
   // Window resize → 3D 重新計算
   window.addEventListener('resize', () => {
-    if (STATE.step === 4) resize3DPreview('preview3d-container');
+    if (STATE.step === 3) resize3DPreview('preview3d-container');
   });
 
   // 初始化壓克力切割上傳
