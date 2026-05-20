@@ -2,16 +2,16 @@
 // 底圖(1620×971，4瓶並排) → 裁切對應顏色 → 設計圖貼合 → 高光
 
 const MOCKUP_IMG_SRC = 'assets/thermos/mockup/thermos_4bottles.png';
-const BOTTLE_W = 405;   // 1620 / 4
-const BOTTLE_H = 971;
+const BOTTLE_W = 384;   // 1536 / 4
+const BOTTLE_H = 1024;
 
 // 各顏色在4瓶圖中的裁切起始 X，以及標籤區四角座標（相對裁切後畫面）
 // 瓶子排列：0=薄荷綠 1=櫻花粉 2=奶紫 3=燕麥咖
 const MOCKUP_DATA = {
-  mint_green:  { cropX: 0,    label: { tl:[20,175], tr:[385,175], br:[385,565], bl:[20,565] } },
-  cherry_pink: { cropX: 405,  label: { tl:[20,175], tr:[385,175], br:[385,565], bl:[20,565] } },
-  milk_purple: { cropX: 810,  label: { tl:[20,175], tr:[385,175], br:[385,565], bl:[20,565] } },
-  oat_tea:     { cropX: 1215, label: { tl:[20,175], tr:[385,175], br:[385,565], bl:[20,565] } },
+  mint_green:  { cropX: 0,    label: { tl:[25,130], tr:[359,130], br:[359,690], bl:[25,690] } },
+  cherry_pink: { cropX: 384,  label: { tl:[25,130], tr:[359,130], br:[359,690], bl:[25,690] } },
+  milk_purple: { cropX: 768,  label: { tl:[25,130], tr:[359,130], br:[359,690], bl:[25,690] } },
+  oat_tea:     { cropX: 1152, label: { tl:[25,130], tr:[359,130], br:[359,690], bl:[25,690] } },
 };
 
 function _loadImg(src) {
@@ -55,6 +55,7 @@ async function renderMockup(colorId, designDataURL) {
   const tmpCanvas = document.createElement('canvas');
   tmpCanvas.width  = BOTTLE_W;
   tmpCanvas.height = BOTTLE_H;
+
   const tc = tmpCanvas.getContext('2d');
   tc.save();
   _drawProjective(tc, off, corners, dw, dh);
