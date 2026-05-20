@@ -395,6 +395,44 @@ async function downloadDesign() {
   }
 }
 
+async function submitDesign() {
+  const p   = PRODUCTS[STATE.productId];
+  if (!p) return;
+  const mat = p.materials.find(m => m.id === STATE.materialId) || p.materials[0];
+
+  // 日期 YYYYMMDD
+  const now = new Date();
+  const dateStr = now.getFullYear() +
+    String(now.getMonth() + 1).padStart(2, '0') +
+    String(now.getDate()).padStart(2, '0');
+
+  // 序號：localStorage 跨次遞增，三碼補零
+  const KEY = 'yangzhu_submit_seq';
+  const seq = parseInt(localStorage.getItem(KEY) || '0') + 1;
+  localStorage.setItem(KEY, seq);
+  const seqStr = String(seq).padStart(3, '0');
+
+  const filename = `客製化保溫瓶-${mat.name}-${dateStr}-${seqStr}.svg`;
+
+  const btn = document.getElementById('btn-download-mockup');
+  const origText = btn ? btn.innerHTML : '';
+  if (btn) btn.innerHTML = '⏳ 產生中...';
+
+  try {
+    const svg = await get2DSVGWithFonts();
+    if (!svg) { alert('尚無設計稿可送出'); return; }
+    const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  } finally {
+    if (btn) btn.innerHTML = origText;
+  }
+}
+
 function sendInquiry() {
   const p   = PRODUCTS[STATE.productId];
   if (!p) return;
