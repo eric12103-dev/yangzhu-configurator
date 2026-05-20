@@ -420,19 +420,19 @@ async function submitDesign() {
   const filename = `客製化保溫瓶-${mat.name}-${dateStr}-${seqStr}.svg`;
 
   const btn = document.getElementById('btn-download-mockup');
-  const origText = btn ? btn.innerHTML : '';
-  if (btn) btn.innerHTML = '⏳ 上傳中...';
+  if (btn) btn.innerHTML = '⏳ 產生中...';
 
   try {
     const svg = await get2DSVGWithFonts();
     if (!svg) { alert('尚無設計稿可送出'); return; }
 
     if (DRIVE_SCRIPT_URL && DRIVE_SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL') {
-      // 上傳到 Google Drive
+      // 背景上傳 Google Drive（不等待，避免卡住跳轉）
       const fd = new FormData();
       fd.append('filename', filename);
       fd.append('svg', svg);
-      await fetch(DRIVE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: fd });
+      fetch(DRIVE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: fd })
+        .catch(e => console.warn('[Drive upload]', e));
     } else {
       // 尚未設定 URL → fallback 下載
       const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
@@ -443,12 +443,14 @@ async function submitDesign() {
       a.click();
       URL.revokeObjectURL(url);
     }
-    // 跳至第五步顯示確認序號
-    STATE.submittedFilename = filename;
-    goStep(5);
-  } finally {
-    if (btn) btn.innerHTML = origText;
+  } catch(e) {
+    console.error('[submitDesign]', e);
   }
+
+  // 無論上傳成功與否，都跳至第五步
+  STATE.submittedFilename = filename;
+  if (btn) btn.innerHTML = '✉ 設計稿確認送出';
+  goStep(5);
 }
 
 function initConfirmStep() {
