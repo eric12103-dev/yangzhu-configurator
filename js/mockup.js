@@ -28,51 +28,6 @@ function _loadImg(src) {
   });
 }
 
-// 計算把矩形 [0,0,sw,sh] 映射到四邊形 corners 的 CSS matrix3d 係數
-// 演算法：求解 8×8 線性方程組（projective transform）
-function _perspectiveMatrix(sw, sh, corners) {
-  const [tl, tr, br, bl] = corners;
-  const s = [[0,0],[sw,0],[sw,sh],[0,sh]];
-  const d = [tl, tr, br, bl];
-
-  function adj(m) { // 3×3 矩陣伴隨
-    return [
-       m[4]*m[8]-m[5]*m[7], -(m[1]*m[8]-m[2]*m[7]),  m[1]*m[5]-m[2]*m[4],
-      -(m[3]*m[8]-m[5]*m[6]),  m[0]*m[8]-m[2]*m[6], -(m[0]*m[5]-m[2]*m[3]),
-       m[3]*m[7]-m[4]*m[6], -(m[0]*m[7]-m[1]*m[6]),  m[0]*m[4]-m[1]*m[3]
-    ];
-  }
-  function multMV(m, v) {
-    return [m[0]*v[0]+m[1]*v[1]+m[2]*v[2],
-            m[3]*v[0]+m[4]*v[1]+m[5]*v[2],
-            m[6]*v[0]+m[7]*v[1]+m[8]*v[2]];
-  }
-  function basisToPoints(p) {
-    const m = [p[0][0],p[1][0],p[2][0], p[0][1],p[1][1],p[2][1], 1,1,1];
-    const v = multMV(adj(m), [p[3][0],p[3][1],1]);
-    return [m[0]*v[0],m[1]*v[1],m[2]*v[2], m[3]*v[0],m[4]*v[1],m[5]*v[2], m[6]*v[0],m[7]*v[1],m[8]*v[2]];
-  }
-  function multMM(a,b) {
-    const r = new Array(9).fill(0);
-    for(let i=0;i<3;i++) for(let j=0;j<3;j++) for(let k=0;k<3;k++) r[i*3+j]+=a[i*3+k]*b[k*3+j];
-    return r;
-  }
-
-  const src = basisToPoints(s);
-  const dst = basisToPoints(d);
-  const t   = multMM(dst, adj(src));
-  const det = t[0]*t[4]*t[8]+t[1]*t[5]*t[6]+t[2]*t[3]*t[7]
-             -t[2]*t[4]*t[6]-t[1]*t[3]*t[8]-t[0]*t[5]*t[7];
-  const n = t.map(v => v/det);
-
-  // CSS matrix3d（行主序 4×4）
-  return [
-     n[0], n[3], 0, n[6],
-     n[1], n[4], 0, n[7],
-        0,    0, 1,    0,
-     n[2], n[5], 0, n[8]
-  ];
-}
 
 // 主函式：傳入顏色ID 和設計圖 DataURL，回傳合成後的 canvas
 async function renderMockup(colorId, designDataURL) {
@@ -124,47 +79,30 @@ async function renderMockup(colorId, designDataURL) {
   return canvas;
 }
 
-// 掃描線法：逐列繪製設計圖以模擬透視扭曲（100 條 strip）
+// 仿射變換法：把設計矩形直接映射到標籤四邊形（三點確定仿射，適合圓柱標籤輕微透視）
 function _drawProjective(ctx, srcCanvas, corners, sw, sh) {
-  const STRIPS = 120;
   const [tl, tr, br, bl] = corners;
 
-  for (let i = 0; i < STRIPS; i++) {
-    const t0 = i / STRIPS;
-    const t1 = (i + 1) / STRIPS;
+  // 仿射矩陣：(0,0)→tl  (sw,0)→tr  (0,sh)→bl
+  const a = (tr[0] - tl[0]) / sw;
+  const b = (tr[1] - tl[1]) / sw;
+  const c = (bl[0] - tl[0]) / sh;
+  const d = (bl[1] - tl[1]) / sh;
+  const e = tl[0];
+  const f = tl[1];
 
-    // 本 strip 左右兩側的 y 位置（在目標空間）
-    const lx0 = tl[0] + (bl[0]-tl[0])*t0,  ly0 = tl[1] + (bl[1]-tl[1])*t0;
-    const rx0 = tr[0] + (br[0]-tr[0])*t0,  ry0 = tr[1] + (br[1]-tr[1])*t0;
-    const lx1 = tl[0] + (bl[0]-tl[0])*t1,  ly1 = tl[1] + (bl[1]-tl[1])*t1;
-    const rx1 = tr[0] + (br[0]-tr[0])*t1,  ry1 = tr[1] + (br[1]-tr[1])*t1;
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(tl[0], tl[1]);
+  ctx.lineTo(tr[0], tr[1]);
+  ctx.lineTo(br[0], br[1]);
+  ctx.lineTo(bl[0], bl[1]);
+  ctx.closePath();
+  ctx.clip();
 
-    const srcY0 = t0 * sh;
-    const srcH  = (t1 - t0) * sh;
-
-    // 建立橫向漸縮 transform
-    const dstW0 = rx0 - lx0; // 頂邊寬
-    const dstW1 = rx1 - lx1; // 底邊寬
-    const dstW  = Math.max(dstW0, dstW1);
-
-    ctx.save();
-    ctx.beginPath();
-    ctx.moveTo(lx0, ly0);
-    ctx.lineTo(rx0, ry0);
-    ctx.lineTo(rx1, ry1);
-    ctx.lineTo(lx1, ly1);
-    ctx.closePath();
-    ctx.clip();
-
-    const scaleX = dstW0 / sw;
-    const scaleY = (ly1 - ly0 + ry1 - ry0) / 2 / srcH;
-    const skewX  = (rx0 - lx0 - dstW0) / (ly0 - ry0 + 0.001);
-
-    ctx.transform(scaleX, (ly0-ry0)/dstW0*0 , (lx1-lx0)/(srcH||1), scaleY, lx0, ly0);
-    ctx.drawImage(srcCanvas, 0, srcY0, sw, srcH, 0, 0, sw, srcH);
-
-    ctx.restore();
-  }
+  ctx.setTransform(a, b, c, d, e, f);
+  ctx.drawImage(srcCanvas, 0, 0, sw, sh);
+  ctx.restore();
 }
 
 // 高光：左側半透明白色漸層模擬圓柱反光
