@@ -1,5 +1,5 @@
 // 楊竹科技 — 保溫杯 Mockup 合成模組
-// 底圖(1620×971，4瓶並排) → 裁切對應顏色 → 設計圖貼合 → 高光
+// 底圖(1536×1024，4瓶並排) → 裁切對應顏色 → 設計圖貼合 → 高光
 
 const MOCKUP_IMG_SRC = 'assets/thermos/mockup/thermos_4bottles.png';
 const BOTTLE_W = 384;   // 1536 / 4
@@ -8,10 +8,10 @@ const BOTTLE_H = 1024;
 // 各顏色在4瓶圖中的裁切起始 X，以及標籤區四角座標（相對裁切後畫面）
 // 瓶子排列：0=薄荷綠 1=櫻花粉 2=奶紫 3=燕麥咖
 const MOCKUP_DATA = {
-  mint_green:  { cropX: 0,    label: { tl:[25,130], tr:[359,130], br:[359,690], bl:[25,690] } },
-  cherry_pink: { cropX: 384,  label: { tl:[25,130], tr:[359,130], br:[359,690], bl:[25,690] } },
-  milk_purple: { cropX: 768,  label: { tl:[25,130], tr:[359,130], br:[359,690], bl:[25,690] } },
-  oat_tea:     { cropX: 1152, label: { tl:[25,130], tr:[359,130], br:[359,690], bl:[25,690] } },
+  mint_green:  { cropX: 0,    label: { tl:[15,338], tr:[370,338], br:[370,548], bl:[15,548] } },
+  cherry_pink: { cropX: 384,  label: { tl:[15,338], tr:[370,338], br:[370,548], bl:[15,548] } },
+  milk_purple: { cropX: 768,  label: { tl:[15,338], tr:[370,338], br:[370,548], bl:[15,548] } },
+  oat_tea:     { cropX: 1152, label: { tl:[15,338], tr:[370,338], br:[370,548], bl:[15,548] } },
 };
 
 function _loadImg(src) {
