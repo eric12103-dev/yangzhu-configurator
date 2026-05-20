@@ -8,10 +8,10 @@ const BOTTLE_H = 1024;
 // 各顏色在4瓶圖中的裁切起始 X，以及標籤區四角座標（相對裁切後畫面）
 // 瓶子排列：0=薄荷綠 1=櫻花粉 2=奶紫 3=燕麥咖
 const MOCKUP_DATA = {
-  mint_green:  { cropX: 0,    label: { tl:[15,338], tr:[370,338], br:[370,548], bl:[15,548] } },
-  cherry_pink: { cropX: 384,  label: { tl:[15,338], tr:[370,338], br:[370,548], bl:[15,548] } },
-  milk_purple: { cropX: 768,  label: { tl:[15,338], tr:[370,338], br:[370,548], bl:[15,548] } },
-  oat_tea:     { cropX: 1152, label: { tl:[15,338], tr:[370,338], br:[370,548], bl:[15,548] } },
+  mint_green:  { cropX: 0,    label: { tl:[10,328], tr:[374,328], br:[374,570], bl:[10,570] } },
+  cherry_pink: { cropX: 384,  label: { tl:[10,328], tr:[374,328], br:[374,570], bl:[10,570] } },
+  milk_purple: { cropX: 768,  label: { tl:[10,328], tr:[374,328], br:[374,570], bl:[10,570] } },
+  oat_tea:     { cropX: 1152, label: { tl:[10,328], tr:[374,328], br:[374,570], bl:[10,570] } },
 };
 
 function _loadImg(src) {
