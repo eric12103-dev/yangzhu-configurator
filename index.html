@@ -162,21 +162,20 @@
         <div class="design-tools">
           <div class="tool-section">
             <h4>文字（手動輸入 或 從 AI 方案套用）</h4>
-            <div class="form-group">
-              <label>字體</label>
-              <button type="button" class="font-select-btn" id="font-select-btn" onclick="toggleFontPicker()">
-                <span id="font-select-label">思源黑體</span>
-                <span class="font-select-arrow">▼</span>
-              </button>
-              <div class="font-grid" id="font-grid"></div>
-            </div>
-            <div class="form-group">
-              <label>主標題 <span style="font-size:10px;color:var(--gray-400)">（顯示於卡面上方）</span></label>
+            <div class="form-group line-input-row">
+              <label>第一行</label>
+              <select id="design-font1" class="font-select-native"></select>
               <input type="text" id="design-text1" placeholder="例：公司名稱 / 活動主題">
             </div>
-            <div class="form-group">
-              <label>副標題 <span style="font-size:10px;color:var(--gray-400)">（顯示於卡面下方）</span></label>
+            <div class="form-group line-input-row">
+              <label>第二行</label>
+              <select id="design-font2" class="font-select-native"></select>
               <input type="text" id="design-text2" placeholder="例：2025年會紀念">
+            </div>
+            <div class="form-group line-input-row">
+              <label>第三行</label>
+              <select id="design-font3" class="font-select-native"></select>
+              <input type="text" id="design-text3" placeholder="例：補充文字">
             </div>
             <div class="color-row" style="margin-bottom:6px;">
               <label>文字顏色</label>

@@ -200,8 +200,9 @@ function _doAddText2D(text, color, size, font, role) {
     topPos      = h * tl.yRatio;
     defaultSize = Math.round(h * tl.sizeRatio);
   } else {
-    topPos      = role === 'subtitle' ? h * 0.78 : h * 0.28;
-    defaultSize = role === 'subtitle' ? Math.round(h * 0.10) : Math.round(h * 0.14);
+    const yMap = { line1: 0.22, line2: 0.50, line3: 0.78 };
+    topPos      = h * (yMap[role] ?? 0.28);
+    defaultSize = Math.round(h * 0.12);
   }
 
   const t = new fabric.IText(text, {

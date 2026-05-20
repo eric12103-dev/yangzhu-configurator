@@ -752,6 +752,24 @@ body {
   }
 }
 
+/* ─── 三行各自字體選單 ───────────────────── */
+.line-input-row select.font-select-native {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1.5px solid var(--gray-300);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  background: var(--white);
+  color: var(--gray-900);
+  margin-bottom: 5px;
+  cursor: pointer;
+  appearance: auto;
+}
+.line-input-row select.font-select-native:focus {
+  outline: none;
+  border-color: var(--green);
+}
+
 /* ─── 字體選擇按鈕 ──────────────────────── */
 .font-select-btn {
   display: flex;

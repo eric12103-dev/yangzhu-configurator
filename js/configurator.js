@@ -9,6 +9,10 @@ const STATE = {
   qty: 100,
   textLine1: '',
   textLine2: '',
+  textLine3: '',
+  font1: 'Noto Sans TC',
+  font2: 'Noto Sans TC',
+  font3: 'Noto Sans TC',
   bgColor: '#ffffff',
   canvasJSON: null,       // 設計稿 canvas 狀態快照（返回時還原用）
   designDataURL: null,    // 設計稿影像快照（3D 貼圖備援）
@@ -195,14 +199,16 @@ function initDesignStep() {
     loadCanvas2DJSON(STATE.canvasJSON);
   }
 
-  // 文字輸入
+  // 文字輸入還原
   const t1 = document.getElementById('design-text1');
   const t2 = document.getElementById('design-text2');
+  const t3 = document.getElementById('design-text3');
   if (t1) t1.value = STATE.textLine1;
   if (t2) t2.value = STATE.textLine2;
+  if (t3) t3.value = STATE.textLine3;
 
-  // 字體格子初始化
-  initFontGrid();
+  // 三行各自字體選單初始化
+  _initFontSelects();
 
   // 圖片上傳（保溫杯僅文字，隱藏上傳區）
   const uploadSection = document.getElementById('design-upload')?.closest('.tool-section');
@@ -249,82 +255,48 @@ function initDesignStep() {
   }
 }
 
-function initFontGrid() {
-  const grid = document.getElementById('font-grid');
-  if (!grid || typeof FONTS === 'undefined') return;
-
-  const currentFont = STATE.font || FONTS[0].id;
-
-  grid.innerHTML = FONTS.map(f => `
-    <div class="font-chip ${f.id === currentFont ? 'selected' : ''}"
-         data-font="${f.id}"
-         onclick="selectFont('${f.id}')">
-      <span class="font-name">${f.label}</span>
-      <span class="font-sample" style="font-family:'${f.id}',sans-serif">楊竹Aa</span>
-    </div>
-  `).join('');
-
-  // 同步按鈕顯示文字
-  const f = FONTS.find(f => f.id === currentFont);
-  if (f) {
-    const lbl = document.getElementById('font-select-label');
-    if (lbl) lbl.textContent = f.label;
-  }
-  // 確保格子預設關閉
-  grid.classList.add('font-grid-hidden');
-}
-
-function toggleFontPicker() {
-  const grid = document.getElementById('font-grid');
-  const btn  = document.getElementById('font-select-btn');
-  if (!grid) return;
-  const open = !grid.classList.contains('font-grid-hidden');
-  grid.classList.toggle('font-grid-hidden', open);
-  btn.classList.toggle('open', !open);
-}
-
-function selectFont(fontId) {
-  STATE.font = fontId;
-  document.getElementById('design-font').value = fontId;
-  document.querySelectorAll('.font-chip').forEach(el => {
-    el.classList.toggle('selected', el.dataset.font === fontId);
+function _initFontSelects() {
+  if (typeof FONTS === 'undefined') return;
+  const opts = FONTS.map(f => `<option value="${f.id}">${f.label}</option>`).join('');
+  [
+    { id: 'design-font1', val: STATE.font1 },
+    { id: 'design-font2', val: STATE.font2 },
+    { id: 'design-font3', val: STATE.font3 },
+  ].forEach(({ id, val }) => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    sel.innerHTML = opts;
+    sel.value = val || FONTS[0].id;
   });
-  // 更新按鈕標籤
-  if (typeof FONTS !== 'undefined') {
-    const f = FONTS.find(f => f.id === fontId);
-    if (f) {
-      const lbl = document.getElementById('font-select-label');
-      if (lbl) lbl.textContent = f.label;
-    }
-  }
-  // 關閉選擇格
-  const grid = document.getElementById('font-grid');
-  if (grid) grid.classList.add('font-grid-hidden');
-  const btn = document.getElementById('font-select-btn');
-  if (btn) btn.classList.remove('open');
 }
 
 function applyDesignText() {
   const t1    = document.getElementById('design-text1').value.trim();
   const t2    = document.getElementById('design-text2').value.trim();
+  const t3    = document.getElementById('design-text3').value.trim();
   const color = document.getElementById('design-textcolor').value;
-  const font  = STATE.font || document.getElementById('design-font').value || 'Noto Sans TC';
+  const f1    = document.getElementById('design-font1').value || 'Noto Sans TC';
+  const f2    = document.getElementById('design-font2').value || 'Noto Sans TC';
+  const f3    = document.getElementById('design-font3').value || 'Noto Sans TC';
 
   STATE.textLine1 = t1;
   STATE.textLine2 = t2;
-  STATE.font = font;
+  STATE.textLine3 = t3;
+  STATE.font1 = f1;
+  STATE.font2 = f2;
+  STATE.font3 = f3;
 
-  // 只移除文字層（hint / title / subtitle），保留圖片等使用者上傳物件
   if (canvas2d) {
     canvas2d.getObjects()
-      .filter(o => ['hint', 'title', 'subtitle'].includes(o.name))
+      .filter(o => ['hint', 'line1', 'line2', 'line3'].includes(o.name))
       .forEach(o => canvas2d.remove(o));
     canvas2d.renderAll();
   }
 
   setBackground2D(STATE.bgColor);
-  if (t1) addText2D(t1, color, null, font, 'title');
-  if (t2) addText2D(t2, color, null, font, 'subtitle');
+  if (t1) addText2D(t1, color, null, f1, 'line1');
+  if (t2) addText2D(t2, color, null, f2, 'line2');
+  if (t3) addText2D(t3, color, null, f3, 'line3');
 }
 
 // 背景預設色套用
