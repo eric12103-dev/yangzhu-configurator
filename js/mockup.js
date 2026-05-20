@@ -1,20 +1,16 @@
 // 楊竹科技 — 保溫杯 Mockup 合成模組
-// 底圖(1536×1024，已去背，2×2排列) → 裁切對應顏色 → 設計圖貼合 → 高光
+// 各顏色讀取各自單瓶圖 → 設計圖貼合標籤區 → 高光
 
-const MOCKUP_IMG_SRC = 'assets/thermos/mockup/thermos_4bottles.png';
-
-// 2×2 排列：上排 綠/粉，下排 紫/燕麥
-// cropX/Y = 在原圖中的起始點，cropW/H = 裁切尺寸
-// label 座標相對裁切後的畫面
+// 標籤座標依「文字框.png」紅框分析（y=548~1088，x≈3~W-2）
 const MOCKUP_DATA = {
-  mint_green:  { cropX: 0,   cropY: 0,   cropW: 768, cropH: 512,
-                 label: { tl:[30,140], tr:[738,140], br:[738,290], bl:[30,290] } },
-  cherry_pink: { cropX: 768, cropY: 0,   cropW: 768, cropH: 512,
-                 label: { tl:[30,140], tr:[738,140], br:[738,290], bl:[30,290] } },
-  milk_purple: { cropX: 0,   cropY: 512, cropW: 768, cropH: 512,
-                 label: { tl:[30,140], tr:[738,140], br:[738,290], bl:[30,290] } },
-  oat_tea:     { cropX: 768, cropY: 512, cropW: 768, cropH: 512,
-                 label: { tl:[30,140], tr:[738,140], br:[738,290], bl:[30,290] } },
+  mint_green:  { src: 'assets/thermos/mockup/thermos_mint_green.png',  W: 1016, H: 2347,
+                 label: { tl:[3,548], tr:[1013,548], br:[1013,1088], bl:[3,1088] } },
+  cherry_pink: { src: 'assets/thermos/mockup/thermos_cherry_pink.png', W: 995,  H: 2347,
+                 label: { tl:[3,548], tr:[992,548],  br:[992,1088],  bl:[3,1088] } },
+  milk_purple: { src: 'assets/thermos/mockup/thermos_milk_purple.png', W: 995,  H: 2347,
+                 label: { tl:[3,548], tr:[992,548],  br:[992,1088],  bl:[3,1088] } },
+  oat_tea:     { src: 'assets/thermos/mockup/thermos_oat_tea.png',     W: 999,  H: 2347,
+                 label: { tl:[3,548], tr:[996,548],  br:[996,1088],  bl:[3,1088] } },
 };
 
 function _loadImg(src) {
@@ -33,18 +29,18 @@ async function renderMockup(colorId, designDataURL) {
   if (!data) return null;
 
   const [bottleImg, designImg] = await Promise.all([
-    _loadImg(MOCKUP_IMG_SRC),
+    _loadImg(data.src),
     _loadImg(designDataURL)
   ]);
 
-  const W = data.cropW, H = data.cropH;
+  const W = data.W, H = data.H;
   const canvas = document.createElement('canvas');
   canvas.width  = W;
   canvas.height = H;
   const ctx = canvas.getContext('2d');
 
-  // ── 底層：裁切對應顏色的瓶子 ──────────────────────────
-  ctx.drawImage(bottleImg, data.cropX, data.cropY, W, H, 0, 0, W, H);
+  // ── 底層：瓶子圖 ──────────────────────────────────────
+  ctx.drawImage(bottleImg, 0, 0, W, H);
 
   // ── 中層：設計圖（仿射變換貼合標籤區）──────────────────
   const corners = [data.label.tl, data.label.tr, data.label.br, data.label.bl];
