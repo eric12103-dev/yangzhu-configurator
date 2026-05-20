@@ -396,7 +396,7 @@ async function downloadDesign() {
 }
 
 // Google Apps Script 網頁應用程式 URL（部署後填入）
-const DRIVE_SCRIPT_URL = 'YOUR_APPS_SCRIPT_URL';
+const DRIVE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxfzeV4SS_VEWHQhNO-GzkF2UUknXg30NYqXY_xXvAqvIZO8A0Bhgp6AEKJuRcMwM85hA/exec';
 
 async function submitDesign() {
   const p   = PRODUCTS[STATE.productId];
