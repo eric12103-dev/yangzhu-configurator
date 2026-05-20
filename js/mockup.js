@@ -1,17 +1,20 @@
 // 楊竹科技 — 保溫杯 Mockup 合成模組
-// 底圖(1536×1024，4瓶並排) → 裁切對應顏色 → 設計圖貼合 → 高光
+// 底圖(1536×1024，已去背，2×2排列) → 裁切對應顏色 → 設計圖貼合 → 高光
 
 const MOCKUP_IMG_SRC = 'assets/thermos/mockup/thermos_4bottles.png';
-const BOTTLE_W = 384;   // 1536 / 4
-const BOTTLE_H = 1024;
 
-// 各顏色在4瓶圖中的裁切起始 X，以及標籤區四角座標（相對裁切後畫面）
-// 瓶子排列：0=薄荷綠 1=櫻花粉 2=奶紫 3=燕麥咖
+// 2×2 排列：上排 綠/粉，下排 紫/燕麥
+// cropX/Y = 在原圖中的起始點，cropW/H = 裁切尺寸
+// label 座標相對裁切後的畫面
 const MOCKUP_DATA = {
-  mint_green:  { cropX: 0,    label: { tl:[10,328], tr:[374,328], br:[374,570], bl:[10,570] } },
-  cherry_pink: { cropX: 384,  label: { tl:[10,328], tr:[374,328], br:[374,570], bl:[10,570] } },
-  milk_purple: { cropX: 768,  label: { tl:[10,328], tr:[374,328], br:[374,570], bl:[10,570] } },
-  oat_tea:     { cropX: 1152, label: { tl:[10,328], tr:[374,328], br:[374,570], bl:[10,570] } },
+  mint_green:  { cropX: 0,   cropY: 0,   cropW: 768, cropH: 512,
+                 label: { tl:[30,140], tr:[738,140], br:[738,290], bl:[30,290] } },
+  cherry_pink: { cropX: 768, cropY: 0,   cropW: 768, cropH: 512,
+                 label: { tl:[30,140], tr:[738,140], br:[738,290], bl:[30,290] } },
+  milk_purple: { cropX: 0,   cropY: 512, cropW: 768, cropH: 512,
+                 label: { tl:[30,140], tr:[738,140], br:[738,290], bl:[30,290] } },
+  oat_tea:     { cropX: 768, cropY: 512, cropW: 768, cropH: 512,
+                 label: { tl:[30,140], tr:[738,140], br:[738,290], bl:[30,290] } },
 };
 
 function _loadImg(src) {
@@ -34,13 +37,14 @@ async function renderMockup(colorId, designDataURL) {
     _loadImg(designDataURL)
   ]);
 
+  const W = data.cropW, H = data.cropH;
   const canvas = document.createElement('canvas');
-  canvas.width  = BOTTLE_W;
-  canvas.height = BOTTLE_H;
+  canvas.width  = W;
+  canvas.height = H;
   const ctx = canvas.getContext('2d');
 
   // ── 底層：裁切對應顏色的瓶子 ──────────────────────────
-  ctx.drawImage(bottleImg, data.cropX, 0, BOTTLE_W, BOTTLE_H, 0, 0, BOTTLE_W, BOTTLE_H);
+  ctx.drawImage(bottleImg, data.cropX, data.cropY, W, H, 0, 0, W, H);
 
   // ── 中層：設計圖（仿射變換貼合標籤區）──────────────────
   const corners = [data.label.tl, data.label.tr, data.label.br, data.label.bl];
@@ -53,9 +57,8 @@ async function renderMockup(colorId, designDataURL) {
   off.getContext('2d').drawImage(designImg, 0, 0);
 
   const tmpCanvas = document.createElement('canvas');
-  tmpCanvas.width  = BOTTLE_W;
-  tmpCanvas.height = BOTTLE_H;
-
+  tmpCanvas.width  = W;
+  tmpCanvas.height = H;
   const tc = tmpCanvas.getContext('2d');
   tc.save();
   _drawProjective(tc, off, corners, dw, dh);
@@ -68,7 +71,7 @@ async function renderMockup(colorId, designDataURL) {
   ctx.restore();
 
   // ── 上層：圓柱高光 ──────────────────────────────────
-  _drawHighlight(ctx, corners, BOTTLE_W, BOTTLE_H);
+  _drawHighlight(ctx, corners, W, H);
 
   return canvas;
 }
@@ -76,7 +79,6 @@ async function renderMockup(colorId, designDataURL) {
 // 仿射變換：把設計矩形映射到標籤四邊形
 function _drawProjective(ctx, srcCanvas, corners, sw, sh) {
   const [tl, tr, br, bl] = corners;
-
   const a = (tr[0] - tl[0]) / sw;
   const b = (tr[1] - tl[1]) / sw;
   const c = (bl[0] - tl[0]) / sh;
@@ -92,7 +94,6 @@ function _drawProjective(ctx, srcCanvas, corners, sw, sh) {
   ctx.lineTo(bl[0], bl[1]);
   ctx.closePath();
   ctx.clip();
-
   ctx.setTransform(a, b, c, d, e, f);
   ctx.drawImage(srcCanvas, 0, 0, sw, sh);
   ctx.restore();
