@@ -381,6 +381,8 @@ async function _buildMockup(designDataURL) {
       mc.width  = result.width;
       mc.height = result.height;
       mc.getContext('2d').drawImage(result, 0, 0);
+      mc.style.width  = Math.round(result.width  * 0.33) + 'px';
+      mc.style.height = Math.round(result.height * 0.33) + 'px';
       mc.style.display = '';
       STATE._mockupReady = true;
       STATE._mockupCanvas = result;
