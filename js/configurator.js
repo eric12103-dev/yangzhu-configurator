@@ -210,9 +210,9 @@ function initDesignStep() {
   // 三行各自字體選單初始化
   _initFontSelects();
 
-  // 圖片上傳（保溫杯僅文字，隱藏上傳區）
+  // 圖片上傳（所有產品皆開放）
   const uploadSection = document.getElementById('design-upload')?.closest('.tool-section');
-  if (uploadSection) uploadSection.style.display = isThermos ? 'none' : '';
+  if (uploadSection) uploadSection.style.display = '';
 
   const fileInput = document.getElementById('design-upload');
   if (fileInput) {
