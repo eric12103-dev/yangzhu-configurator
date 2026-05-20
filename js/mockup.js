@@ -1,20 +1,20 @@
 // 楊竹科技 — 保溫杯 Mockup 合成模組
 // 底圖(1248×832) → 設計圖(透視扭曲 + multiply) → 高光
 
-// 各顏色瓶身的標籤區四個角點（像素座標，基於 1248×832）
+// 各顏色瓶身的標籤區四個角點（像素座標，基於 1536×1024）
 // 順序：左上、右上、右下、左下
 const MOCKUP_LABEL = {
-  mint_green:  { tl:[292,268], tr:[555,248], br:[555,388], bl:[292,410] },
-  oat_tea:     { tl:[282,268], tr:[548,248], br:[548,385], bl:[282,407] },
-  cherry_pink: { tl:[285,268], tr:[550,248], br:[550,386], bl:[285,408] },
-  milk_purple: { tl:[288,268], tr:[552,248], br:[552,387], bl:[288,409] },
+  mint_green:  { tl:[359,330], tr:[683,305], br:[683,478], bl:[359,505] },
+  oat_tea:     { tl:[359,330], tr:[683,305], br:[683,478], bl:[359,505] },
+  cherry_pink: { tl:[359,330], tr:[683,305], br:[683,478], bl:[359,505] },
+  milk_purple: { tl:[359,330], tr:[683,305], br:[683,478], bl:[359,505] },
 };
 
 const MOCKUP_IMG = {
-  mint_green:  'assets/thermos/mockup/mint_green.png',
-  oat_tea:     'assets/thermos/mockup/oat_tea.png',
-  cherry_pink: 'assets/thermos/mockup/cherry_pink.png',
-  milk_purple: 'assets/thermos/mockup/milk_purple.png',
+  mint_green:  'assets/thermos/mockup/thermos_clean.png',
+  oat_tea:     'assets/thermos/mockup/thermos_clean.png',
+  cherry_pink: 'assets/thermos/mockup/thermos_clean.png',
+  milk_purple: 'assets/thermos/mockup/thermos_clean.png',
 };
 
 // 讀取圖片並回傳 HTMLImageElement
@@ -40,7 +40,8 @@ async function renderMockup(colorId, designDataURL) {
     _loadImg(designDataURL)
   ]);
 
-  const W = 1248, H = 832;
+  const W = bottleImg.naturalWidth  || bottleImg.width;
+  const H = bottleImg.naturalHeight || bottleImg.height;
   const canvas = document.createElement('canvas');
   canvas.width  = W;
   canvas.height = H;
