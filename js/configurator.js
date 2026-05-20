@@ -19,10 +19,11 @@ const STATE = {
   contactName: '',
   contactEmail: '',
   contactPhone: '',
-  contactNote: ''
+  contactNote: '',
+  submittedFilename: ''
 };
 
-const TOTAL_STEPS = 4;
+const TOTAL_STEPS = 5;
 
 // ─── 步驟導覽 ──────────────────────────────────────────────
 function goStep(n) {
@@ -57,6 +58,7 @@ function renderStep() {
   // 各步驟初始化（Step 3 = 設計，Step 4 = 報價單）
   if (STATE.step === 3) { initDesignStep(); }
   if (STATE.step === 4) initPreviewStep();
+  if (STATE.step === 5) initConfirmStep();
 
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -431,7 +433,6 @@ async function submitDesign() {
       fd.append('filename', filename);
       fd.append('svg', svg);
       await fetch(DRIVE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: fd });
-      alert(`✅ 設計稿已送出！\n檔名：${filename}`);
     } else {
       // 尚未設定 URL → fallback 下載
       const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
@@ -442,9 +443,17 @@ async function submitDesign() {
       a.click();
       URL.revokeObjectURL(url);
     }
+    // 跳至第五步顯示確認序號
+    STATE.submittedFilename = filename;
+    goStep(5);
   } finally {
     if (btn) btn.innerHTML = origText;
   }
+}
+
+function initConfirmStep() {
+  const el = document.getElementById('confirm-order-name');
+  if (el) el.textContent = STATE.submittedFilename || '—';
 }
 
 function sendInquiry() {

@@ -90,6 +90,11 @@
       <div class="step-dot" onclick="goStep(4)">4</div>
       <div class="step-label">預覽</div>
     </div>
+    <div class="step-line"></div>
+    <div class="step" data-step="5">
+      <div class="step-dot">5</div>
+      <div class="step-label">送出確認</div>
+    </div>
   </div>
 
   <!-- ══════════════════════════════════════ -->
@@ -307,6 +312,35 @@
         <button class="btn btn-secondary" onclick="prevStep()">← 返回設計</button>
         <button class="btn btn-outline" onclick="goStep(1)">🔄 重新配置</button>
       </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════ -->
+  <!-- Step 5 — 送出確認                      -->
+  <!-- ══════════════════════════════════════ -->
+  <div class="step-panel hidden" data-step="5">
+    <div class="card" style="text-align:center;padding:48px 24px;">
+      <div style="font-size:56px;margin-bottom:16px;">✅</div>
+      <h2 style="font-size:20px;margin-bottom:8px;">設計稿已送出！</h2>
+      <p style="font-size:14px;color:var(--gray-500);margin-bottom:32px;">設計師將依以下序號為您確認製作細節</p>
+
+      <div id="confirm-order-box" style="
+        background:var(--green-pale);
+        border:2px solid var(--green);
+        border-radius:12px;
+        padding:20px 32px;
+        display:inline-block;
+        margin-bottom:24px;
+      ">
+        <div style="font-size:12px;color:var(--gray-500);margin-bottom:6px;">訂單序號</div>
+        <div id="confirm-order-name" style="font-size:22px;font-weight:700;color:var(--gray-900);letter-spacing:1px;">—</div>
+      </div>
+
+      <p style="font-size:16px;font-weight:600;color:var(--green);margin-bottom:32px;">
+        📸 請截圖序號給設計師確認
+      </p>
+
+      <button class="btn btn-secondary" onclick="goStep(1)">🔄 重新配置</button>
     </div>
   </div>
 
