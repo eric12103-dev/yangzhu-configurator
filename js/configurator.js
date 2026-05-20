@@ -395,6 +395,9 @@ async function downloadDesign() {
   }
 }
 
+// Google Apps Script 網頁應用程式 URL（部署後填入）
+const DRIVE_SCRIPT_URL = 'YOUR_APPS_SCRIPT_URL';
+
 async function submitDesign() {
   const p   = PRODUCTS[STATE.productId];
   if (!p) return;
@@ -416,18 +419,29 @@ async function submitDesign() {
 
   const btn = document.getElementById('btn-download-mockup');
   const origText = btn ? btn.innerHTML : '';
-  if (btn) btn.innerHTML = '⏳ 產生中...';
+  if (btn) btn.innerHTML = '⏳ 上傳中...';
 
   try {
     const svg = await get2DSVGWithFonts();
     if (!svg) { alert('尚無設計稿可送出'); return; }
-    const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
+
+    if (DRIVE_SCRIPT_URL && DRIVE_SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL') {
+      // 上傳到 Google Drive
+      const fd = new FormData();
+      fd.append('filename', filename);
+      fd.append('svg', svg);
+      await fetch(DRIVE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: fd });
+      alert(`✅ 設計稿已送出！\n檔名：${filename}`);
+    } else {
+      // 尚未設定 URL → fallback 下載
+      const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
   } finally {
     if (btn) btn.innerHTML = origText;
   }
