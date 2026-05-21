@@ -423,31 +423,32 @@ async function submitDesign() {
   if (btn) btn.innerHTML = '⏳ 產生中...';
 
   try {
-    const svg = await get2DSVGWithFonts();
-    if (!svg) { alert('尚無設計稿可送出'); return; }
+    // 10 秒 timeout，避免字體下載卡住
+    const timeout = new Promise(resolve => setTimeout(() => resolve(null), 10000));
+    const svg = await Promise.race([get2DSVGWithFonts(), timeout]);
 
-    if (DRIVE_SCRIPT_URL && DRIVE_SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL') {
-      // 背景上傳 Google Drive（不等待，避免卡住跳轉）
-      const fd = new FormData();
-      fd.append('filename', filename);
-      fd.append('svg', svg);
-      fetch(DRIVE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: fd })
-        .catch(e => console.warn('[Drive upload]', e));
-    } else {
-      // 尚未設定 URL → fallback 下載
-      const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
-      const url  = URL.createObjectURL(blob);
-      const a    = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      a.click();
-      URL.revokeObjectURL(url);
+    if (svg) {
+      if (DRIVE_SCRIPT_URL && DRIVE_SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL') {
+        const fd = new FormData();
+        fd.append('filename', filename);
+        fd.append('svg', svg);
+        fetch(DRIVE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: fd })
+          .catch(e => console.warn('[Drive upload]', e));
+      } else {
+        const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
     }
   } catch(e) {
     console.error('[submitDesign]', e);
   }
 
-  // 無論上傳成功與否，都跳至第五步
+  // 無論成功與否都跳至第五步
   STATE.submittedFilename = filename;
   if (btn) btn.innerHTML = '✉ 設計稿確認送出';
   goStep(5);
