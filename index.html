@@ -43,24 +43,35 @@
 <!-- ─── Header ─────────────────────────── -->
 <header class="site-header">
   <a class="site-logo" href="#">
-    <svg class="logo-img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 230 54" width="230" height="54" aria-label="Songli Praise for Gift">
-      <!-- SL 菱形標誌 -->
-      <g transform="translate(2, 3)">
-        <polygon points="24,1 46,24 24,48 2,24" fill="rgba(255,255,255,0.10)" stroke="rgba(255,255,255,0.45)" stroke-width="1.5"/>
-        <circle cx="16" cy="17" r="8.5" fill="rgba(255,255,255,0.80)"/>
-        <circle cx="30" cy="14" r="6.5" fill="rgba(255,255,255,0.62)"/>
-        <circle cx="16" cy="29" r="6"   fill="rgba(255,255,255,0.48)"/>
-        <circle cx="30" cy="28" r="7.5" fill="rgba(255,255,255,0.68)"/>
-        <path d="M12,38 C14,44 19,45 23,41 C27,37 30,43 33,41"
-              stroke="rgba(255,255,255,0.88)" stroke-width="2.2"
-              fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <svg class="logo-img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 248 58" width="248" height="58" aria-label="Songli Praise for Gift">
+      <!-- SL 菱形標誌：棋盤式圓圈 + S 捲尾 -->
+      <g transform="translate(1, 4)">
+        <!-- 旋轉矩形外框 -->
+        <rect x="6" y="6" width="34" height="34" rx="5"
+              transform="rotate(45, 23, 23)"
+              fill="rgba(255,255,255,0.08)"
+              stroke="rgba(255,255,255,0.55)" stroke-width="1.6"/>
+        <!-- 左上：實心圓 -->
+        <circle cx="14" cy="15" r="8.2" fill="rgba(255,255,255,0.90)"/>
+        <!-- 右上：空心圓 -->
+        <circle cx="28" cy="15" r="8.2" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.88)" stroke-width="1.8"/>
+        <!-- 左下：空心圓 -->
+        <circle cx="14" cy="28" r="7.5" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.88)" stroke-width="1.8"/>
+        <!-- 右下：實心圓 -->
+        <circle cx="28" cy="28" r="8.2" fill="rgba(255,255,255,0.90)"/>
+        <!-- S 捲尾 -->
+        <path d="M7,39 C11,47 19,49 23,43 C27,37 31,45 35,42"
+              stroke="rgba(255,255,255,0.90)" stroke-width="2.4"
+              fill="none" stroke-linecap="round"/>
       </g>
-      <text x="56" y="37"
+      <!-- Songli -->
+      <text x="56" y="38"
             font-family="'Playfair Display',Georgia,'Times New Roman',serif"
-            font-size="30" font-style="italic" font-weight="700" fill="white">Songli</text>
-      <text x="59" y="50"
+            font-size="32" font-style="italic" font-weight="700" fill="white">Songli</text>
+      <!-- Praise For The Gift -->
+      <text x="59" y="52"
             font-family="Georgia,'Times New Roman',serif"
-            font-size="9.5" fill="rgba(255,255,255,0.72)" letter-spacing="2.5">Praise for Gift</text>
+            font-size="10" fill="rgba(255,255,255,0.72)" letter-spacing="2">Praise For The Gift</text>
     </svg>
   </a>
 </header>
