@@ -76,6 +76,25 @@ function init2DCanvas(productId) {
   canvas2d.on('object:scaling',  _updateScaleSlider);
   canvas2d.on('object:modified', _updateScaleSlider);
 
+  // 限制物件不可拖出印刷邊界（labelArea 範圍）
+  canvas2d.on('object:moving', function(e) {
+    const obj = e.target;
+    if (!obj || !currentProduct || !currentProduct.labelArea) return;
+    const la  = currentProduct.labelArea;
+    const w   = canvas2d.getWidth();
+    const h   = canvas2d.getHeight();
+    const xMin = w * la.xRatio;
+    const yMin = h * la.yRatio;
+    const xMax = w * (la.xRatio + la.wRatio);
+    const yMax = h * (la.yRatio + la.hRatio);
+    const bnd  = obj.getBoundingRect(true);
+    if (bnd.left < xMin) obj.left += xMin - bnd.left;
+    if (bnd.top  < yMin) obj.top  += yMin - bnd.top;
+    if (bnd.left + bnd.width  > xMax) obj.left -= (bnd.left + bnd.width  - xMax);
+    if (bnd.top  + bnd.height > yMax) obj.top  -= (bnd.top  + bnd.height - yMax);
+    obj.setCoords();
+  });
+
   // after:render — 所有產品：有 labelArea 畫虛線印刷框；其他產品畫全 canvas 圓角框
   canvas2d.on('after:render', function() {
     if (!currentProduct || _suppressOverlay) return;
@@ -326,16 +345,10 @@ function get2DSVG() {
   const bgObjs = canvas2d.getObjects().filter(o => !o.selectable && o.name !== 'bottle-bg');
   bgObjs.forEach(o => o.set('visible', false));
   _suppressOverlay = true;
-
-  // 暫時移除 clipPath，避免文字被截斷
-  const origClip = canvas2d.clipPath;
-  canvas2d.clipPath = null;
   canvas2d.renderAll();
 
   let svg = canvas2d.toSVG();
 
-  // 還原 clipPath
-  canvas2d.clipPath = origClip;
   _suppressOverlay = false;
   bgObjs.forEach(o => o.set('visible', true));
   canvas2d.renderAll();
@@ -344,7 +357,7 @@ function get2DSVG() {
   const cw = canvas2d.getWidth();
   const ch = canvas2d.getHeight();
   svg = svg.replace(
-    /(<svg\b[^>]*?)(\s+width="[^"]*")(\s+height="[^"]*")/,
+    /(<svg\b[^>]*?)\s+width="[^"]*"\s+height="[^"]*"/,
     `$1 width="85mm" height="46.5mm" viewBox="0 0 ${cw} ${ch}"`
   );
   return svg;
