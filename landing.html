@@ -460,38 +460,6 @@
   </p>
 </footer>
 
-<!-- ── Floating Chat Widget ───────────────── -->
-<div id="chat-widget">
-  <div id="chat-panel">
-    <div class="chat-header">
-      <div class="chat-title">
-        <span>💬</span> 小竹 AI 客服
-      </div>
-      <button class="chat-close" onclick="closeChat()">✕</button>
-    </div>
-    <iframe id="chat-iframe"
-            src="https://yangzhu-chatbot-production.up.railway.app"
-            title="小竹 AI 客服"
-            loading="lazy">
-    </iframe>
-  </div>
-  <button id="chat-toggle" onclick="toggleChat()">
-    <div class="live-dot"></div>
-    小竹客服
-  </button>
-</div>
-
-<script>
-  function toggleChat() {
-    document.getElementById('chat-panel').classList.toggle('open');
-  }
-  function openChat() {
-    document.getElementById('chat-panel').classList.add('open');
-  }
-  function closeChat() {
-    document.getElementById('chat-panel').classList.remove('open');
-  }
-</script>
 
 </body>
 </html>
