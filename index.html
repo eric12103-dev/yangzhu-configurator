@@ -42,7 +42,7 @@
 
 <!-- ─── Header ─────────────────────────── -->
 <header class="site-header">
-  <a class="site-logo" href="#">
+  <a class="site-logo" href="https://www.songligifts.com/" target="_blank" rel="noopener">
     <svg class="logo-img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 248 58" width="248" height="58" aria-label="Songli Praise for Gift">
       <!-- SL 菱形標誌：棋盤式圓圈 + S 捲尾 -->
       <g transform="translate(1, 4)">
@@ -104,11 +104,6 @@
     <div class="step" data-step="4">
       <div class="step-dot" onclick="goStep(4)">4</div>
       <div class="step-label">預覽</div>
-    </div>
-    <div class="step-line"></div>
-    <div class="step" data-step="5">
-      <div class="step-dot">5</div>
-      <div class="step-label">截圖</div>
     </div>
   </div>
 
@@ -323,34 +318,15 @@
         <button id="btn-download-mockup" class="btn btn-primary btn-lg" onclick="submitDesign()" style="display:none;">✉ 設計稿確認送出</button>
       </div>
 
+      <!-- 送出後顯示序號 -->
+      <div id="submit-result" style="display:none;text-align:center;margin-bottom:20px;padding:20px 32px;background:var(--green-pale);border:2px solid var(--green);border-radius:12px;">
+        <div style="font-size:13px;color:var(--gray-500);margin-bottom:8px;">感謝您的訂購，請截圖序號給設計師確認</div>
+        <div id="submit-order-name" style="font-size:20px;font-weight:700;color:var(--gray-900);letter-spacing:1px;">—</div>
+      </div>
+
       <div class="step-nav">
         <button class="btn btn-secondary" onclick="prevStep()">← 返回設計</button>
-        <button class="btn btn-outline" onclick="submitDesign()">📷 截圖確認</button>
       </div>
-    </div>
-  </div>
-
-  <!-- ══════════════════════════════════════ -->
-  <!-- Step 5 — 送出確認                      -->
-  <!-- ══════════════════════════════════════ -->
-  <div class="step-panel hidden" data-step="5">
-    <div class="card" style="text-align:center;padding:48px 24px;">
-      <div style="font-size:56px;margin-bottom:16px;">🎉</div>
-      <h2 style="font-size:22px;margin-bottom:24px;color:var(--gray-900);">感謝您的訂購，請截圖序號給設計師確認</h2>
-
-      <div id="confirm-order-box" style="
-        background:var(--green-pale);
-        border:2px solid var(--green);
-        border-radius:12px;
-        padding:20px 40px;
-        display:inline-block;
-        margin-bottom:32px;
-      ">
-        <div style="font-size:12px;color:var(--gray-500);margin-bottom:8px;">訂單序號</div>
-        <div id="confirm-order-name" style="font-size:22px;font-weight:700;color:var(--gray-900);letter-spacing:1px;">—</div>
-      </div>
-
-      <button class="btn btn-secondary" onclick="goStep(1)">📷 截圖</button>
     </div>
   </div>
 

@@ -23,7 +23,7 @@ const STATE = {
   submittedFilename: ''
 };
 
-const TOTAL_STEPS = 5;
+const TOTAL_STEPS = 4;
 
 // ─── 步驟導覽 ──────────────────────────────────────────────
 function goStep(n) {
@@ -58,7 +58,6 @@ function renderStep() {
   // 各步驟初始化（Step 3 = 設計，Step 4 = 報價單）
   if (STATE.step === 3) { initDesignStep(); }
   if (STATE.step === 4) initPreviewStep();
-  if (STATE.step === 5) initConfirmStep();
 
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -417,46 +416,37 @@ async function submitDesign() {
   localStorage.setItem(KEY, seq);
   const seqStr = String(seq).padStart(3, '0');
 
-  const filename = `客製化保溫瓶-${mat.name}-${dateStr}-${seqStr}.svg`;
+  const filename = `客製化保溫瓶-${mat.name}-${dateStr}-${seqStr}.png`;
 
   const btn = document.getElementById('btn-download-mockup');
   if (btn) btn.innerHTML = '⏳ 產生中...';
 
   try {
-    // 10 秒 timeout，避免字體下載卡住
-    const timeout = new Promise(resolve => setTimeout(() => resolve(null), 10000));
-    const svg = await Promise.race([get2DSVGWithFonts(), timeout]);
-
-    if (svg) {
+    // 直接用 canvas PNG 截圖（字體永遠正確，不依賴字體嵌入）
+    const dataURL = (typeof get2DDataURL === 'function') ? get2DDataURL() : null;
+    if (dataURL) {
+      // 傳 base64 字串（去掉 data:image/png;base64, 前綴）
+      const base64 = dataURL.split(',')[1];
       if (DRIVE_SCRIPT_URL && DRIVE_SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL') {
         const fd = new FormData();
         fd.append('filename', filename);
-        fd.append('svg', svg);
+        fd.append('png', base64);
         fetch(DRIVE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: fd })
           .catch(e => console.warn('[Drive upload]', e));
-      } else {
-        const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
-        const url  = URL.createObjectURL(blob);
-        const a    = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        a.click();
-        URL.revokeObjectURL(url);
       }
     }
   } catch(e) {
     console.error('[submitDesign]', e);
   }
 
-  // 無論成功與否都跳至第五步
+  // 顯示序號在 Step 4
   STATE.submittedFilename = filename;
   if (btn) btn.innerHTML = '✉ 設計稿確認送出';
-  goStep(5);
-}
-
-function initConfirmStep() {
-  const el = document.getElementById('confirm-order-name');
-  if (el) el.textContent = STATE.submittedFilename || '—';
+  const resultDiv = document.getElementById('submit-result');
+  const nameEl    = document.getElementById('submit-order-name');
+  if (nameEl)    nameEl.textContent  = filename;
+  if (resultDiv) resultDiv.style.display = '';
+  window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
 }
 
 function sendInquiry() {
