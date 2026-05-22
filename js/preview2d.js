@@ -332,20 +332,21 @@ function get2DSVG() {
   canvas2d.clipPath = null;
   canvas2d.renderAll();
 
-  // 取得 SVG 並注入正確印刷尺寸（85×46.5mm）
-  const p = currentProduct;
-  const svgOpts = p ? {
-    width:  '85mm',
-    height: '46.5mm',
-    viewBox: `0 0 ${canvas2d.getWidth()} ${canvas2d.getHeight()}`
-  } : {};
-  let svg = canvas2d.toSVG(svgOpts);
+  let svg = canvas2d.toSVG();
 
-  // 還原
+  // 還原 clipPath
   canvas2d.clipPath = origClip;
   _suppressOverlay = false;
   bgObjs.forEach(o => o.set('visible', true));
   canvas2d.renderAll();
+
+  // 後處理：設定正確印刷尺寸 85×46.5mm，保留 viewBox 對應畫素座標
+  const cw = canvas2d.getWidth();
+  const ch = canvas2d.getHeight();
+  svg = svg.replace(
+    /(<svg\b[^>]*?)(\s+width="[^"]*")(\s+height="[^"]*")/,
+    `$1 width="85mm" height="46.5mm" viewBox="0 0 ${cw} ${ch}"`
+  );
   return svg;
 }
 
