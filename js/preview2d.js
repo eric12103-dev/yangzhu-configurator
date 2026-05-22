@@ -353,13 +353,12 @@ function get2DSVG() {
   bgObjs.forEach(o => o.set('visible', true));
   canvas2d.renderAll();
 
-  // 後處理：設定正確印刷尺寸 85×46.5mm，保留 viewBox 對應畫素座標
+  // 後處理：設定正確印刷尺寸 85×46.5mm（各別替換，避免重複屬性）
   const cw = canvas2d.getWidth();
   const ch = canvas2d.getHeight();
-  svg = svg.replace(
-    /(<svg\b[^>]*?)\s+width="[^"]*"\s+height="[^"]*"/,
-    `$1 width="85mm" height="46.5mm" viewBox="0 0 ${cw} ${ch}"`
-  );
+  svg = svg.replace(/(<svg\b[^>]*)\swidth="[^"]*"/, '$1 width="85mm"');
+  svg = svg.replace(/(<svg\b[^>]*)\sheight="[^"]*"/, '$1 height="46.5mm"');
+  svg = svg.replace(/(<svg\b[^>]*)\sviewBox="[^"]*"/, `$1 viewBox="0 0 ${cw} ${ch}"`);
   return svg;
 }
 
