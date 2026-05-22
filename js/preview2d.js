@@ -326,8 +326,23 @@ function get2DSVG() {
   const bgObjs = canvas2d.getObjects().filter(o => !o.selectable && o.name !== 'bottle-bg');
   bgObjs.forEach(o => o.set('visible', false));
   _suppressOverlay = true;
+
+  // 暫時移除 clipPath，避免文字被截斷
+  const origClip = canvas2d.clipPath;
+  canvas2d.clipPath = null;
   canvas2d.renderAll();
-  const svg = canvas2d.toSVG();
+
+  // 取得 SVG 並注入正確印刷尺寸（85×46.5mm）
+  const p = currentProduct;
+  const svgOpts = p ? {
+    width:  '85mm',
+    height: '46.5mm',
+    viewBox: `0 0 ${canvas2d.getWidth()} ${canvas2d.getHeight()}`
+  } : {};
+  let svg = canvas2d.toSVG(svgOpts);
+
+  // 還原
+  canvas2d.clipPath = origClip;
   _suppressOverlay = false;
   bgObjs.forEach(o => o.set('visible', true));
   canvas2d.renderAll();
