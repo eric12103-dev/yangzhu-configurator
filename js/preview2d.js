@@ -76,22 +76,22 @@ function init2DCanvas(productId) {
   canvas2d.on('object:scaling',  _updateScaleSlider);
   canvas2d.on('object:modified', _updateScaleSlider);
 
-  // 限制物件不可拖出印刷邊界（labelArea 範圍）
+  // 限制物件中心點不可拖出印刷邊界（防止文字完全消失）
   canvas2d.on('object:moving', function(e) {
     const obj = e.target;
     if (!obj || !currentProduct || !currentProduct.labelArea) return;
-    const la  = currentProduct.labelArea;
-    const w   = canvas2d.getWidth();
-    const h   = canvas2d.getHeight();
+    const la   = currentProduct.labelArea;
+    const w    = canvas2d.getWidth();
+    const h    = canvas2d.getHeight();
     const xMin = w * la.xRatio;
     const yMin = h * la.yRatio;
     const xMax = w * (la.xRatio + la.wRatio);
     const yMax = h * (la.yRatio + la.hRatio);
-    const bnd  = obj.getBoundingRect(true);
-    if (bnd.left < xMin) obj.left += xMin - bnd.left;
-    if (bnd.top  < yMin) obj.top  += yMin - bnd.top;
-    if (bnd.left + bnd.width  > xMax) obj.left -= (bnd.left + bnd.width  - xMax);
-    if (bnd.top  + bnd.height > yMax) obj.top  -= (bnd.top  + bnd.height - yMax);
+    const c    = obj.getCenterPoint();
+    if (c.x < xMin) obj.left += xMin - c.x;
+    else if (c.x > xMax) obj.left -= c.x - xMax;
+    if (c.y < yMin) obj.top  += yMin - c.y;
+    else if (c.y > yMax) obj.top  -= c.y - yMax;
     obj.setCoords();
   });
 
