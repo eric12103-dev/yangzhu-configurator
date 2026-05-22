@@ -224,15 +224,20 @@ function _doAddText2D(text, color, size, font, role) {
     defaultSize = Math.round(h * 0.12);
   }
 
-  const t = new fabric.IText(text, {
+  const la = currentProduct && currentProduct.labelArea;
+  const boxWidth = la ? w * la.wRatio : w * 0.92;
+
+  const t = new fabric.Textbox(text, {
     left: w / 2,
     top: topPos,
+    width: boxWidth,
     originX: 'center',
     originY: 'center',
     fontSize: size || defaultSize,
     fill: color,
     fontFamily: font,
     textAlign: 'center',
+    splitByGrapheme: true,
     editable: true,
     name: role
   });
