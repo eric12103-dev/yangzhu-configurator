@@ -422,18 +422,15 @@ async function submitDesign() {
   if (btn) btn.innerHTML = '⏳ 產生中...';
 
   try {
-    // 直接用 canvas PNG 截圖（字體永遠正確，不依賴字體嵌入）
-    const dataURL = (typeof get2DDataURL === 'function') ? get2DDataURL() : null;
-    if (dataURL) {
-      // 傳 base64 字串（去掉 data:image/png;base64, 前綴）
-      const base64 = dataURL.split(',')[1];
-      if (DRIVE_SCRIPT_URL && DRIVE_SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL') {
-        const fd = new FormData();
-        fd.append('filename', filename + '.png');
-        fd.append('png', base64);
-        fetch(DRIVE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: fd })
-          .catch(e => console.warn('[Drive upload]', e));
-      }
+    // 嘗試嵌入字體的 SVG，10 秒逾時則用基本 SVG
+    const timeout = new Promise(resolve => setTimeout(() => resolve(null), 10000));
+    const svg = await Promise.race([get2DSVGWithFonts(), timeout]) || get2DSVG();
+    if (svg && DRIVE_SCRIPT_URL && DRIVE_SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL') {
+      const fd = new FormData();
+      fd.append('filename', filename + '.svg');
+      fd.append('svg', svg);
+      fetch(DRIVE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: fd })
+        .catch(e => console.warn('[Drive upload]', e));
     }
   } catch(e) {
     console.error('[submitDesign]', e);
