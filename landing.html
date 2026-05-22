@@ -9,6 +9,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;900&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    /* 禁用全頁 I 字游標與文字選取 */
+    body, p, h1, h2, h3, h4, li, span, div { cursor: default; user-select: none; -webkit-user-select: none; }
+    a { cursor: pointer; user-select: none; }
+    .site-logo { cursor: pointer; }
 
     :root {
       --green:      #B87878;
