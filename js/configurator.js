@@ -391,7 +391,7 @@ async function submitDesign() {
   localStorage.setItem(KEY, seq);
   const seqStr = String(seq).padStart(3, '0');
 
-  const filename = `客製化隨行杯-${mat.name}-${dateStr}-${seqStr}`;
+  const filename = `${p.name}-${mat.name}-${dateStr}-${seqStr}`;
 
   const btn = document.getElementById('btn-download-mockup');
   if (btn) btn.innerHTML = '⏳ 產生中...';
