@@ -311,20 +311,31 @@ function applyBgPreset(color) {
 
 // ─── Step 4：預覽 ──────────────────────────────────────────
 function initPreviewStep() {
-  const isThermos = STATE.productId === 'thermos';
-  const flatEl    = document.getElementById('preview-flat');
-  const mockupDiv = document.getElementById('preview-mockup');
-  const btnDesign = document.getElementById('btn-download-design');
-  const btnMockup = document.getElementById('btn-download-mockup');
-  const dataURL   = get2DDataURL();
+  const isThermos  = STATE.productId === 'thermos';
+  const useSubmit  = isThermos || STATE.productId === 'mug'; // 使用設計稿確認送出流程
+  const flatEl     = document.getElementById('preview-flat');
+  const mockupDiv  = document.getElementById('preview-mockup');
+  const btnDesign  = document.getElementById('btn-download-design');
+  const btnMockup  = document.getElementById('btn-download-mockup');
+  const dataURL    = get2DDataURL();
   if (dataURL) STATE.designDataURL = dataURL;
 
   if (isThermos) {
-    // 保溫杯：只顯示瓶身效果圖
+    // 隨行杯：顯示瓶身合成效果圖
     if (flatEl)    flatEl.style.display    = 'none';
     if (mockupDiv) mockupDiv.style.display = '';
     if (btnDesign) btnDesign.style.display = 'none';
     if (dataURL)   _buildMockup(dataURL);
+  } else if (useSubmit) {
+    // 馬克杯等：顯示平面設計圖 + 設計稿確認送出按鈕
+    if (mockupDiv) mockupDiv.style.display = 'none';
+    if (btnDesign) btnDesign.style.display = 'none';
+    if (btnMockup) { btnMockup.style.display = ''; }
+    if (flatEl && dataURL) {
+      flatEl.innerHTML = `<img src="${dataURL}" style="max-width:100%;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.12);">`;
+    } else if (flatEl) {
+      flatEl.innerHTML = '<p style="color:var(--gray-400);">尚無設計圖，請返回編輯。</p>';
+    }
   } else {
     // 其他產品：只顯示平面設計圖
     if (mockupDiv) mockupDiv.style.display = 'none';
