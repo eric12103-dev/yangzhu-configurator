@@ -367,13 +367,13 @@ function get2DSVG() {
 
 // ─── 本地字體對應路徑 ─────────────────────────────────────
 const _LOCAL_FONTS = {
-  'Amalfi Coast':  '隨行杯/Amalfi Coast.ttf',
-  'Bacalisties':   '隨行杯/Bacalisties.ttf',
-  'Chen Yuluoyan': '隨行杯/ChenYuluoyan-2.0-Thin.ttf',
-  'JF Open Huninn':'隨行杯/jf-openhuninn-1.1.ttf',
-  'Jinghong':      '隨行杯/jinghong.ttf',
-  'Meiyi':         '隨行杯/meiyifont-proportional.ttf',
-  'Meiyi Mono':    '隨行杯/meiyifont-monospaced.ttf',
+  'Amalfi Coast':  '字體/Amalfi Coast.ttf',
+  'Bacalisties':   '字體/Bacalisties.ttf',
+  'Chen Yuluoyan': '字體/ChenYuluoyan-2.0-Thin.ttf',
+  'JF Open Huninn':'字體/jf-openhuninn-1.1.ttf',
+  'Jinghong':      '字體/jinghong.ttf',
+  'Meiyi':         '字體/meiyifont-proportional.ttf',
+  'Meiyi Mono':    '字體/meiyifont-monospaced.ttf',
 };
 
 function _buf2b64(buf) {

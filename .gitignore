@@ -3,5 +3,5 @@ node_modules/
 訂單資料/
 *.log
 .DS_Store
-隨行杯/meiyifont-proportional.ttf
-隨行杯/meiyifont-monospaced.ttf
+字體/meiyifont-proportional.ttf
+字體/meiyifont-monospaced.ttf
