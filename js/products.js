@@ -39,6 +39,44 @@ const PRODUCTS = {
     leadDays: 20,
     color: '#B87333',
     textOnly: true
+  },
+
+  mug: {
+    id: 'mug',
+    name: '質感原木金屬馬克杯',
+    nameEn: 'Wood Metal Mug',
+    icon: '☕',
+    image: 'assets/photos/mug.png',
+    badge: '質感禮品',
+    badgeColor: '#8B6F47',
+    description: '雙層真空不鏽鋼製造，UV彩色噴印客製文字',
+    size: { w: 600, h: 600, unit: '' },
+    displaySize: '印刷範圍 待確認',
+    labelArea: { xRatio: 0.18, yRatio: 0.20, wRatio: 0.55, hRatio: 0.55 },
+    textLayout: {
+      title:    { yRatio: 0.42, sizeRatio: 0.11 },
+      subtitle: { yRatio: 0.62, sizeRatio: 0.08 }
+    },
+    materialLabel: '顏色',
+    materials: [
+      { id: 'charcoal_mist',  name: '灰夜奶霧', priceBase: 580, image: 'assets/mug/charcoal_mist.png' },
+      { id: 'roasted_latte',  name: '焙茶拿鐵', priceBase: 580, image: 'assets/mug/roasted_latte.png' },
+      { id: 'cloud_milk',     name: '雲朵牛奶', priceBase: 580, image: 'assets/mug/cloud_milk.png' },
+      { id: 'mint_green',     name: '薄荷奶綠', priceBase: 580, image: 'assets/mug/mint_green.png' }
+    ],
+    finishes: [
+      { id: 'uv_print', name: 'UV彩色噴印', price: 0 }
+    ],
+    qtyBreaks: [
+      { min: 1,   max: 49,   price: 0 },
+      { min: 50,  max: 99,   price: -30 },
+      { min: 100, max: 299,  price: -60 },
+      { min: 300, max: 9999, price: -100 }
+    ],
+    minQty: 1,
+    leadDays: 20,
+    color: '#8B6F47',
+    textOnly: true
   }
 };
 
