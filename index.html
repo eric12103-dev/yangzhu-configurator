@@ -243,33 +243,6 @@
             💡 拖拉元素調整位置，點選後可縮放旋轉。
           </div>
 
-          <!-- 壓克力切割（折疊） -->
-          <div class="ai-section" id="acrylic-cut-section" style="margin-top:0;">
-            <div class="ai-header">
-              <span class="ai-badge">✂️ 壓克力切割</span>
-              <span class="ai-model">純瀏覽器運算</span>
-            </div>
-            <label class="upload-zone" style="max-height:none;cursor:pointer;">
-              <input type="file" id="acrylic-upload-input" accept="image/*" style="display:none;">
-              <div style="font-size:24px;">✂️</div>
-              <p>上傳圖片自動偵測輪廓</p>
-            </label>
-            <div id="acrylic-preview-wrap" class="hidden" style="text-align:center;margin:6px 0;">
-              <img id="acrylic-preview-img" style="max-width:100%;max-height:120px;border-radius:8px;object-fit:contain;" alt="上傳圖片">
-            </div>
-            <button class="btn btn-ai" id="acrylic-detect-btn" onclick="detectAcrylicContour()" disabled style="width:100%;">
-              <span id="acrylic-detect-btn-text">✂️ 自動偵測輪廓</span>
-              <span id="acrylic-detect-btn-loading" class="hidden">⏳ 偵測中…</span>
-            </button>
-            <div id="acrylic-error" class="ai-error hidden"></div>
-            <div id="acrylic-result" class="hidden" style="margin-top:10px;">
-              <p style="font-size:11px;color:var(--gray-400);margin-bottom:6px;" id="acrylic-info"></p>
-              <canvas id="acrylic-canvas-preview" style="max-width:100%;border:1px solid #e5e7eb;border-radius:8px;display:block;margin:0 auto;"></canvas>
-              <a id="acrylic-download-btn" class="btn btn-primary" style="display:block;text-align:center;margin-top:10px;text-decoration:none;padding:10px;">
-                ⬇ 下載 SVG（雷射切割用）
-              </a>
-            </div>
-          </div>
         </div>
 
         <!-- 欄 2：2D Canvas -->
@@ -317,7 +290,6 @@
       </div>
 
       <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:20px;">
-        <button id="btn-download-design" class="btn btn-outline btn-lg" onclick="downloadDesign()">⬇ 下載設計圖</button>
         <button id="btn-download-mockup" class="btn btn-primary btn-lg" onclick="submitDesign()" style="display:none;">✉ 設計稿確認送出</button>
       </div>
 
@@ -351,10 +323,7 @@
 <script src="js/products.js"></script>
 <script src="js/preview2d.js"></script>
 <script src="js/mockup.js"></script>
-<script src="js/preview3d.js"></script>
 <script src="js/configurator.js"></script>
-<script src="js/ai-design.js"></script>
-<script src="js/acrylic-cut.js"></script>
 
 <script>
   // 覆寫 goStep，將 5 步改為 4 步
