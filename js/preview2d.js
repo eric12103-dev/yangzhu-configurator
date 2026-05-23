@@ -21,7 +21,7 @@ const FONTS = [
   { id: 'Playfair Display',         label: 'Playfair（英）',preview: 'YangZhu' },
   { id: 'Bebas Neue',               label: 'Bebas（英）',  preview: 'YANGZHU' },
   { id: 'Arial',                    label: 'Arial',        preview: 'YangZhu' },
-  // ── 保溫杯特色字體 ─────────────────────
+  // ── 隨行杯特色字體 ─────────────────────
   { id: 'Amalfi Coast',             label: 'Amalfi Coast', preview: 'YangZhu' },
   { id: 'Bacalisties',              label: 'Bacalisties',  preview: 'YangZhu' },
   { id: 'Chen Yuluoyan',            label: '陳宇洛燕體',    preview: '楊竹Aa' },
@@ -151,7 +151,7 @@ function init2DCanvas(productId) {
   }
 }
 
-// 載入保溫杯瓶身圖片作為背景（不可選取）並限制編輯區在印刷範圍內
+// 載入隨行杯瓶身圖片作為背景（不可選取）並限制編輯區在印刷範圍內
 function _loadThermosBottleBg(cw, ch, withHint, imgUrl) {
   const url = imgUrl || 'assets/thermos-bg.png';
   fabric.Image.fromURL(url, img => {
@@ -282,7 +282,7 @@ function setBackground2D(color) {
 // ─── 取得 DataURL（排除輔助線與虛線框）──────────────────────
 function get2DDataURL() {
   if (!canvas2d) return null;
-  // bottle-bg 保留在匯出圖中（保溫杯瓶身），只隱藏 hint 等輔助物件
+  // bottle-bg 保留在匯出圖中（隨行杯瓶身），只隱藏 hint 等輔助物件
   const bgObjs = canvas2d.getObjects().filter(o => !o.selectable && o.name !== 'bottle-bg');
   bgObjs.forEach(o => o.set('visible', false));
   _suppressOverlay = true;
@@ -367,13 +367,13 @@ function get2DSVG() {
 
 // ─── 本地字體對應路徑 ─────────────────────────────────────
 const _LOCAL_FONTS = {
-  'Amalfi Coast':  '保溫杯/Amalfi Coast.ttf',
-  'Bacalisties':   '保溫杯/Bacalisties.ttf',
-  'Chen Yuluoyan': '保溫杯/ChenYuluoyan-2.0-Thin.ttf',
-  'JF Open Huninn':'保溫杯/jf-openhuninn-1.1.ttf',
-  'Jinghong':      '保溫杯/jinghong.ttf',
-  'Meiyi':         '保溫杯/meiyifont-proportional.ttf',
-  'Meiyi Mono':    '保溫杯/meiyifont-monospaced.ttf',
+  'Amalfi Coast':  '隨行杯/Amalfi Coast.ttf',
+  'Bacalisties':   '隨行杯/Bacalisties.ttf',
+  'Chen Yuluoyan': '隨行杯/ChenYuluoyan-2.0-Thin.ttf',
+  'JF Open Huninn':'隨行杯/jf-openhuninn-1.1.ttf',
+  'Jinghong':      '隨行杯/jinghong.ttf',
+  'Meiyi':         '隨行杯/meiyifont-proportional.ttf',
+  'Meiyi Mono':    '隨行杯/meiyifont-monospaced.ttf',
 };
 
 function _buf2b64(buf) {

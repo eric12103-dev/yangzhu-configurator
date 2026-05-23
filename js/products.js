@@ -3,7 +3,7 @@
 const PRODUCTS = {
   thermos: {
     id: 'thermos',
-    name: '客製化保溫杯',
+    name: '客製化隨行杯',
     nameEn: 'Custom Thermos',
     icon: '🍵',
     image: 'assets/photos/thermos.png',
