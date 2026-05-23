@@ -234,10 +234,11 @@ function initDesignStep() {
     });
   }
 
-  // 保溫杯：隱藏不適用的 AI 功能
+  // 隨行杯、馬克杯：隱藏不適用的 AI 功能
+  const hideAI = isThermos || STATE.productId === 'mug';
   ['ai-image-section', 'ai-cartoon-section', 'acrylic-cut-section'].forEach(id => {
     const el = document.getElementById(id);
-    if (el) el.style.display = isThermos ? 'none' : '';
+    if (el) el.style.display = hideAI ? 'none' : '';
   });
 
   // 背景色選擇區：保溫杯隱藏（印刷底色由杯身顏色決定）
