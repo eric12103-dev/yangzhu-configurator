@@ -64,10 +64,11 @@ function renderStep() {
 
 // ─── Step 1：選產品 ────────────────────────────────────────
 function selectProduct(productId) {
-  STATE.productId = productId;
+  STATE.productId  = productId;
   STATE.materialId = null;
   STATE.finishId   = null;
   STATE.capacityId = null;
+  STATE.canvasJSON = null; // 切換商品時清除上一個商品的設計內容
 
   document.querySelectorAll('.product-card').forEach(el => {
     el.classList.toggle('selected', el.dataset.productId === productId);
