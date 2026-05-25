@@ -77,6 +77,41 @@ const PRODUCTS = {
     leadDays: 20,
     color: '#8B6F47',
     textOnly: true
+  },
+
+  acrylic_charm: {
+    id: 'acrylic_charm',
+    name: '壓克力吊飾',
+    nameEn: 'Acrylic Charm',
+    icon: '✨',
+    image: 'assets/photos/acrylic_charm.png',
+    badge: '測試中',
+    badgeColor: '#888888',
+    description: '客製化壓克力吊飾，UV彩色噴印，造型多樣',
+    password: '79969123',
+    size: { w: 600, h: 600, unit: '' },
+    displaySize: '印刷範圍 待確認',
+    labelArea: { xRatio: 0.05, yRatio: 0.05, wRatio: 0.90, hRatio: 0.90 },
+    textLayout: {
+      title:    { yRatio: 0.42, sizeRatio: 0.11 },
+      subtitle: { yRatio: 0.62, sizeRatio: 0.08 }
+    },
+    materialLabel: '規格',
+    materials: [
+      { id: 'standard', name: '標準款', priceBase: 150, image: 'assets/photos/acrylic_charm.png' }
+    ],
+    finishes: [
+      { id: 'uv_print', name: 'UV彩色噴印', price: 0 }
+    ],
+    qtyBreaks: [
+      { min: 1,   max: 49,   price: 0 },
+      { min: 50,  max: 99,   price: -10 },
+      { min: 100, max: 9999, price: -20 }
+    ],
+    minQty: 1,
+    leadDays: 14,
+    color: '#888888',
+    textOnly: true
   }
 };
 

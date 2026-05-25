@@ -62,6 +62,35 @@ function renderStep() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+// ─── 密碼保護彈窗 ──────────────────────────────────────────
+function promptPassword(productId, callback) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:16px;padding:32px 28px;width:320px;box-shadow:0 8px 32px rgba(0,0,0,0.2);text-align:center;">
+      <div style="font-size:28px;margin-bottom:8px;">🔒</div>
+      <div style="font-size:16px;font-weight:700;margin-bottom:6px;">此商品測試中</div>
+      <div style="font-size:13px;color:#888;margin-bottom:20px;">請輸入密碼以繼續</div>
+      <input id="pw-input" type="password" placeholder="請輸入密碼" style="width:100%;box-sizing:border-box;padding:10px 14px;border:1.5px solid #ddd;border-radius:8px;font-size:15px;margin-bottom:10px;outline:none;">
+      <div id="pw-error" style="color:#e53e3e;font-size:12px;margin-bottom:10px;display:none;">密碼錯誤，請再試一次</div>
+      <button id="pw-confirm" style="width:100%;padding:11px;background:var(--green);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:8px;">確認</button>
+      <button id="pw-cancel" style="width:100%;padding:10px;background:none;border:1.5px solid #ddd;border-radius:8px;font-size:14px;cursor:pointer;color:#666;">取消</button>
+    </div>`;
+  document.body.appendChild(overlay);
+  const input = overlay.querySelector('#pw-input');
+  const errEl = overlay.querySelector('#pw-error');
+  input.focus();
+  const close = () => document.body.removeChild(overlay);
+  overlay.querySelector('#pw-cancel').onclick = close;
+  const confirm = () => {
+    const p = PRODUCTS[productId];
+    if (input.value === p.password) { close(); callback(); }
+    else { errEl.style.display = ''; input.value = ''; input.focus(); }
+  };
+  overlay.querySelector('#pw-confirm').onclick = confirm;
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') confirm(); });
+}
+
 // ─── Step 1：選產品 ────────────────────────────────────────
 function selectProduct(productId) {
   STATE.productId  = productId;
@@ -463,9 +492,9 @@ document.addEventListener('DOMContentLoaded', () => {
            </div>`
         : `<div class="product-icon">${p.icon}</div>`;
       return `
-      <div class="product-card" data-product-id="${p.id}" onclick="selectProduct('${p.id}')">
+      <div class="product-card" data-product-id="${p.id}" onclick="${p.password ? `promptPassword('${p.id}', () => selectProduct('${p.id}'))` : `selectProduct('${p.id}')`}">
         ${imgHtml}
-        <div class="product-badge" style="background:${p.badgeColor}">${p.badge}</div>
+        <div class="product-badge" style="background:${p.badgeColor}">${p.password ? '🔒 ' : ''}${p.badge}</div>
         <h3>${p.name}</h3>
         <p>${p.description}</p>
         <div class="product-size">${sizeText}</div>
