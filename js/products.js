@@ -108,7 +108,7 @@ const PRODUCTS = {
       { min: 50,  max: 99,   price: -10 },
       { min: 100, max: 9999, price: -20 }
     ],
-    minQty: 1,
+    minQty: 100,
     leadDays: 14,
     color: '#888888',
     textOnly: true
