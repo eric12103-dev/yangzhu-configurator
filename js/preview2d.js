@@ -5,30 +5,15 @@ let uploadedImage = null;
 let currentProduct = null;
 let _suppressOverlay = false;  // 匯出時暫時關閉虛線框
 
-// 可用字體清單（需搭配 Google Fonts 載入）
+// 可用字體清單
 const FONTS = [
-  // ── 中文字體 ──────────────────────
-  { id: 'Noto Sans TC',             label: '思源黑體',    preview: '楊竹Aa' },
-  { id: 'Noto Serif TC',            label: '思源宋體',    preview: '楊竹Aa' },
-  { id: 'Zen Old Mincho',           label: '典雅明朝',    preview: '楊竹Aa' },
-  { id: 'LXGW WenKai TC',          label: '霞鶩文楷',    preview: '楊竹Aa' },
-  { id: 'Zcool KuaiLe',            label: '站酷快樂體🎉', preview: '楊竹Aa' },
-  { id: 'Zcool QingKe HuangYou',   label: '站酷黃油體✨', preview: '楊竹Aa' },
-  { id: 'Ma Shan Zheng',           label: '馬善正楷🌸',   preview: '楊竹Aa' },
-  { id: 'Long Cang',               label: '龍藏手寫🖌️',   preview: '楊竹Aa' },
-  // ── 英文字體 ──────────────────────
-  { id: 'Oswald',                   label: 'Oswald（英）', preview: 'YangZhu' },
-  { id: 'Playfair Display',         label: 'Playfair（英）',preview: 'YangZhu' },
-  { id: 'Bebas Neue',               label: 'Bebas（英）',  preview: 'YANGZHU' },
-  { id: 'Arial',                    label: 'Arial',        preview: 'YangZhu' },
-  // ── 隨行杯特色字體 ─────────────────────
-  { id: 'Amalfi Coast',             label: 'Amalfi Coast', preview: 'YangZhu' },
-  { id: 'Bacalisties',              label: 'Bacalisties',  preview: 'YangZhu' },
-  { id: 'Chen Yuluoyan',            label: '陳宇洛燕體',    preview: '楊竹Aa' },
-  { id: 'JF Open Huninn',           label: '俐方體',        preview: '楊竹Aa' },
-  { id: 'Jinghong',                 label: '驚鴻',          preview: '楊竹Aa' },
-  { id: 'Meiyi',                    label: '美意字',        preview: '楊竹Aa' },
-  { id: 'Meiyi Mono',               label: '美意字等寬',     preview: '楊竹Aa' },
+  { id: '書法體英文',  label: '書法體英文',  preview: 'YangZhu' },
+  { id: '標準體',     label: '標準體',      preview: '楊竹Aa'  },
+  { id: '流線體英文',  label: '流線體英文',  preview: 'YangZhu' },
+  { id: '童趣手寫體',  label: '童趣手寫體',  preview: '楊竹Aa'  },
+  { id: '簡約手寫體',  label: '簡約手寫體',  preview: '楊竹Aa'  },
+  { id: '簽名體英文',  label: '簽名體英文',  preview: 'YangZhu' },
+  { id: '草寫體',     label: '草寫體',      preview: '楊竹Aa'  },
 ];
 
 function init2DCanvas(productId) {
@@ -367,13 +352,13 @@ function get2DSVG() {
 
 // ─── 本地字體對應路徑 ─────────────────────────────────────
 const _LOCAL_FONTS = {
-  'Amalfi Coast':  '字體/Amalfi Coast.ttf',
-  'Bacalisties':   '字體/Bacalisties.ttf',
-  'Chen Yuluoyan': '字體/ChenYuluoyan-2.0-Thin.ttf',
-  'JF Open Huninn':'字體/jf-openhuninn-1.1.ttf',
-  'Jinghong':      '字體/jinghong.ttf',
-  'Meiyi':         '字體/meiyifont-proportional.ttf',
-  'Meiyi Mono':    '字體/meiyifont-monospaced.ttf',
+  '書法體英文':  '字體/書法體英文.ttf',
+  '標準體':      '字體/標準體中文 英文.ttf',
+  '流線體英文':  '字體/流線體英文.TTF',
+  '童趣手寫體':  '字體/童趣手寫體中文.ttf',
+  '簡約手寫體':  '字體/簡約手寫體中文.ttf',
+  '簽名體英文':  '字體/簽名體英文.ttf',
+  '草寫體':      '字體/草寫體中文.ttf',
 };
 
 function _buf2b64(buf) {

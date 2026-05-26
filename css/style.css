@@ -1,39 +1,39 @@
 /* 楊竹科技 — 線上配置器樣式表 */
 
-/* ─── 隨行杯本地字體 ────────────────────────── */
+/* ─── 本地特色字體 ──────────────────────────── */
 @font-face {
-  font-family: 'Amalfi Coast';
-  src: url('../字體/Amalfi Coast.ttf') format('truetype');
+  font-family: '書法體英文';
+  src: url('../字體/書法體英文.ttf') format('truetype');
   font-weight: normal; font-style: normal;
 }
 @font-face {
-  font-family: 'Bacalisties';
-  src: url('../字體/Bacalisties.ttf') format('truetype');
+  font-family: '標準體';
+  src: url('../字體/標準體中文%20英文.ttf') format('truetype');
   font-weight: normal; font-style: normal;
 }
 @font-face {
-  font-family: 'Chen Yuluoyan';
-  src: url('../字體/ChenYuluoyan-2.0-Thin.ttf') format('truetype');
-  font-weight: 300; font-style: normal;
-}
-@font-face {
-  font-family: 'JF Open Huninn';
-  src: url('../字體/jf-openhuninn-1.1.ttf') format('truetype');
+  font-family: '流線體英文';
+  src: url('../字體/流線體英文.TTF') format('truetype');
   font-weight: normal; font-style: normal;
 }
 @font-face {
-  font-family: 'Jinghong';
-  src: url('../字體/jinghong.ttf') format('truetype');
+  font-family: '童趣手寫體';
+  src: url('../字體/童趣手寫體中文.ttf') format('truetype');
   font-weight: normal; font-style: normal;
 }
 @font-face {
-  font-family: 'Meiyi';
-  src: url('../字體/meiyifont-proportional.ttf') format('truetype');
+  font-family: '簡約手寫體';
+  src: url('../字體/簡約手寫體中文.ttf') format('truetype');
   font-weight: normal; font-style: normal;
 }
 @font-face {
-  font-family: 'Meiyi Mono';
-  src: url('../字體/meiyifont-monospaced.ttf') format('truetype');
+  font-family: '簽名體英文';
+  src: url('../字體/簽名體英文.ttf') format('truetype');
+  font-weight: normal; font-style: normal;
+}
+@font-face {
+  font-family: '草寫體';
+  src: url('../字體/草寫體中文.ttf') format('truetype');
   font-weight: normal; font-style: normal;
 }
 

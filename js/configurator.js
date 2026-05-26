@@ -10,9 +10,9 @@ const STATE = {
   textLine1: '',
   textLine2: '',
   textLine3: '',
-  font1: 'Noto Sans TC',
-  font2: 'Noto Sans TC',
-  font3: 'Noto Sans TC',
+  font1: '標準體',
+  font2: '標準體',
+  font3: '標準體',
   bgColor: '#ffffff',
   canvasJSON: null,       // 設計稿 canvas 狀態快照（返回時還原用）
   designDataURL: null,    // 設計稿影像快照（3D 貼圖備援）
