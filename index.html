@@ -228,12 +228,16 @@
 
         </div>
 
-        <!-- 欄 2：2D Canvas -->
+        <!-- 欄 2：2D Canvas / 即時 Mockup -->
         <div>
-          <div class="canvas-wrap">
+          <div id="canvas-2d-wrap" class="canvas-wrap">
             <canvas id="canvas-2d"></canvas>
           </div>
-          <p style="font-size:11px;color:var(--gray-400);text-align:center;margin-top:8px;">虛線為刀模輪廓參考線</p>
+          <div id="live-mockup-wrap" style="display:none;text-align:center;">
+            <div id="live-mockup-loading" style="color:var(--gray-400);padding:32px 0;font-size:13px;">合成中…</div>
+            <canvas id="live-mockup-canvas" style="max-width:100%;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.12);display:none;"></canvas>
+          </div>
+          <p id="canvas-note" style="font-size:11px;color:var(--gray-400);text-align:center;margin-top:8px;">虛線為刀模輪廓參考線</p>
           <div id="mobile-scale-bar" style="display:none;flex-direction:column;gap:8px;margin-top:10px;padding:8px 4px;">
             <div style="display:flex;align-items:center;gap:10px;">
               <span style="font-size:12px;color:var(--gray-400);white-space:nowrap;">縮放</span>

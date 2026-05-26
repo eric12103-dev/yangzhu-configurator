@@ -292,12 +292,21 @@ function initDesignStep() {
   }
 
   // canvas 下方說明文字
-  const canvasNote = document.querySelector('.canvas-wrap + p');
+  const canvasNote = document.getElementById('canvas-note');
   if (canvasNote) {
     canvasNote.textContent = isThermos
-      ? '虛線為印刷邊界（85 × 46.5 mm），設計完成後確認送出'
+      ? '即時效果圖，設計完成後確認送出'
       : '虛線為刀模輪廓參考線';
   }
+
+  // 隨行杯：隱藏 2D canvas，顯示即時 mockup
+  const canvas2dWrap   = document.getElementById('canvas-2d-wrap');
+  const liveMockupWrap = document.getElementById('live-mockup-wrap');
+  if (canvas2dWrap)   canvas2dWrap.style.display   = isThermos ? 'none' : '';
+  if (liveMockupWrap) liveMockupWrap.style.display  = isThermos ? ''     : 'none';
+
+  // 初始 mockup 渲染（含已儲存文字）
+  if (isThermos) setTimeout(() => { applyDesignText(); }, 300);
 }
 
 function _initFontSelects() {
@@ -342,6 +351,26 @@ function applyDesignText() {
   if (t1) addText2D(t1, color, null, f1, 'line1');
   if (t2) addText2D(t2, color, null, f2, 'line2');
   if (t3) addText2D(t3, color, null, f3, 'line3');
+
+  if (STATE.productId === 'thermos') _refreshLiveMockup();
+}
+
+async function _refreshLiveMockup() {
+  const mc = document.getElementById('live-mockup-canvas');
+  const ml = document.getElementById('live-mockup-loading');
+  if (!mc) return;
+  const dataURL = get2DDataURLTransparent() || get2DDataURL();
+  if (!dataURL) return;
+  if (ml) ml.style.display = '';
+  mc.style.display = 'none';
+  const colorId = STATE.materialId || 'oat_tea';
+  const result = await renderMockup(colorId, dataURL);
+  if (!result) return;
+  mc.width  = result.width;
+  mc.height = result.height;
+  mc.getContext('2d').drawImage(result, 0, 0);
+  if (ml) ml.style.display = 'none';
+  mc.style.display = '';
 }
 
 // 背景預設色套用
