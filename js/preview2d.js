@@ -228,10 +228,12 @@ function _doAddText2D(text, color, size, font, role) {
   }
 
   const la = currentProduct && currentProduct.labelArea;
-  const boxWidth = la ? w * la.wRatio : w * 0.92;
+  const isThermos = currentProduct && currentProduct.id === 'thermos';
+  const boxWidth = la ? w * la.wRatio * (isThermos ? 0.82 : 1.0) : w * 0.92;
+  const textCenterX = la ? w * (la.xRatio + la.wRatio / 2) : w / 2;
 
   const t = new fabric.Textbox(text, {
-    left: w / 2,
+    left: textCenterX,
     top: topPos,
     width: boxWidth,
     originX: 'center',
@@ -244,6 +246,16 @@ function _doAddText2D(text, color, size, font, role) {
     editable: true,
     name: role
   });
+
+  if (isThermos && la) {
+    t.clipPath = new fabric.Rect({
+      left:   w * la.xRatio,
+      top:    h * la.yRatio,
+      width:  w * la.wRatio,
+      height: h * la.hRatio,
+      absolutePositioned: true
+    });
+  }
 
   canvas2d.add(t);
   canvas2d.bringToFront(t);
