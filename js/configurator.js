@@ -295,15 +295,15 @@ function initDesignStep() {
   const canvasNote = document.getElementById('canvas-note');
   if (canvasNote) {
     canvasNote.textContent = isThermos
-      ? '即時效果圖，設計完成後確認送出'
+      ? '可拖曳移動、點選縮放旋轉；下方即時顯示效果圖'
       : '虛線為刀模輪廓參考線';
   }
 
-  // 隨行杯：隱藏 2D canvas，顯示即時 mockup
+  // 隨行杯：2D canvas 保留供互動編輯，同時顯示即時 mockup
   const canvas2dWrap   = document.getElementById('canvas-2d-wrap');
   const liveMockupWrap = document.getElementById('live-mockup-wrap');
-  if (canvas2dWrap)   canvas2dWrap.style.display   = isThermos ? 'none' : '';
-  if (liveMockupWrap) liveMockupWrap.style.display  = isThermos ? ''     : 'none';
+  if (canvas2dWrap)   canvas2dWrap.style.display   = '';
+  if (liveMockupWrap) liveMockupWrap.style.display  = isThermos ? '' : 'none';
 
   // 初始 mockup 渲染（含已儲存文字）
   if (isThermos) setTimeout(() => { applyDesignText(); }, 300);
