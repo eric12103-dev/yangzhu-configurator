@@ -1,5 +1,10 @@
 // 楊竹科技 — 步驟式配置器主邏輯
 
+function _debounce(fn, ms) {
+  let t;
+  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+}
+
 const STATE = {
   step: 1,
   productId: null,
@@ -240,6 +245,17 @@ function initDesignStep() {
 
   // 三行各自字體選單初始化
   _initFontSelects();
+
+  // 即時預覽：文字輸入 / 字體 / 顏色變更自動更新 canvas
+  const _liveApply = _debounce(applyDesignText, 250);
+  ['design-text1', 'design-text2', 'design-text3'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', _liveApply);
+  });
+  ['design-font1', 'design-font2', 'design-font3', 'design-textcolor'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('change', _liveApply);
+  });
 
   // 圖片上傳（textOnly 產品隱藏）
   const product = PRODUCTS[STATE.productId];
