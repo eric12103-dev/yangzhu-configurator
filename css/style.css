@@ -2,37 +2,37 @@
 
 /* ─── 本地特色字體 ──────────────────────────── */
 @font-face {
-  font-family: '標準體中、英文';
+  font-family: '(中英)標準體';
   src: url('../字體/標準體中、英文.ttf') format('truetype');
   font-weight: normal; font-style: normal;
 }
 @font-face {
-  font-family: '草寫體中文';
+  font-family: '(中)草寫體';
   src: url('../字體/草寫體中文.ttf') format('truetype');
   font-weight: normal; font-style: normal;
 }
 @font-face {
-  font-family: '童趣手寫體中文';
+  font-family: '(中)童趣手寫體';
   src: url('../字體/童趣手寫體中文.ttf') format('truetype');
   font-weight: normal; font-style: normal;
 }
 @font-face {
-  font-family: '簡約手寫體中文';
+  font-family: '(中)簡約手寫體';
   src: url('../字體/簡約手寫體中文.ttf') format('truetype');
   font-weight: normal; font-style: normal;
 }
 @font-face {
-  font-family: '書法體英文';
+  font-family: '(英)書法體';
   src: url('../字體/書法體英文.ttf') format('truetype');
   font-weight: normal; font-style: normal;
 }
 @font-face {
-  font-family: '流線體英文';
+  font-family: '(英)流線體';
   src: url('../字體/流線體英文.TTF') format('truetype');
   font-weight: normal; font-style: normal;
 }
 @font-face {
-  font-family: '簽名體英文';
+  font-family: '(英)簽名體';
   src: url('../字體/簽名體英文.ttf') format('truetype');
   font-weight: normal; font-style: normal;
 }
