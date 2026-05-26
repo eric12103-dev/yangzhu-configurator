@@ -7,13 +7,13 @@ let _suppressOverlay = false;  // 匯出時暫時關閉虛線框
 
 // 可用字體清單
 const FONTS = [
-  { id: '書法體英文',  label: '書法體英文',  preview: 'YangZhu' },
-  { id: '標準體',     label: '標準體',      preview: '楊竹Aa'  },
-  { id: '流線體英文',  label: '流線體英文',  preview: 'YangZhu' },
-  { id: '童趣手寫體',  label: '童趣手寫體',  preview: '楊竹Aa'  },
-  { id: '簡約手寫體',  label: '簡約手寫體',  preview: '楊竹Aa'  },
-  { id: '簽名體英文',  label: '簽名體英文',  preview: 'YangZhu' },
-  { id: '草寫體',     label: '草寫體',      preview: '楊竹Aa'  },
+  { id: '標準體中、英文',  label: '標準體中、英文',  preview: '楊竹Aa'  },
+  { id: '草寫體中文',     label: '草寫體中文',      preview: '楊竹Aa'  },
+  { id: '童趣手寫體中文',  label: '童趣手寫體中文',  preview: '楊竹Aa'  },
+  { id: '簡約手寫體中文',  label: '簡約手寫體中文',  preview: '楊竹Aa'  },
+  { id: '書法體英文',     label: '書法體英文',      preview: 'YangZhu' },
+  { id: '流線體英文',     label: '流線體英文',      preview: 'YangZhu' },
+  { id: '簽名體英文',     label: '簽名體英文',      preview: 'YangZhu' },
 ];
 
 function init2DCanvas(productId) {
@@ -352,13 +352,13 @@ function get2DSVG() {
 
 // ─── 本地字體對應路徑 ─────────────────────────────────────
 const _LOCAL_FONTS = {
-  '書法體英文':  '字體/書法體英文.ttf',
-  '標準體':      '字體/標準體中文 英文.ttf',
-  '流線體英文':  '字體/流線體英文.TTF',
-  '童趣手寫體':  '字體/童趣手寫體中文.ttf',
-  '簡約手寫體':  '字體/簡約手寫體中文.ttf',
-  '簽名體英文':  '字體/簽名體英文.ttf',
-  '草寫體':      '字體/草寫體中文.ttf',
+  '標準體中、英文': '字體/標準體中、英文.ttf',
+  '草寫體中文':    '字體/草寫體中文.ttf',
+  '童趣手寫體中文': '字體/童趣手寫體中文.ttf',
+  '簡約手寫體中文': '字體/簡約手寫體中文.ttf',
+  '書法體英文':    '字體/書法體英文.ttf',
+  '流線體英文':    '字體/流線體英文.TTF',
+  '簽名體英文':    '字體/簽名體英文.ttf',
 };
 
 function _buf2b64(buf) {

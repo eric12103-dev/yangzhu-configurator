@@ -2,13 +2,28 @@
 
 /* ─── 本地特色字體 ──────────────────────────── */
 @font-face {
-  font-family: '書法體英文';
-  src: url('../字體/書法體英文.ttf') format('truetype');
+  font-family: '標準體中、英文';
+  src: url('../字體/標準體中、英文.ttf') format('truetype');
   font-weight: normal; font-style: normal;
 }
 @font-face {
-  font-family: '標準體';
-  src: url('../字體/標準體中文%20英文.ttf') format('truetype');
+  font-family: '草寫體中文';
+  src: url('../字體/草寫體中文.ttf') format('truetype');
+  font-weight: normal; font-style: normal;
+}
+@font-face {
+  font-family: '童趣手寫體中文';
+  src: url('../字體/童趣手寫體中文.ttf') format('truetype');
+  font-weight: normal; font-style: normal;
+}
+@font-face {
+  font-family: '簡約手寫體中文';
+  src: url('../字體/簡約手寫體中文.ttf') format('truetype');
+  font-weight: normal; font-style: normal;
+}
+@font-face {
+  font-family: '書法體英文';
+  src: url('../字體/書法體英文.ttf') format('truetype');
   font-weight: normal; font-style: normal;
 }
 @font-face {
@@ -17,23 +32,8 @@
   font-weight: normal; font-style: normal;
 }
 @font-face {
-  font-family: '童趣手寫體';
-  src: url('../字體/童趣手寫體中文.ttf') format('truetype');
-  font-weight: normal; font-style: normal;
-}
-@font-face {
-  font-family: '簡約手寫體';
-  src: url('../字體/簡約手寫體中文.ttf') format('truetype');
-  font-weight: normal; font-style: normal;
-}
-@font-face {
   font-family: '簽名體英文';
   src: url('../字體/簽名體英文.ttf') format('truetype');
-  font-weight: normal; font-style: normal;
-}
-@font-face {
-  font-family: '草寫體';
-  src: url('../字體/草寫體中文.ttf') format('truetype');
   font-weight: normal; font-style: normal;
 }
 
