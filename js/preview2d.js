@@ -71,7 +71,7 @@ function init2DCanvas(productId) {
   canvas2d.on('object:scaling',  _updateScaleSlider);
   canvas2d.on('object:modified', _updateScaleSlider);
 
-  // 限制物件中心點不可拖出印刷邊界（防止文字完全消失）
+  // 限制物件邊界不可拖出印刷邊界
   canvas2d.on('object:moving', function(e) {
     const obj = e.target;
     if (!obj || !currentProduct || !currentProduct.labelArea) return;
@@ -82,11 +82,24 @@ function init2DCanvas(productId) {
     const yMin = h * la.yRatio;
     const xMax = w * (la.xRatio + la.wRatio);
     const yMax = h * (la.yRatio + la.hRatio);
-    const c    = obj.getCenterPoint();
-    if (c.x < xMin) obj.left += xMin - c.x;
-    else if (c.x > xMax) obj.left -= c.x - xMax;
-    if (c.y < yMin) obj.top  += yMin - c.y;
-    else if (c.y > yMax) obj.top  -= c.y - yMax;
+    obj.setCoords();
+    const br = obj.getBoundingRect(true, true);
+    const objW = br.width, objH = br.height;
+    // 若物件比標籤還寬/高，至少鎖定中心點在邊界內
+    if (objW >= (xMax - xMin)) {
+      const cx = (xMin + xMax) / 2;
+      obj.left = cx; obj.originX = 'center';
+    } else {
+      if (br.left < xMin) obj.left += (xMin - br.left);
+      else if (br.left + objW > xMax) obj.left -= (br.left + objW - xMax);
+    }
+    if (objH >= (yMax - yMin)) {
+      const cy = (yMin + yMax) / 2;
+      obj.top = cy; obj.originY = 'center';
+    } else {
+      if (br.top < yMin) obj.top += (yMin - br.top);
+      else if (br.top + objH > yMax) obj.top -= (br.top + objH - yMax);
+    }
     obj.setCoords();
   });
 
@@ -229,7 +242,7 @@ function _doAddText2D(text, color, size, font, role) {
 
   const la = currentProduct && currentProduct.labelArea;
   const isThermos = currentProduct && currentProduct.id === 'thermos';
-  const boxWidth = la ? w * la.wRatio * (isThermos ? 0.82 : 1.0) : w * 0.92;
+  const boxWidth = la ? w * la.wRatio * (isThermos ? 0.75 : 1.0) : w * 0.92;
   const textCenterX = la ? w * (la.xRatio + la.wRatio / 2) : w / 2;
 
   const t = new fabric.Textbox(text, {
@@ -248,11 +261,12 @@ function _doAddText2D(text, color, size, font, role) {
   });
 
   if (isThermos && la) {
+    const _inset = 5;
     t.clipPath = new fabric.Rect({
-      left:   w * la.xRatio,
-      top:    h * la.yRatio,
-      width:  w * la.wRatio,
-      height: h * la.hRatio,
+      left:   w * la.xRatio + _inset,
+      top:    h * la.yRatio + _inset,
+      width:  w * la.wRatio - _inset * 2,
+      height: h * la.hRatio - _inset * 2,
       absolutePositioned: true
     });
   }
