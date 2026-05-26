@@ -241,17 +241,20 @@ function initDesignStep() {
   // 三行各自字體選單初始化
   _initFontSelects();
 
-  // 圖片上傳（所有產品皆開放）
+  // 圖片上傳（textOnly 產品隱藏）
+  const product = PRODUCTS[STATE.productId];
   const uploadSection = document.getElementById('design-upload')?.closest('.tool-section');
-  if (uploadSection) uploadSection.style.display = '';
+  if (uploadSection) uploadSection.style.display = product?.textOnly ? 'none' : '';
 
-  const fileInput = document.getElementById('design-upload');
-  if (fileInput) {
-    fileInput.replaceWith(fileInput.cloneNode(true));
-    const newFile = document.getElementById('design-upload');
-    newFile.addEventListener('change', e => {
-      if (e.target.files[0]) uploadImage2D(e.target.files[0]);
-    });
+  if (!product?.textOnly) {
+    const fileInput = document.getElementById('design-upload');
+    if (fileInput) {
+      fileInput.replaceWith(fileInput.cloneNode(true));
+      const newFile = document.getElementById('design-upload');
+      newFile.addEventListener('change', e => {
+        if (e.target.files[0]) uploadImage2D(e.target.files[0]);
+      });
+    }
   }
 
   // 背景色
