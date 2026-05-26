@@ -3,7 +3,8 @@
 let canvas2d = null;
 let uploadedImage = null;
 let currentProduct = null;
-let _suppressOverlay = false;  // 匯出時暫時關閉虛線框
+let _suppressOverlay  = false;  // 匯出時暫時關閉虛線框
+let _showLabelBorder  = false;  // 隨行杯：選取時才顯示印刷框
 
 // 可用字體清單
 const FONTS = [
@@ -64,9 +65,9 @@ function init2DCanvas(productId) {
     fabric.Object.prototype.controls.mtr.cursorStyle = rotateCursorSvg;
   }
 
-  canvas2d.on('selection:created', _showScaleBar);
-  canvas2d.on('selection:updated', _showScaleBar);
-  canvas2d.on('selection:cleared',  _hideScaleBar);
+  canvas2d.on('selection:created', () => { _showLabelBorder = true;  canvas2d.requestRenderAll(); _showScaleBar(); });
+  canvas2d.on('selection:updated', () => { _showLabelBorder = true;  canvas2d.requestRenderAll(); _showScaleBar(); });
+  canvas2d.on('selection:cleared', () => { _showLabelBorder = false; canvas2d.requestRenderAll(); _hideScaleBar(); });
   canvas2d.on('object:scaling',  _updateScaleSlider);
   canvas2d.on('object:modified', _updateScaleSlider);
 
@@ -89,9 +90,10 @@ function init2DCanvas(productId) {
     obj.setCoords();
   });
 
-  // after:render — 所有產品：有 labelArea 畫虛線印刷框；其他產品畫全 canvas 圓角框
+  // after:render — 有 labelArea 畫虛線印刷框（隨行杯僅選取時顯示）；其他畫圓角框
   canvas2d.on('after:render', function() {
     if (!currentProduct || _suppressOverlay) return;
+    if (isThermos && !_showLabelBorder) return;
     const ctx = canvas2d.contextContainer;
     const w   = canvas2d.getWidth();
     const h   = canvas2d.getHeight();
@@ -137,9 +139,9 @@ function init2DCanvas(productId) {
     const _lhr = (_mdata.label.bl[1] - _mdata.label.tl[1]) / _mdata.H;
     currentProduct.labelArea  = { xRatio: _lxr, yRatio: _lyr, wRatio: _lwr, hRatio: _lhr };
     currentProduct.textLayout = {
-      line1: { yRatio: _lyr + _lhr * 0.22, sizeRatio: _lhr * 0.30 },
-      line2: { yRatio: _lyr + _lhr * 0.52, sizeRatio: _lhr * 0.23 },
-      line3: { yRatio: _lyr + _lhr * 0.80, sizeRatio: _lhr * 0.18 },
+      line1: { yRatio: _lyr + _lhr * 0.22, sizeRatio: _lhr * 0.19 },
+      line2: { yRatio: _lyr + _lhr * 0.52, sizeRatio: _lhr * 0.15 },
+      line3: { yRatio: _lyr + _lhr * 0.80, sizeRatio: _lhr * 0.12 },
     };
     // 載入瓶身照片作為 canvas 不可選取背景
     fabric.Image.fromURL(_mdata.src, img => {
