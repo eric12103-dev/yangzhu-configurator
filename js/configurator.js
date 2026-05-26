@@ -230,8 +230,8 @@ function initDesignStep() {
 
   init2DCanvas(STATE.productId);
 
-  // 若有先前的 canvas 狀態（從預覽返回），還原設計內容
-  if (STATE.canvasJSON && typeof loadCanvas2DJSON === 'function') {
+  // 若有先前的 canvas 狀態（從預覽返回），還原設計內容（隨行杯透過 applyDesignText 重繪）
+  if (STATE.canvasJSON && typeof loadCanvas2DJSON === 'function' && !isThermos) {
     loadCanvas2DJSON(STATE.canvasJSON);
   }
 
@@ -295,18 +295,18 @@ function initDesignStep() {
   const canvasNote = document.getElementById('canvas-note');
   if (canvasNote) {
     canvasNote.textContent = isThermos
-      ? '可拖曳移動、點選縮放旋轉；下方即時顯示效果圖'
+      ? '可拖曳移動、點選縮放旋轉文字'
       : '虛線為刀模輪廓參考線';
   }
 
-  // 隨行杯：2D canvas 保留供互動編輯，同時顯示即時 mockup
+  // canvas 直接顯示瓶身背景，不需獨立 mockup wrap
   const canvas2dWrap   = document.getElementById('canvas-2d-wrap');
   const liveMockupWrap = document.getElementById('live-mockup-wrap');
-  if (canvas2dWrap)   canvas2dWrap.style.display   = '';
-  if (liveMockupWrap) liveMockupWrap.style.display  = isThermos ? '' : 'none';
+  if (canvas2dWrap)   canvas2dWrap.style.display = '';
+  if (liveMockupWrap) liveMockupWrap.style.display = 'none';
 
-  // 初始 mockup 渲染（含已儲存文字）
-  if (isThermos) setTimeout(() => { applyDesignText(); }, 300);
+  // 初始文字渲染（等待瓶身圖非同步載入後）
+  if (isThermos) setTimeout(() => { applyDesignText(); }, 400);
 }
 
 function _initFontSelects() {
@@ -352,7 +352,6 @@ function applyDesignText() {
   if (t2) addText2D(t2, color, null, f2, 'line2');
   if (t3) addText2D(t3, color, null, f3, 'line3');
 
-  if (STATE.productId === 'thermos') _refreshLiveMockup();
 }
 
 async function _refreshLiveMockup() {
@@ -391,10 +390,13 @@ function initPreviewStep() {
   if (dataURL) STATE.designDataURL = dataURL;
 
   if (isThermos) {
-    // 隨行杯：顯示瓶身合成效果圖
-    if (flatEl)    flatEl.style.display    = 'none';
-    if (mockupDiv) mockupDiv.style.display = '';
-    if (dataURL)   _buildMockup(dataURL);
+    // 隨行杯：直接展示帶瓶身背景的 canvas 匯出圖
+    if (flatEl)    flatEl.style.display    = '';
+    if (mockupDiv) mockupDiv.style.display = 'none';
+    if (btnMockup) btnMockup.style.display = '';
+    if (flatEl && dataURL) {
+      flatEl.innerHTML = `<img src="${dataURL}" style="max-width:280px;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.12);">`;
+    }
   } else {
     // 其他商品（馬克杯等）：顯示平面設計圖 + 設計稿確認送出
     if (mockupDiv) mockupDiv.style.display = 'none';

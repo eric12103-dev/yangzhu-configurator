@@ -26,18 +26,27 @@ function init2DCanvas(productId) {
   if (!el) return;
 
   const containerW = el.parentElement.offsetWidth || 400;
-  const ratio = currentProduct.size.h / currentProduct.size.w;
-  const cw = Math.min(containerW - 40, 480);
-  const ch = Math.round(cw * ratio);
+  const isThermos  = currentProduct.id === 'thermos';
+
+  let cw, ch, _mdata = null;
+  if (isThermos) {
+    const _colorId = (typeof STATE !== 'undefined' && STATE.materialId) ? STATE.materialId : 'oat_tea';
+    _mdata = (typeof MOCKUP_DATA !== 'undefined') ? MOCKUP_DATA[_colorId] : null;
+    const _aspect  = _mdata ? (_mdata.H / _mdata.W) : 2.35;
+    cw = Math.min(containerW - 40, 360);
+    ch = Math.round(cw * _aspect);
+  } else {
+    const ratio = currentProduct.size.h / currentProduct.size.w;
+    cw = Math.min(containerW - 40, 480);
+    ch = Math.round(cw * ratio);
+  }
 
   el.width  = cw;
   el.height = ch;
 
-  const isThermos = currentProduct.id === 'thermos';
-
   canvas2d = new fabric.Canvas('canvas-2d', {
     width: cw, height: ch,
-    backgroundColor: isThermos ? '#faf7f5' : '#ffffff'
+    backgroundColor: isThermos ? '#f0ece6' : '#ffffff'
   });
 
   // ── 手機觸控優化 ──────────────────────────
@@ -120,17 +129,24 @@ function init2DCanvas(productId) {
     ctx.restore();
   });
 
-  if (isThermos) {
-    // Canvas = 印刷區，不載入瓶身照片，直接設定 clipPath 並初始化
-    const clipRect = new fabric.Rect({
-      left: Math.round(cw * 0.02),
-      top:  Math.round(ch * 0.02),
-      width:  Math.round(cw * 0.96),
-      height: Math.round(ch * 0.96),
-      absolutePositioned: true
+  if (isThermos && _mdata) {
+    // 更新 labelArea / textLayout 對應瓶身標籤實際位置
+    const _lxr = _mdata.label.tl[0] / _mdata.W;
+    const _lyr = _mdata.label.tl[1] / _mdata.H;
+    const _lwr = (_mdata.label.tr[0] - _mdata.label.tl[0]) / _mdata.W;
+    const _lhr = (_mdata.label.bl[1] - _mdata.label.tl[1]) / _mdata.H;
+    currentProduct.labelArea  = { xRatio: _lxr, yRatio: _lyr, wRatio: _lwr, hRatio: _lhr };
+    currentProduct.textLayout = {
+      line1: { yRatio: _lyr + _lhr * 0.22, sizeRatio: _lhr * 0.30 },
+      line2: { yRatio: _lyr + _lhr * 0.52, sizeRatio: _lhr * 0.23 },
+      line3: { yRatio: _lyr + _lhr * 0.80, sizeRatio: _lhr * 0.18 },
+    };
+    // 載入瓶身照片作為 canvas 不可選取背景
+    fabric.Image.fromURL(_mdata.src, img => {
+      if (!canvas2d) return;
+      img.set({ scaleX: cw / img.width, scaleY: ch / img.height });
+      canvas2d.setBackgroundImage(img, () => { addDefaultElements(); });
     });
-    canvas2d.clipPath = clipRect;
-    addDefaultElements();
   } else {
     addDefaultElements();
   }
@@ -279,19 +295,22 @@ function get2DDataURL() {
   return dataURL;
 }
 
-// ─── 取得透明底 DataURL（供 Mockup 合成用）──────────────────────
+// ─── 取得透明底 DataURL（供 SVG 提交用，移除瓶身背景）──────────────────────
 function get2DDataURLTransparent() {
   if (!canvas2d) return null;
-  const origBg = canvas2d.backgroundColor;
-  const bgObjs = canvas2d.getObjects().filter(o => !o.selectable);
+  const origBg    = canvas2d.backgroundColor;
+  const origBgImg = canvas2d.backgroundImage || null;
+  const bgObjs    = canvas2d.getObjects().filter(o => !o.selectable);
   bgObjs.forEach(o => o.set('visible', false));
   _suppressOverlay = true;
-  canvas2d.setBackgroundColor('rgba(0,0,0,0)', () => {});
+  canvas2d.backgroundColor = 'rgba(0,0,0,0)';
+  canvas2d.backgroundImage = null;
   canvas2d.renderAll();
   const dataURL = canvas2d.toDataURL({ format: 'png', multiplier: 2 });
   _suppressOverlay = false;
-  canvas2d.setBackgroundColor(origBg, () => {});
   bgObjs.forEach(o => o.set('visible', true));
+  canvas2d.backgroundColor = origBg;
+  canvas2d.backgroundImage = origBgImg;
   canvas2d.renderAll();
   return dataURL;
 }
@@ -465,7 +484,18 @@ function clear2D() {
   if (!canvas2d) return;
   canvas2d.getObjects().slice().forEach(o => canvas2d.remove(o));
   if (currentProduct && currentProduct.id === 'thermos') {
-    canvas2d.setBackgroundColor('#faf7f5', () => { canvas2d.renderAll(); });
+    const _cid = (typeof STATE !== 'undefined' && STATE.materialId) ? STATE.materialId : 'oat_tea';
+    const _md  = (typeof MOCKUP_DATA !== 'undefined') ? MOCKUP_DATA[_cid] : null;
+    canvas2d.backgroundColor = '#f0ece6';
+    if (_md) {
+      const cw = canvas2d.getWidth(), ch = canvas2d.getHeight();
+      fabric.Image.fromURL(_md.src, img => {
+        if (!canvas2d) return;
+        img.set({ scaleX: cw / img.width, scaleY: ch / img.height });
+        canvas2d.setBackgroundImage(img, () => { addDefaultElements(); });
+      });
+      return;
+    }
     addDefaultElements();
   } else {
     canvas2d.setBackgroundColor('#ffffff', () => { canvas2d.renderAll(); });
