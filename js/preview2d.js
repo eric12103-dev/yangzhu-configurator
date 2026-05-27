@@ -242,7 +242,7 @@ function _doAddText2D(text, color, size, font, role) {
 
   const la = currentProduct && currentProduct.labelArea;
   const isThermos = currentProduct && currentProduct.id === 'thermos';
-  const boxWidth = la ? w * la.wRatio * (isThermos ? 0.75 : 1.0) : w * 0.92;
+  const boxWidth = la ? w * la.wRatio * (isThermos ? 0.93 : 1.0) : w * 0.92;
   const textCenterX = la ? w * (la.xRatio + la.wRatio / 2) : w / 2;
 
   const t = new fabric.Textbox(text, {
