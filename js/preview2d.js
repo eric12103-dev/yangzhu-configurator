@@ -275,6 +275,20 @@ function _doAddText2D(text, color, size, font, role) {
   canvas2d.bringToFront(t);
   canvas2d.setActiveObject(t);
   canvas2d.renderAll();
+  // 縮小文字框寬度貼合實際文字（讓選取綠框不超過文字）
+  if (t._textLines && t._textLines.length) {
+    let maxW = 0;
+    for (let i = 0; i < t._textLines.length; i++) {
+      const lw = t.getLineWidth(i);
+      if (lw > maxW) maxW = lw;
+    }
+    const fittedW = Math.ceil(maxW) + 8;
+    if (fittedW < t.width) {
+      t.set('width', fittedW);
+      t.setCoords();
+      canvas2d.renderAll();
+    }
+  }
   return t;
 }
 
