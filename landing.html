@@ -15,10 +15,10 @@
     .site-logo { cursor: pointer; }
 
     :root {
-      --green:       #B87878;
-      --green-dark:  #9a6060;
-      --green-light: #D4A0A0;
-      --green-pale:  #F5EEEC;
+      --green:       #BD9290;
+      --green-dark:  #A67A78;
+      --green-light: #D4B2AE;
+      --green-pale:  #F5EDEC;
       --gray-100:    #FAF7F5;
       --gray-200:    #EDE8E4;
       --gray-400:    #9aa5b4;
@@ -27,7 +27,7 @@
       --gray-900:    #111827;
       --white:       #ffffff;
       --shadow-card: 0 4px 24px rgba(0,0,0,0.08);
-      --shadow-green:0 8px 32px rgba(184,120,120,0.18);
+      --shadow-green:0 8px 32px rgba(189,146,144,0.18);
       --radius:      12px;
     }
 
@@ -43,7 +43,7 @@
       position: fixed;
       top: 0; left: 0; right: 0;
       z-index: 100;
-      background: #C4897A;
+      background: #BD9290;
       border-bottom: none;
       padding: 0 24px;
       height: 60px;
@@ -103,12 +103,12 @@
       border-radius: 50px;
       text-decoration: none;
       transition: background .2s, transform .2s, box-shadow .2s;
-      box-shadow: 0 4px 16px rgba(184,120,120,.3);
+      box-shadow: 0 4px 16px rgba(189,146,144,.3);
     }
     .hero-cta:hover {
       background: var(--green-dark);
       transform: translateY(-2px);
-      box-shadow: 0 8px 24px rgba(184,120,120,.4);
+      box-shadow: 0 8px 24px rgba(189,146,144,.4);
     }
     .hero-meta { margin-top: 16px; font-size: 13px; color: var(--gray-400); }
 
@@ -330,7 +330,7 @@
       font-size: 15px;
       font-weight: 700;
       cursor: pointer;
-      box-shadow: 0 4px 20px rgba(184,120,120,.4);
+      box-shadow: 0 4px 20px rgba(189,146,144,.4);
       transition: all .2s;
       font-family: inherit;
     }
@@ -357,18 +357,7 @@
 <!-- ── Header ───────────────────────────── -->
 <header class="site-header">
   <a class="site-logo" href="https://www.songligifts.com/" target="_blank" rel="noopener">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 248 58" width="248" height="58" aria-label="Songli Praise for Gift">
-      <g transform="translate(1, 4)">
-        <rect x="6" y="6" width="34" height="34" rx="5" transform="rotate(45, 23, 23)" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.55)" stroke-width="1.6"/>
-        <circle cx="14" cy="15" r="8.2" fill="rgba(255,255,255,0.90)"/>
-        <circle cx="28" cy="15" r="8.2" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.88)" stroke-width="1.8"/>
-        <circle cx="14" cy="28" r="7.5" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.88)" stroke-width="1.8"/>
-        <circle cx="28" cy="28" r="8.2" fill="rgba(255,255,255,0.90)"/>
-        <path d="M7,39 C11,47 19,49 23,43 C27,37 31,45 35,42" stroke="rgba(255,255,255,0.90)" stroke-width="2.4" fill="none" stroke-linecap="round"/>
-      </g>
-      <text x="56" y="38" font-family="'Playfair Display',Georgia,'Times New Roman',serif" font-size="32" font-style="italic" font-weight="700" fill="white">Songli</text>
-      <text x="59" y="52" font-family="Georgia,'Times New Roman',serif" font-size="10" fill="rgba(255,255,255,0.72)" letter-spacing="2">Praise For The Gift</text>
-    </svg>
+    <img src="assets/logo.svg" class="logo-img" alt="Songli Praise For The Gift" style="height:52px;width:auto;">
   </a>
 </header>
 
