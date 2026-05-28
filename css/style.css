@@ -72,7 +72,7 @@ body {
   display: flex;
   align-items: center;
   gap: 16px;
-  height: 64px;
+  height: 112px;
   box-shadow: var(--shadow-sm);
   position: sticky;
   top: 0;
