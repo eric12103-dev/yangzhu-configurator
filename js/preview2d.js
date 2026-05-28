@@ -3,8 +3,63 @@
 let canvas2d = null;
 let uploadedImage = null;
 let currentProduct = null;
-let _suppressOverlay  = false;  // 匯出時暫時關閉虛線框
-let _showLabelBorder  = false;  // 隨行杯：選取時才顯示印刷框
+let _suppressOverlay  = false;
+let _showLabelBorder  = false;
+
+// ─── Undo / Redo ─────────────────────────────
+let _historyStack = [];
+let _redoStack    = [];
+let _historyLock  = false;
+let _textChangeTimer = null;
+
+function _saveHistory() {
+  if (_historyLock || !canvas2d) return;
+  const json = JSON.stringify(canvas2d.toJSON(['name', 'padding', 'lineHeight']));
+  _historyStack.push(json);
+  if (_historyStack.length > 40) _historyStack.shift();
+  _redoStack = [];
+  _updateUndoRedoBtns();
+}
+
+function _updateUndoRedoBtns() {
+  const u = document.getElementById('btn-undo');
+  const r = document.getElementById('btn-redo');
+  if (u) u.disabled = _historyStack.length < 2;
+  if (r) r.disabled = _redoStack.length === 0;
+}
+
+function _restoreFromJSON(jsonStr) {
+  if (!canvas2d) return;
+  _historyLock = true;
+  canvas2d.loadFromJSON(JSON.parse(jsonStr), () => {
+    canvas2d.renderAll();
+    _historyLock = false;
+    _updateUndoRedoBtns();
+    if (typeof _saveDraft === 'function') _saveDraft();
+  });
+}
+
+function undo2D() {
+  if (_historyStack.length < 2) return;
+  _redoStack.push(_historyStack.pop());
+  _restoreFromJSON(_historyStack[_historyStack.length - 1]);
+}
+
+function redo2D() {
+  if (!_redoStack.length) return;
+  const next = _redoStack.pop();
+  _historyStack.push(next);
+  _restoreFromJSON(next);
+}
+
+// 鍵盤快捷鍵 Ctrl+Z / Ctrl+Y
+document.addEventListener('keydown', e => {
+  if (!canvas2d) return;
+  const active = canvas2d.getActiveObject();
+  if (active && active.isEditing) return; // 文字輸入中不觸發
+  if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undo2D(); }
+  if ((e.ctrlKey || e.metaKey) && e.key === 'y') { e.preventDefault(); redo2D(); }
+});
 
 // 可用字體清單
 const FONTS = [
@@ -83,10 +138,26 @@ function init2DCanvas(productId) {
     if (typeof _hideFloatToolbar === 'function') _hideFloatToolbar();
   });
   canvas2d.on('object:scaling',  e => { if (typeof _updateFloatToolbar === 'function') _updateFloatToolbar(); });
-  canvas2d.on('object:modified', e => { if (typeof _updateFloatToolbar === 'function') _updateFloatToolbar(); if (typeof _saveDraft === 'function') _saveDraft(); });
-  canvas2d.on('object:added',   () => { if (typeof _saveDraft === 'function') _saveDraft(); });
-  canvas2d.on('object:removed', () => { if (typeof _saveDraft === 'function') _saveDraft(); });
-  canvas2d.on('text:changed',   () => { if (typeof _saveDraft === 'function') _saveDraft(); });
+  canvas2d.on('object:modified', e => {
+    if (typeof _updateFloatToolbar === 'function') _updateFloatToolbar();
+    _saveHistory();
+    if (typeof _saveDraft === 'function') _saveDraft();
+  });
+  canvas2d.on('object:added', () => {
+    _saveHistory();
+    if (typeof _saveDraft === 'function') _saveDraft();
+  });
+  canvas2d.on('object:removed', () => {
+    _saveHistory();
+    if (typeof _saveDraft === 'function') _saveDraft();
+  });
+  canvas2d.on('text:changed', () => {
+    if (_textChangeTimer) clearTimeout(_textChangeTimer);
+    _textChangeTimer = setTimeout(() => {
+      _saveHistory();
+      if (typeof _saveDraft === 'function') _saveDraft();
+    }, 600);
+  });
 
   // 限制物件邊界不可拖出印刷邊界
   canvas2d.on('object:moving', function(e) {
@@ -223,7 +294,9 @@ function drawProductOutline(w, h) {
 
 function addDefaultElements() {
   canvas2d.renderAll();
+  _historyStack = []; _redoStack = [];
   if (typeof _loadDraft === 'function') _loadDraft();
+  setTimeout(() => { _saveHistory(); }, 300);
 }
 
 // ─── 加入文字（role: 'title' | 'subtitle'）────────────────
@@ -516,6 +589,7 @@ function deleteSelected2D() {
 // ─── 清空 ─────────────────────────────────────────────────
 function clear2D() {
   if (!canvas2d) return;
+  _historyStack = []; _redoStack = []; _updateUndoRedoBtns();
   if (typeof _clearDraft === 'function') _clearDraft();
   canvas2d.getObjects().slice().forEach(o => canvas2d.remove(o));
   if (currentProduct && currentProduct.id === 'thermos') {
