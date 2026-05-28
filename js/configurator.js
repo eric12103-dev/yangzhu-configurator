@@ -403,6 +403,42 @@ function _hideFloatToolbar() {
   if (t) t.style.display = 'none';
 }
 
+// ─── 草稿自動儲存（localStorage）─────────────────────────────
+function _draftKey() {
+  return `yangzhu_draft_${STATE.productId}_${STATE.materialId || ''}`;
+}
+function _saveDraft() {
+  if (!canvas2d) return;
+  try {
+    const objs = canvas2d.toJSON(['name', 'padding', 'lineHeight']).objects
+      .filter(o => o.selectable !== false && o.name !== 'hint');
+    localStorage.setItem(_draftKey(), JSON.stringify({ objects: objs, bgColor: STATE.bgColor }));
+  } catch(e) {}
+}
+function _loadDraft() {
+  if (!canvas2d) return;
+  try {
+    const raw = localStorage.getItem(_draftKey());
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    if (!data.objects || !data.objects.length) return;
+    fabric.util.enlivenObjects(data.objects, objs => {
+      if (!canvas2d) return;
+      objs.forEach(o => canvas2d.add(o));
+      canvas2d.renderAll();
+    });
+    if (data.bgColor && STATE.productId !== 'thermos') {
+      STATE.bgColor = data.bgColor;
+      if (typeof setBackground2D === 'function') setBackground2D(data.bgColor);
+      const picker = document.getElementById('design-bgcolor');
+      if (picker) picker.value = data.bgColor;
+    }
+  } catch(e) {}
+}
+function _clearDraft() {
+  try { localStorage.removeItem(_draftKey()); } catch(e) {}
+}
+
 async function _refreshLiveMockup() {
   const mc = document.getElementById('live-mockup-canvas');
   const ml = document.getElementById('live-mockup-loading');

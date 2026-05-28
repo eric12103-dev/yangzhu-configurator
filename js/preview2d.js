@@ -83,7 +83,10 @@ function init2DCanvas(productId) {
     if (typeof _hideFloatToolbar === 'function') _hideFloatToolbar();
   });
   canvas2d.on('object:scaling',  e => { if (typeof _updateFloatToolbar === 'function') _updateFloatToolbar(); });
-  canvas2d.on('object:modified', e => { if (typeof _updateFloatToolbar === 'function') _updateFloatToolbar(); });
+  canvas2d.on('object:modified', e => { if (typeof _updateFloatToolbar === 'function') _updateFloatToolbar(); if (typeof _saveDraft === 'function') _saveDraft(); });
+  canvas2d.on('object:added',   () => { if (typeof _saveDraft === 'function') _saveDraft(); });
+  canvas2d.on('object:removed', () => { if (typeof _saveDraft === 'function') _saveDraft(); });
+  canvas2d.on('text:changed',   () => { if (typeof _saveDraft === 'function') _saveDraft(); });
 
   // 限制物件邊界不可拖出印刷邊界
   canvas2d.on('object:moving', function(e) {
@@ -220,6 +223,7 @@ function drawProductOutline(w, h) {
 
 function addDefaultElements() {
   canvas2d.renderAll();
+  if (typeof _loadDraft === 'function') _loadDraft();
 }
 
 // ─── 加入文字（role: 'title' | 'subtitle'）────────────────
@@ -512,6 +516,7 @@ function deleteSelected2D() {
 // ─── 清空 ─────────────────────────────────────────────────
 function clear2D() {
   if (!canvas2d) return;
+  if (typeof _clearDraft === 'function') _clearDraft();
   canvas2d.getObjects().slice().forEach(o => canvas2d.remove(o));
   if (currentProduct && currentProduct.id === 'thermos') {
     const _cid = (typeof STATE !== 'undefined' && STATE.materialId) ? STATE.materialId : 'oat_tea';
