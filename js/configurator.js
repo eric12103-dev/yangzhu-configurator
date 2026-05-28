@@ -296,13 +296,6 @@ function _initFreeTextUI() {
       d.classList.toggle('active', (d.dataset.color || '').toLowerCase() === color.toLowerCase())
     );
   });
-  _buildDotPalette('text-bgcolor-dots', _TEXT_COLORS, true, color => {
-    const obj = canvas2d && canvas2d.getActiveObject();
-    if (obj && obj.type === 'textbox') { obj.set('backgroundColor', color || ''); canvas2d.renderAll(); }
-    document.querySelectorAll('#text-bgcolor-dots .dot').forEach(d =>
-      d.classList.toggle('active', (d.dataset.color || '') === (color || ''))
-    );
-  });
 }
 
 function _buildDotPalette(containerId, colors, withNone, onClick) {
@@ -355,10 +348,6 @@ function _syncTextPropsPanel(obj) {
   const fillColor = (obj.fill || '#333333').toUpperCase();
   document.querySelectorAll('#text-color-dots .dot').forEach(d =>
     d.classList.toggle('active', (d.dataset.color || '').toUpperCase() === fillColor)
-  );
-  const bgColor = (obj.backgroundColor || '').toUpperCase();
-  document.querySelectorAll('#text-bgcolor-dots .dot').forEach(d =>
-    d.classList.toggle('active', (d.dataset.color || '').toUpperCase() === bgColor)
   );
 }
 
