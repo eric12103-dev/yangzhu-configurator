@@ -272,7 +272,9 @@ function _doAddText2D(text, color, size, font, role) {
     textAlign: 'center',
     splitByGrapheme: true,
     editable: true,
-    name: role
+    name: role,
+    padding: 6,
+    lineHeight: 1.3
   });
 
   if (isThermos && la) {
