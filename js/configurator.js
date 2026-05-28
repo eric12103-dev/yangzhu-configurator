@@ -547,6 +547,21 @@ function downloadMockup() {
 // Google Apps Script 網頁應用程式 URL（部署後填入）
 const DRIVE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxfzeV4SS_VEWHQhNO-GzkF2UUknXg30NYqXY_xXvAqvIZO8A0Bhgp6AEKJuRcMwM85hA/exec';
 
+async function _uploadWithRetry(url, formData, maxRetries = 3) {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 15000);
+      await fetch(url, { method: 'POST', mode: 'no-cors', body: formData, signal: ctrl.signal });
+      clearTimeout(timer);
+      return true;
+    } catch (e) {
+      if (i < maxRetries - 1) await new Promise(r => setTimeout(r, 2000));
+    }
+  }
+  return false;
+}
+
 async function submitDesign() {
   const p   = PRODUCTS[STATE.productId];
   if (!p) return;
@@ -580,8 +595,18 @@ async function submitDesign() {
       const fd = new FormData();
       fd.append('filename', filename + '.svg');
       fd.append('svg', svg);
-      fetch(DRIVE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: fd })
-        .catch(e => console.warn('[Drive upload]', e));
+      const statusEl = document.getElementById('upload-status');
+      if (statusEl) { statusEl.textContent = '📤 傳送中...'; statusEl.style.color = 'var(--gray-500)'; }
+      _uploadWithRetry(DRIVE_SCRIPT_URL, fd).then(ok => {
+        if (!statusEl) return;
+        if (ok) {
+          statusEl.textContent = '✅ 設計稿已送出';
+          statusEl.style.color = 'var(--green)';
+        } else {
+          statusEl.textContent = '⚠️ 傳送失敗，請截圖序號後告知設計師手動處理';
+          statusEl.style.color = '#e53e3e';
+        }
+      });
     }
   } catch(e) {
     console.error('[submitDesign]', e);
