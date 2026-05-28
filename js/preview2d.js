@@ -244,6 +244,7 @@ function _doAddText2D(text, color, size, font, role) {
   const hint = canvas2d.getObjects().find(o => o.name === 'hint');
   if (hint) canvas2d.remove(hint);
 
+  const la = currentProduct && currentProduct.labelArea;
   let topPos, defaultSize;
   if (currentProduct && currentProduct.textLayout && currentProduct.textLayout[role]) {
     const tl = currentProduct.textLayout[role];
@@ -251,11 +252,10 @@ function _doAddText2D(text, color, size, font, role) {
     defaultSize = Math.round(h * tl.sizeRatio);
   } else {
     const yMap = { line1: 0.22, line2: 0.50, line3: 0.78 };
-    topPos      = h * (yMap[role] ?? 0.28);
-    defaultSize = Math.round(h * 0.12);
+    topPos      = la ? h * (la.yRatio + la.hRatio / 2) : h * (yMap[role] ?? 0.28);
+    defaultSize = la ? Math.round(h * la.hRatio * 0.18) : Math.round(h * 0.08);
   }
 
-  const la = currentProduct && currentProduct.labelArea;
   const isThermos = currentProduct && currentProduct.id === 'thermos';
   const boxWidth = la ? w * la.wRatio * (isThermos ? 0.93 : 1.0) : w * 0.92;
   const textCenterX = la ? w * (la.xRatio + la.wRatio / 2) : w / 2;
