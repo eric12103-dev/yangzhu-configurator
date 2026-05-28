@@ -66,24 +66,24 @@ function init2DCanvas(productId) {
   }
 
   canvas2d.on('selection:created', e => {
-    _showLabelBorder = true; canvas2d.requestRenderAll(); _showScaleBar();
+    _showLabelBorder = true; canvas2d.requestRenderAll();
     const obj = e.selected?.[0] || canvas2d.getActiveObject();
     if (typeof _syncTextPropsPanel === 'function') _syncTextPropsPanel(obj);
     if (typeof _updateFloatToolbar === 'function') _updateFloatToolbar();
   });
   canvas2d.on('selection:updated', e => {
-    _showLabelBorder = true; canvas2d.requestRenderAll(); _showScaleBar();
+    _showLabelBorder = true; canvas2d.requestRenderAll();
     const obj = e.selected?.[0] || canvas2d.getActiveObject();
     if (typeof _syncTextPropsPanel === 'function') _syncTextPropsPanel(obj);
     if (typeof _updateFloatToolbar === 'function') _updateFloatToolbar();
   });
   canvas2d.on('selection:cleared', () => {
-    _showLabelBorder = false; canvas2d.requestRenderAll(); _hideScaleBar();
+    _showLabelBorder = false; canvas2d.requestRenderAll();
     if (typeof _syncTextPropsPanel === 'function') _syncTextPropsPanel(null);
     if (typeof _hideFloatToolbar === 'function') _hideFloatToolbar();
   });
-  canvas2d.on('object:scaling',  e => { _updateScaleSlider(e); if (typeof _updateFloatToolbar === 'function') _updateFloatToolbar(); });
-  canvas2d.on('object:modified', e => { _updateScaleSlider(e); if (typeof _updateFloatToolbar === 'function') _updateFloatToolbar(); });
+  canvas2d.on('object:scaling',  e => { if (typeof _updateFloatToolbar === 'function') _updateFloatToolbar(); });
+  canvas2d.on('object:modified', e => { if (typeof _updateFloatToolbar === 'function') _updateFloatToolbar(); });
 
   // 限制物件邊界不可拖出印刷邊界
   canvas2d.on('object:moving', function(e) {
@@ -499,35 +499,6 @@ async function get2DSVGWithFonts() {
   return svgStr.replace(/(<svg[^>]*>)/, '$1<defs>' + style + '</defs>');
 }
 
-// ─── 手機縮放控制列 ───────────────────────────────────────
-function _showScaleBar() {
-  const bar = document.getElementById('mobile-scale-bar');
-  if (bar) bar.style.display = 'flex';
-  _updateScaleSlider();
-}
-function _hideScaleBar() {
-  const bar = document.getElementById('mobile-scale-bar');
-  if (bar) bar.style.display = 'none';
-}
-function _updateScaleSlider() {
-  const obj    = canvas2d?.getActiveObject();
-  const slider = document.getElementById('scale-slider');
-  const pct    = document.getElementById('scale-pct');
-  if (!obj || !slider) return;
-  const val = Math.round((obj.scaleX || 1) * 100);
-  slider.value = Math.max(5, Math.min(300, val));
-  if (pct) pct.textContent = val + '%';
-}
-function scaleSelectedTo(scale) {
-  if (!canvas2d) return;
-  const obj = canvas2d.getActiveObject();
-  if (!obj) return;
-  const s = Math.max(0.05, Math.min(3.0, parseFloat(scale)));
-  obj.set({ scaleX: s, scaleY: s });
-  canvas2d.requestRenderAll();
-  const pct = document.getElementById('scale-pct');
-  if (pct) pct.textContent = Math.round(s * 100) + '%';
-}
 
 // ─── 刪除選取 ─────────────────────────────────────────────
 function deleteSelected2D() {
