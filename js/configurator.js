@@ -585,7 +585,7 @@ async function submitDesign() {
   const filename = `${p.name}-${mat.name}-${dateStr}-${seqStr}`;
 
   const btn = document.getElementById('btn-download-mockup');
-  if (btn) btn.innerHTML = '⏳ 產生中...';
+  if (btn) { btn.innerHTML = '⏳ 產生中...'; btn.disabled = true; }
 
   try {
     // 嘗試嵌入字體的 SVG，10 秒逾時則用基本 SVG
@@ -600,11 +600,14 @@ async function submitDesign() {
       _uploadWithRetry(DRIVE_SCRIPT_URL, fd).then(ok => {
         if (!statusEl) return;
         if (ok) {
-          statusEl.textContent = '✅ 設計稿已送出';
+          statusEl.textContent = '上傳成功請截圖';
           statusEl.style.color = 'var(--green)';
+          statusEl.style.fontWeight = '700';
+          if (btn) btn.style.display = 'none';
         } else {
           statusEl.textContent = '⚠️ 傳送失敗，請截圖序號後告知設計師手動處理';
           statusEl.style.color = '#e53e3e';
+          if (btn) { btn.innerHTML = '✉ 重新送出'; btn.disabled = false; }
         }
       });
     }
@@ -614,7 +617,7 @@ async function submitDesign() {
 
   // 顯示序號在 Step 4
   STATE.submittedFilename = filename;
-  if (btn) btn.innerHTML = '✉ 設計稿確認送出';
+  if (btn) { btn.innerHTML = '✉ 設計稿確認送出'; btn.disabled = false; }
   const resultDiv = document.getElementById('submit-result');
   const nameEl    = document.getElementById('submit-order-name');
   if (nameEl)    nameEl.textContent  = filename;
