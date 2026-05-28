@@ -536,10 +536,15 @@ function alignCenter2D(axis) {
   if (!canvas2d) return;
   const obj = canvas2d.getActiveObject();
   if (!obj) return;
+  const w = canvas2d.getWidth();
+  const h = canvas2d.getHeight();
+  const la = currentProduct && currentProduct.labelArea;
   if (axis === 'h') {
-    obj.set({ left: canvas2d.getWidth() / 2, originX: 'center' });
+    const cx = la ? (la.xRatio + la.wRatio / 2) * w : w / 2;
+    obj.set({ left: cx, originX: 'center' });
   } else {
-    obj.set({ top: canvas2d.getHeight() / 2, originY: 'center' });
+    const cy = la ? (la.yRatio + la.hRatio / 2) * h : h / 2;
+    obj.set({ top: cy, originY: 'center' });
   }
   obj.setCoords();
   canvas2d.requestRenderAll();
