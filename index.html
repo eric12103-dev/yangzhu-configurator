@@ -156,65 +156,70 @@
         <h2 style="font-size:18px;margin:0;">編輯</h2>
       </div>
       <p style="font-size:13px;color:var(--gray-400);margin-bottom:16px;">
-        輸入文字即可在右側即時預覽效果。
+        點擊新增文字，或上傳圖片設計你的專屬圖案。
       </p>
 
       <div class="design-preview-layout">
 
         <!-- 欄 1：工具面板 -->
         <div class="design-tools">
-          <div class="tool-section">
-            <h4>文字（手動輸入 或 從 AI 方案套用）</h4>
-            <div class="form-group line-input-row">
-              <label>第一行</label>
-              <select id="design-font1" class="font-select-native"></select>
-              <input type="text" id="design-text1" placeholder="例：公司名稱 / 活動主題">
+
+          <!-- 預設：新增文字按鈕 -->
+          <div id="panel-add" class="tool-section">
+            <p style="font-size:12px;color:var(--gray-400);margin-bottom:10px;">請新增文字，或選取文字框進行調整</p>
+            <button class="btn btn-primary" style="width:100%;font-size:15px;padding:12px 0" onclick="addFreeText()">+ 新增文字</button>
+          </div>
+
+          <!-- 文字屬性面板（選取文字時顯示） -->
+          <div id="panel-text-props" style="display:none">
+            <div class="tool-section">
+              <h4>字型</h4>
+              <select id="free-font-select" class="font-select-native" onchange="updateSelectedFont(this.value)"></select>
             </div>
-            <div class="form-group line-input-row">
-              <label>第二行</label>
-              <select id="design-font2" class="font-select-native"></select>
-              <input type="text" id="design-text2" placeholder="例：2025年會紀念">
+            <div class="tool-section">
+              <h4>文字顏色</h4>
+              <div id="text-color-dots" class="dot-palette"></div>
             </div>
-            <div class="form-group line-input-row">
-              <label>第三行</label>
-              <select id="design-font3" class="font-select-native"></select>
-              <input type="text" id="design-text3" placeholder="例：補充文字">
+            <div class="tool-section">
+              <h4>文字底色</h4>
+              <div id="text-bgcolor-dots" class="dot-palette"></div>
             </div>
-            <div class="color-row" style="margin-bottom:6px;">
-              <label>文字顏色</label>
-              <input type="color" id="design-textcolor" value="#333333">
-            </div>
-            <div style="margin-bottom:10px;">
-              <div class="color-row" style="margin-bottom:6px;">
-                <label>背景底色</label>
-                <input type="color" id="design-bgcolor" value="#ffffff" oninput="STATE.bgColor=this.value;setBackground2D(this.value)">
+            <div class="tool-section">
+              <div style="display:flex;gap:8px;">
+                <button class="btn btn-secondary btn-sm" style="flex:1" onclick="alignCenter2D('h')">⬌ 左右置中</button>
+                <button class="btn btn-secondary btn-sm" style="flex:1" onclick="alignCenter2D('v')">⬍ 上下置中</button>
               </div>
-              <div class="color-presets">
-                <button class="cp-btn" style="background:#ffffff;border:1px solid #ccc" onclick="applyBgPreset('#ffffff')" title="白色"></button>
-                <button class="cp-btn" style="background:#000000" onclick="applyBgPreset('#000000')" title="黑色"></button>
-                <button class="cp-btn" style="background:#f5f5f0" onclick="applyBgPreset('#f5f5f0')" title="米白"></button>
-                <button class="cp-btn" style="background:#1a2744" onclick="applyBgPreset('#1a2744')" title="深藍"></button>
-                <button class="cp-btn" style="background:#2D7D46" onclick="applyBgPreset('#2D7D46')" title="綠色"></button>
-                <button class="cp-btn" style="background:#c8102e" onclick="applyBgPreset('#c8102e')" title="紅色"></button>
-                <button class="cp-btn" style="background:#f5c518" onclick="applyBgPreset('#f5c518')" title="金黃"></button>
-                <button class="cp-btn" style="background:#f9a8d4" onclick="applyBgPreset('#f9a8d4')" title="粉紅"></button>
-                <button class="cp-btn" style="background:#7c3aed" onclick="applyBgPreset('#7c3aed')" title="紫色"></button>
-                <button class="cp-btn" style="background:#0ea5e9" onclick="applyBgPreset('#0ea5e9')" title="天藍"></button>
-              </div>
-            </div>
-            <div style="display:flex;gap:8px;margin-top:8px;">
-              <button class="btn btn-secondary btn-sm" style="flex:1" onclick="alignCenter2D('h')" title="左右置中">⬌ 左右置中</button>
-              <button class="btn btn-secondary btn-sm" style="flex:1" onclick="alignCenter2D('v')" title="上下置中">⬍ 上下置中</button>
             </div>
           </div>
 
-          <div class="tool-section">
+          <!-- 上傳圖片 -->
+          <div class="tool-section" id="upload-section">
             <h4>上傳 Logo / 圖片</h4>
             <label class="upload-zone">
               <input type="file" id="design-upload" accept="image/*">
               <div style="font-size:28px;">📂</div>
               <p>點擊上傳 PNG / JPG / SVG</p>
             </label>
+          </div>
+
+          <!-- 背景底色（隨行杯隱藏） -->
+          <div class="tool-section" id="bg-color-section">
+            <h4>背景底色</h4>
+            <div class="color-row" style="margin-bottom:6px;">
+              <input type="color" id="design-bgcolor" value="#ffffff" oninput="STATE.bgColor=this.value;setBackground2D(this.value)">
+            </div>
+            <div class="color-presets">
+              <button class="cp-btn" style="background:#ffffff;border:1px solid #ccc" onclick="applyBgPreset('#ffffff')" title="白色"></button>
+              <button class="cp-btn" style="background:#000000" onclick="applyBgPreset('#000000')" title="黑色"></button>
+              <button class="cp-btn" style="background:#f5f5f0" onclick="applyBgPreset('#f5f5f0')" title="米白"></button>
+              <button class="cp-btn" style="background:#1a2744" onclick="applyBgPreset('#1a2744')" title="深藍"></button>
+              <button class="cp-btn" style="background:#2D7D46" onclick="applyBgPreset('#2D7D46')" title="綠色"></button>
+              <button class="cp-btn" style="background:#c8102e" onclick="applyBgPreset('#c8102e')" title="紅色"></button>
+              <button class="cp-btn" style="background:#f5c518" onclick="applyBgPreset('#f5c518')" title="金黃"></button>
+              <button class="cp-btn" style="background:#f9a8d4" onclick="applyBgPreset('#f9a8d4')" title="粉紅"></button>
+              <button class="cp-btn" style="background:#7c3aed" onclick="applyBgPreset('#7c3aed')" title="紫色"></button>
+              <button class="cp-btn" style="background:#0ea5e9" onclick="applyBgPreset('#0ea5e9')" title="天藍"></button>
+            </div>
           </div>
 
           <div class="tool-actions">
@@ -232,6 +237,10 @@
         <div>
           <div id="canvas-2d-wrap" class="canvas-wrap">
             <canvas id="canvas-2d"></canvas>
+            <div id="float-toolbar">
+              <button title="刪除" onclick="deleteSelected2D()">🗑</button>
+              <button title="複製" onclick="duplicateSelected2D()">⧉</button>
+            </div>
           </div>
           <div id="live-mockup-wrap" style="display:none;text-align:center;">
             <div id="live-mockup-loading" style="color:var(--gray-400);padding:32px 0;font-size:13px;">合成中…</div>

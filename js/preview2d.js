@@ -65,11 +65,25 @@ function init2DCanvas(productId) {
     fabric.Object.prototype.controls.mtr.cursorStyle = rotateCursorSvg;
   }
 
-  canvas2d.on('selection:created', () => { _showLabelBorder = true;  canvas2d.requestRenderAll(); _showScaleBar(); });
-  canvas2d.on('selection:updated', () => { _showLabelBorder = true;  canvas2d.requestRenderAll(); _showScaleBar(); });
-  canvas2d.on('selection:cleared', () => { _showLabelBorder = false; canvas2d.requestRenderAll(); _hideScaleBar(); });
-  canvas2d.on('object:scaling',  _updateScaleSlider);
-  canvas2d.on('object:modified', _updateScaleSlider);
+  canvas2d.on('selection:created', e => {
+    _showLabelBorder = true; canvas2d.requestRenderAll(); _showScaleBar();
+    const obj = e.selected?.[0] || canvas2d.getActiveObject();
+    if (typeof _syncTextPropsPanel === 'function') _syncTextPropsPanel(obj);
+    if (typeof _updateFloatToolbar === 'function') _updateFloatToolbar();
+  });
+  canvas2d.on('selection:updated', e => {
+    _showLabelBorder = true; canvas2d.requestRenderAll(); _showScaleBar();
+    const obj = e.selected?.[0] || canvas2d.getActiveObject();
+    if (typeof _syncTextPropsPanel === 'function') _syncTextPropsPanel(obj);
+    if (typeof _updateFloatToolbar === 'function') _updateFloatToolbar();
+  });
+  canvas2d.on('selection:cleared', () => {
+    _showLabelBorder = false; canvas2d.requestRenderAll(); _hideScaleBar();
+    if (typeof _syncTextPropsPanel === 'function') _syncTextPropsPanel(null);
+    if (typeof _hideFloatToolbar === 'function') _hideFloatToolbar();
+  });
+  canvas2d.on('object:scaling',  e => { _updateScaleSlider(e); if (typeof _updateFloatToolbar === 'function') _updateFloatToolbar(); });
+  canvas2d.on('object:modified', e => { _updateScaleSlider(e); if (typeof _updateFloatToolbar === 'function') _updateFloatToolbar(); });
 
   // 限制物件邊界不可拖出印刷邊界
   canvas2d.on('object:moving', function(e) {
@@ -101,6 +115,7 @@ function init2DCanvas(productId) {
       else if (br.top + objH > yMax) obj.top -= (br.top + objH - yMax);
     }
     obj.setCoords();
+    if (typeof _updateFloatToolbar === 'function') _updateFloatToolbar();
   });
 
   // after:render — 有 labelArea 畫虛線印刷框（隨行杯僅選取時顯示）；其他畫圓角框

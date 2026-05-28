@@ -12,15 +12,9 @@ const STATE = {
   finishId: null,
   capacityId: null,
   qty: 100,
-  textLine1: '',
-  textLine2: '',
-  textLine3: '',
-  font1: '(中英)標準體',
-  font2: '(中英)標準體',
-  font3: '(中英)標準體',
   bgColor: '#ffffff',
-  canvasJSON: null,       // 設計稿 canvas 狀態快照（返回時還原用）
-  designDataURL: null,    // 設計稿影像快照（3D 貼圖備援）
+  canvasJSON: null,
+  designDataURL: null,
   contactName: '',
   contactEmail: '',
   contactPhone: '',
@@ -225,41 +219,27 @@ function updateLiveQuote() {
 }
 
 // ─── Step 3：設計 ──────────────────────────────────────────
+const _TEXT_COLORS = [
+  '#FFDD00','#E8A020','#F08000','#D84020','#C82020','#F080A0','#F040A0','#C00060',
+  '#800020','#600040','#800080','#600060','#4040C0','#202080','#000060','#60A0E0',
+  '#2060E0','#2040A0','#202060','#00A080','#40A040','#207040','#004020','#FFFFFF',
+  '#E0E0E0','#808080','#000000','#606040'
+];
+
 function initDesignStep() {
   const isThermos = STATE.productId === 'thermos';
 
   init2DCanvas(STATE.productId);
 
-  // 若有先前的 canvas 狀態（從預覽返回），還原設計內容（隨行杯透過 applyDesignText 重繪）
   if (STATE.canvasJSON && typeof loadCanvas2DJSON === 'function' && !isThermos) {
     loadCanvas2DJSON(STATE.canvasJSON);
   }
 
-  // 文字輸入還原
-  const t1 = document.getElementById('design-text1');
-  const t2 = document.getElementById('design-text2');
-  const t3 = document.getElementById('design-text3');
-  if (t1) t1.value = STATE.textLine1;
-  if (t2) t2.value = STATE.textLine2;
-  if (t3) t3.value = STATE.textLine3;
+  _initFreeTextUI();
 
-  // 三行各自字體選單初始化
-  _initFontSelects();
-
-  // 即時預覽：文字輸入 / 字體 / 顏色變更自動更新 canvas
-  const _liveApply = _debounce(applyDesignText, 250);
-  ['design-text1', 'design-text2', 'design-text3'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.addEventListener('input', _liveApply);
-  });
-  ['design-font1', 'design-font2', 'design-font3', 'design-textcolor'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.addEventListener('change', _liveApply);
-  });
-
-  // 圖片上傳（textOnly 產品隱藏）
+  // 圖片上傳
   const product = PRODUCTS[STATE.productId];
-  const uploadSection = document.getElementById('design-upload')?.closest('.tool-section');
+  const uploadSection = document.getElementById('upload-section');
   if (uploadSection) uploadSection.style.display = product?.textOnly ? 'none' : '';
 
   if (!product?.textOnly) {
@@ -282,14 +262,8 @@ function initDesignStep() {
       setBackground2D(e.target.value);
     });
   }
-
-
-  // 背景色選擇區：保溫杯隱藏（印刷底色由杯身顏色決定）
-  const bgColorEl = document.getElementById('design-bgcolor');
-  if (bgColorEl) {
-    const bgSection = bgColorEl.closest('.color-row')?.parentElement;
-    if (bgSection) bgSection.style.display = isThermos ? 'none' : '';
-  }
+  const bgSection = document.getElementById('bg-color-section');
+  if (bgSection) bgSection.style.display = isThermos ? 'none' : '';
 
   // canvas 下方說明文字
   const canvasNote = document.getElementById('canvas-note');
@@ -299,59 +273,145 @@ function initDesignStep() {
       : '虛線為刀模輪廓參考線';
   }
 
-  // canvas 直接顯示瓶身背景，不需獨立 mockup wrap
   const canvas2dWrap   = document.getElementById('canvas-2d-wrap');
   const liveMockupWrap = document.getElementById('live-mockup-wrap');
   if (canvas2dWrap)   canvas2dWrap.style.display = '';
   if (liveMockupWrap) liveMockupWrap.style.display = 'none';
 
-  // 初始文字渲染（等待瓶身圖非同步載入後）
-  if (isThermos) setTimeout(() => { applyDesignText(); }, 400);
+  // 確保 panel 預設狀態
+  _syncTextPropsPanel(null);
 }
 
-function _initFontSelects() {
+function _initFreeTextUI() {
   if (typeof FONTS === 'undefined') return;
-  const opts = FONTS.map(f => `<option value="${f.id}">${f.label}</option>`).join('');
-  [
-    { id: 'design-font1', val: STATE.font1 },
-    { id: 'design-font2', val: STATE.font2 },
-    { id: 'design-font3', val: STATE.font3 },
-  ].forEach(({ id, val }) => {
-    const sel = document.getElementById(id);
-    if (!sel) return;
-    sel.innerHTML = opts;
-    sel.value = val || FONTS[0].id;
+  const sel = document.getElementById('free-font-select');
+  if (sel) {
+    sel.innerHTML = FONTS.map(f => `<option value="${f.id}">${f.label}</option>`).join('');
+    sel.value = FONTS[0].id;
+  }
+  _buildDotPalette('text-color-dots', _TEXT_COLORS, false, color => {
+    const obj = canvas2d && canvas2d.getActiveObject();
+    if (obj && obj.type === 'textbox') { obj.set('fill', color); canvas2d.renderAll(); }
+    document.querySelectorAll('#text-color-dots .dot').forEach(d =>
+      d.classList.toggle('active', (d.dataset.color || '').toLowerCase() === color.toLowerCase())
+    );
+  });
+  _buildDotPalette('text-bgcolor-dots', _TEXT_COLORS, true, color => {
+    const obj = canvas2d && canvas2d.getActiveObject();
+    if (obj && obj.type === 'textbox') { obj.set('backgroundColor', color || ''); canvas2d.renderAll(); }
+    document.querySelectorAll('#text-bgcolor-dots .dot').forEach(d =>
+      d.classList.toggle('active', (d.dataset.color || '') === (color || ''))
+    );
   });
 }
 
-function applyDesignText() {
-  const t1    = document.getElementById('design-text1').value.trim();
-  const t2    = document.getElementById('design-text2').value.trim();
-  const t3    = document.getElementById('design-text3').value.trim();
-  const color = document.getElementById('design-textcolor').value;
-  const f1    = document.getElementById('design-font1').value || 'Noto Sans TC';
-  const f2    = document.getElementById('design-font2').value || 'Noto Sans TC';
-  const f3    = document.getElementById('design-font3').value || 'Noto Sans TC';
-
-  STATE.textLine1 = t1;
-  STATE.textLine2 = t2;
-  STATE.textLine3 = t3;
-  STATE.font1 = f1;
-  STATE.font2 = f2;
-  STATE.font3 = f3;
-
-  if (canvas2d) {
-    canvas2d.getObjects()
-      .filter(o => ['hint', 'line1', 'line2', 'line3'].includes(o.name))
-      .forEach(o => canvas2d.remove(o));
-    canvas2d.renderAll();
+function _buildDotPalette(containerId, colors, withNone, onClick) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = '';
+  if (withNone) {
+    const d = document.createElement('button');
+    d.className = 'dot dot-none'; d.title = '無底色'; d.dataset.color = '';
+    d.addEventListener('click', () => onClick(null));
+    el.appendChild(d);
   }
+  colors.forEach(c => {
+    const d = document.createElement('button');
+    d.className = 'dot'; d.style.background = c; d.title = c; d.dataset.color = c;
+    if (c === '#FFFFFF') d.style.border = '1.5px solid #ddd';
+    d.addEventListener('click', () => onClick(c));
+    el.appendChild(d);
+  });
+}
 
-  setBackground2D(STATE.bgColor);
-  if (t1) addText2D(t1, color, null, f1, 'line1');
-  if (t2) addText2D(t2, color, null, f2, 'line2');
-  if (t3) addText2D(t3, color, null, f3, 'line3');
+function addFreeText() {
+  if (!canvas2d) return;
+  const font = document.getElementById('free-font-select')?.value || '(中英)標準體';
+  addText2D('新增文字', '#333333', null, font, 'ft_' + Date.now());
+  // 字體非同步載入，等完成後進入編輯模式
+  setTimeout(() => {
+    const obj = canvas2d.getActiveObject();
+    if (obj && obj.enterEditing) {
+      obj.enterEditing();
+      obj.selectAll();
+      canvas2d.renderAll();
+    }
+  }, 200);
+}
 
+function _syncTextPropsPanel(obj) {
+  const propsPanel = document.getElementById('panel-text-props');
+  const addPanel   = document.getElementById('panel-add');
+  const isText = obj && obj.type === 'textbox';
+
+  if (propsPanel) propsPanel.style.display = isText ? '' : 'none';
+  if (addPanel)   addPanel.style.display   = isText ? 'none' : '';
+
+  if (!isText) return;
+
+  const sel = document.getElementById('free-font-select');
+  if (sel) sel.value = obj.fontFamily || (typeof FONTS !== 'undefined' ? FONTS[0].id : '');
+
+  const fillColor = (obj.fill || '#333333').toUpperCase();
+  document.querySelectorAll('#text-color-dots .dot').forEach(d =>
+    d.classList.toggle('active', (d.dataset.color || '').toUpperCase() === fillColor)
+  );
+  const bgColor = (obj.backgroundColor || '').toUpperCase();
+  document.querySelectorAll('#text-bgcolor-dots .dot').forEach(d =>
+    d.classList.toggle('active', (d.dataset.color || '').toUpperCase() === bgColor)
+  );
+}
+
+function updateSelectedFont(font) {
+  const obj = canvas2d && canvas2d.getActiveObject();
+  if (!obj || obj.type !== 'textbox') return;
+  document.fonts.load(`16px "${font}"`).then(() => {
+    obj.set('fontFamily', font);
+    canvas2d.renderAll();
+    // 重新貼合寬度
+    if (obj._textLines && obj._textLines.length) {
+      let maxW = 0;
+      for (let i = 0; i < obj._textLines.length; i++) {
+        const lw = obj.getLineWidth(i); if (lw > maxW) maxW = lw;
+      }
+      const fw = Math.ceil(maxW) + 8;
+      if (fw < obj.width) { obj.set('width', fw); obj.setCoords(); canvas2d.renderAll(); }
+    }
+  });
+}
+
+function duplicateSelected2D() {
+  const obj = canvas2d && canvas2d.getActiveObject();
+  if (!obj) return;
+  obj.clone(cloned => {
+    cloned.set({ left: (obj.left || 0) + 20, top: (obj.top || 0) + 20 });
+    canvas2d.add(cloned);
+    canvas2d.setActiveObject(cloned);
+    canvas2d.renderAll();
+    _updateFloatToolbar();
+  });
+}
+
+function _updateFloatToolbar() {
+  const toolbar  = document.getElementById('float-toolbar');
+  const canvasEl = document.getElementById('canvas-2d');
+  if (!toolbar || !canvasEl || !canvas2d) return;
+  const obj = canvas2d.getActiveObject();
+  if (!obj) { _hideFloatToolbar(); return; }
+  obj.setCoords();
+  const br = obj.getBoundingRect(true, true);
+  const scaleX = canvasEl.offsetWidth  / canvas2d.getWidth();
+  const scaleY = canvasEl.offsetHeight / canvas2d.getHeight();
+  const objCenterX = canvasEl.offsetLeft + (br.left + br.width  / 2) * scaleX;
+  const objTopY    = canvasEl.offsetTop  +  br.top * scaleY - 44;
+  toolbar.style.left    = objCenterX + 'px';
+  toolbar.style.top     = Math.max(4, objTopY) + 'px';
+  toolbar.style.display = 'flex';
+}
+
+function _hideFloatToolbar() {
+  const t = document.getElementById('float-toolbar');
+  if (t) t.style.display = 'none';
 }
 
 async function _refreshLiveMockup() {

@@ -352,6 +352,7 @@ body {
 .tool-section h4 { font-size: 13px; font-weight: 700; color: var(--gray-700); margin-bottom: 8px; }
 
 .canvas-wrap {
+  position: relative;
   background: var(--gray-200);
   border-radius: var(--radius);
   padding: 16px;
@@ -360,6 +361,56 @@ body {
   align-items: center;
   min-height: 240px;
 }
+
+/* ─── 圓點色盤 ───────────────────────────── */
+.dot-palette {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.dot-palette .dot {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+  padding: 0;
+}
+.dot-palette .dot:hover { transform: scale(1.15); border-color: #999; }
+.dot-palette .dot.active { border-color: #333; box-shadow: 0 0 0 1px #333; transform: scale(1.1); }
+.dot-palette .dot-none {
+  background: linear-gradient(to bottom right, #fff calc(50% - 1px), #e00 50%, #fff calc(50% + 1px));
+  border: 1.5px solid #ccc !important;
+}
+
+/* ─── 浮動工具列 ─────────────────────────── */
+#float-toolbar {
+  position: absolute;
+  display: none;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+  padding: 4px;
+  gap: 2px;
+  z-index: 200;
+  align-items: center;
+  pointer-events: auto;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+#float-toolbar button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px 8px;
+  border-radius: 6px;
+  font-size: 15px;
+  line-height: 1;
+  transition: background 0.15s;
+}
+#float-toolbar button:hover { background: #f3f4f6; }
 
 .canvas-wrap canvas {
   border-radius: 8px;
