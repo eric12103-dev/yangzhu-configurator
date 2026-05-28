@@ -3,14 +3,14 @@
 
 // 標籤座標依「文字框.png」紅框分析（y=548~1088，x≈3~W-2）
 const MOCKUP_DATA = {
-  mint_green:  { src: 'assets/thermos/mockup/thermos_mint_green.png',  W: 1016, H: 2347,
-                 label: { tl:[3,548], tr:[1013,548], br:[1013,1088], bl:[3,1088] } },
-  cherry_pink: { src: 'assets/thermos/mockup/thermos_cherry_pink.png', W: 995,  H: 2347,
-                 label: { tl:[3,548], tr:[992,548],  br:[992,1088],  bl:[3,1088] } },
-  milk_purple: { src: 'assets/thermos/mockup/thermos_milk_purple.png', W: 995,  H: 2347,
-                 label: { tl:[3,548], tr:[992,548],  br:[992,1088],  bl:[3,1088] } },
-  oat_tea:     { src: 'assets/thermos/mockup/thermos_oat_tea.png',     W: 999,  H: 2347,
-                 label: { tl:[3,548], tr:[996,548],  br:[996,1088],  bl:[3,1088] } },
+  mint_green:  { src: 'assets/thermos/mockup/thermos_mint_green.png',  W: 389, H: 875,
+                 label: { tl:[5,204], tr:[384,204], br:[384,406], bl:[5,406] } },
+  cherry_pink: { src: 'assets/thermos/mockup/thermos_cherry_pink.png', W: 391, H: 875,
+                 label: { tl:[5,204], tr:[386,204], br:[386,406], bl:[5,406] } },
+  milk_purple: { src: 'assets/thermos/mockup/thermos_milk_purple.png', W: 391, H: 875,
+                 label: { tl:[5,204], tr:[386,204], br:[386,406], bl:[5,406] } },
+  oat_tea:     { src: 'assets/thermos/mockup/thermos_oat_tea.png',     W: 393, H: 874,
+                 label: { tl:[5,204], tr:[388,204], br:[388,405], bl:[5,405] } },
 };
 
 function _loadImg(src) {
