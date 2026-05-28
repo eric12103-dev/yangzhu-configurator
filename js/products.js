@@ -9,6 +9,7 @@ const PRODUCTS = {
     image: 'assets/photos/thermos.png',
     badge: '台灣製造',
     badgeColor: '#B87333',
+    url: 'https://www.songligifts.com/products/%E3%80%90%E9%80%81%E7%A6%AE%E9%A6%96%E9%81%B8%E3%80%91%E6%BC%B8%E5%B1%A4%E6%99%82%E5%B0%9A%E4%BF%9D%E6%BA%AB%E7%93%B6550ml%E5%AE%A2%E8%A3%BD%E5%8C%96%E5%8D%B0%E5%88%B7%E9%9B%99%E7%94%A8%E8%A8%AD%E8%A8%88%E7%A6%AE%E7%89%A9%E5%8C%85%E8%A3%9D-1-1-1',
     description: '304不鏽鋼真空保溫，雷射雕刻客製文字，送禮自用首選',
     size: { w: 850, h: 465, unit: '' },  // canvas 比例 = 印刷尺寸 85×46.5mm
     displaySize: '印刷範圍 85 × 46.5 mm',

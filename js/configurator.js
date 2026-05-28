@@ -474,6 +474,14 @@ function initPreviewStep() {
   const dataURL   = get2DDataURL();
   if (dataURL) STATE.designDataURL = dataURL;
 
+  // 商品連結按鈕
+  const btnLink = document.getElementById('btn-product-link');
+  if (btnLink) {
+    const p = PRODUCTS[STATE.productId];
+    if (p && p.url) { btnLink.href = p.url; btnLink.style.display = ''; }
+    else             { btnLink.style.display = 'none'; }
+  }
+
   if (isThermos) {
     // 隨行杯：直接展示帶瓶身背景的 canvas 匯出圖
     if (flatEl)    flatEl.style.display    = '';
@@ -550,10 +558,13 @@ async function submitDesign() {
     String(now.getMonth() + 1).padStart(2, '0') +
     String(now.getDate()).padStart(2, '0');
 
-  // 序號：localStorage 跨次遞增，三碼補零
-  const KEY = 'yangzhu_submit_seq';
-  const seq = parseInt(localStorage.getItem(KEY) || '0') + 1;
-  localStorage.setItem(KEY, seq);
+  // 序號：每日從 001 重新計，跨產品全域計數
+  const SEQ_KEY  = 'yangzhu_submit_seq';
+  const DATE_KEY = 'yangzhu_submit_date';
+  const savedDate = localStorage.getItem(DATE_KEY);
+  const seq = (savedDate === dateStr) ? parseInt(localStorage.getItem(SEQ_KEY) || '0') + 1 : 1;
+  localStorage.setItem(DATE_KEY, dateStr);
+  localStorage.setItem(SEQ_KEY, seq);
   const seqStr = String(seq).padStart(3, '0');
 
   const filename = `${p.name}-${mat.name}-${dateStr}-${seqStr}`;
