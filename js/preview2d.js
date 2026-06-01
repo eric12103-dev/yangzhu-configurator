@@ -422,6 +422,40 @@ function get2DDataURL() {
   return dataURL;
 }
 
+// ─── 隨行杯專用：只匯出標籤印刷區 PNG（透明底、字體已渲染）────────────────
+function get2DLabelDataURL() {
+  if (!canvas2d) return null;
+  const isThermos = currentProduct && currentProduct.id === 'thermos';
+  const la = currentProduct && currentProduct.labelArea;
+  if (!isThermos || !la) return get2DDataURLTransparent();
+
+  const w = canvas2d.getWidth();
+  const h = canvas2d.getHeight();
+  const origBgImg   = canvas2d.backgroundImage;
+  const origBgColor = canvas2d.backgroundColor;
+  const bgObjs = canvas2d.getObjects().filter(o => !o.selectable);
+  bgObjs.forEach(o => o.set('visible', false));
+  _suppressOverlay = true;
+  canvas2d.backgroundImage = null;
+  canvas2d.backgroundColor = 'rgba(0,0,0,0)';
+  canvas2d.renderAll();
+
+  const dataURL = canvas2d.toDataURL({
+    format: 'png', multiplier: 2,
+    left:   Math.round(w * la.xRatio),
+    top:    Math.round(h * la.yRatio),
+    width:  Math.round(w * la.wRatio),
+    height: Math.round(h * la.hRatio)
+  });
+
+  canvas2d.backgroundImage = origBgImg;
+  canvas2d.backgroundColor = origBgColor;
+  _suppressOverlay = false;
+  bgObjs.forEach(o => o.set('visible', true));
+  canvas2d.renderAll();
+  return dataURL;
+}
+
 // ─── 取得透明底 DataURL（供 SVG 提交用，移除瓶身背景）──────────────────────
 function get2DDataURLTransparent() {
   if (!canvas2d) return null;
@@ -501,6 +535,9 @@ function get2DSVG() {
   _suppressOverlay = false;
   bgObjs.forEach(o => o.set('visible', true));
   canvas2d.renderAll();
+
+  // 後處理：移除所有 <image> 元素（瓶身背景圖，Illustrator 會找不到連結檔案）
+  svg = svg.replace(/<image\b[^>]*(?:\/>|>[\s\S]*?<\/image>)/gi, '');
 
   // 後處理：印刷尺寸 85×46.5mm
   const cw = canvas2d.getWidth();

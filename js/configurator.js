@@ -596,8 +596,16 @@ async function submitDesign() {
   if (btn) { btn.innerHTML = '⏳ 產生中...'; btn.disabled = true; }
 
   try {
-    // 直接用基本 SVG（無字體嵌入），檔案小、位置正確，避免嵌入字體造成大檔案逾時
-    const svg = (typeof get2DSVG === 'function') ? get2DSVG() : null;
+    // 隨行杯：用標籤區 PNG 包成 SVG（字體已渲染，無需安裝字體）
+    // 其他商品：用基本向量 SVG
+    let svg = null;
+    if (STATE.productId === 'thermos' && typeof get2DLabelDataURL === 'function') {
+      const labelPNG = get2DLabelDataURL();
+      if (labelPNG) {
+        svg = `<?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="85mm" height="46.5mm"><image xlink:href="${labelPNG}" width="85mm" height="46.5mm"/></svg>`;
+      }
+    }
+    if (!svg) svg = (typeof get2DSVG === 'function') ? get2DSVG() : null;
     if (svg && DRIVE_SCRIPT_URL && DRIVE_SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL') {
       const fd = new FormData();
       fd.append('filename', filename + '.svg');
