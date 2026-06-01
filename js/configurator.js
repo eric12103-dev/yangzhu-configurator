@@ -596,10 +596,12 @@ async function submitDesign() {
   if (btn) { btn.innerHTML = '⏳ 產生中...'; btn.disabled = true; }
 
   try {
-    // 隨行杯：用標籤區 PNG 包成 SVG（字體已渲染，無需安裝字體）
-    // 其他商品：用基本向量 SVG
+    // 向量 SVG（文字轉路徑，不需安裝字體）；失敗時退回 PNG 包 SVG
     let svg = null;
-    if (STATE.productId === 'thermos' && typeof get2DLabelDataURL === 'function') {
+    if (typeof get2DSVGOutlined === 'function') {
+      try { svg = await get2DSVGOutlined(); } catch(e) { console.warn('[submit] outline failed', e); }
+    }
+    if (!svg && STATE.productId === 'thermos' && typeof get2DLabelDataURL === 'function') {
       const labelPNG = get2DLabelDataURL();
       if (labelPNG) {
         svg = `<?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="85mm" height="46.5mm"><image xlink:href="${labelPNG}" width="85mm" height="46.5mm"/></svg>`;

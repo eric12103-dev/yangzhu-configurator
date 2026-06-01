@@ -559,6 +559,74 @@ function get2DSVG() {
   return svg;
 }
 
+// ─── 匯出向量 SVG（文字轉路徑，不需安裝字體）────────────────────────────────
+async function get2DSVGOutlined() {
+  const basicSVG = get2DSVG();
+  if (!basicSVG) return null;
+
+  // 動態載入 opentype.js
+  if (!window.opentype) {
+    await new Promise((res) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/opentype.js@1.3.4/dist/opentype.min.js';
+      s.onload = res;
+      s.onerror = () => { console.warn('[SVG outline] opentype.js 載入失敗'); res(); };
+      document.head.appendChild(s);
+    });
+  }
+  if (!window.opentype) return basicSVG;
+
+  // 解析 SVG，找出所有用到的字體
+  const parser = new DOMParser();
+  const svgDoc = parser.parseFromString(basicSVG, 'image/svg+xml');
+  const textEls = Array.from(svgDoc.querySelectorAll('text[font-family]'));
+  const families = [...new Set(textEls.map(el => el.getAttribute('font-family').replace(/['"]/g, '')))];
+
+  // 載入字體（瀏覽器已快取，通常極快）
+  const fontCache = {};
+  for (const family of families) {
+    const path = _LOCAL_FONTS[family];
+    if (!path) continue;
+    try {
+      const resp = await fetch(path);
+      if (resp.ok) fontCache[family] = opentype.parse(await resp.arrayBuffer());
+    } catch(e) { console.warn('[SVG outline] 字體載入失敗', family); }
+  }
+
+  // 文字元素轉路徑
+  const ns = 'http://www.w3.org/2000/svg';
+  for (const textEl of textEls) {
+    const family = (textEl.getAttribute('font-family') || '').replace(/['"]/g, '');
+    const font = fontCache[family];
+    if (!font) continue;  // 無對應字體，保留原 text 元素
+
+    const fontSize = parseFloat(textEl.getAttribute('font-size') || '16');
+    const fill     = textEl.getAttribute('fill') || '#000000';
+    const newG     = document.createElementNS(ns, 'g');
+
+    const tspans = Array.from(textEl.querySelectorAll('tspan'));
+    const targets = tspans.length ? tspans : [textEl];
+
+    for (const ts of targets) {
+      const char = ts.textContent || '';
+      if (!char.trim()) continue;
+      const x  = parseFloat(ts.getAttribute('x')  ?? textEl.getAttribute('x')  ?? '0');
+      const y  = parseFloat(ts.getAttribute('y')  ?? textEl.getAttribute('y')  ?? '0');
+      const dy = parseFloat(ts.getAttribute('dy') ?? '0');
+      const otPath = font.getPath(char, x, y + dy, fontSize);
+      if (!otPath.commands.length) continue;
+      const pathEl = document.createElementNS(ns, 'path');
+      pathEl.setAttribute('d', otPath.toPathData(2));
+      pathEl.setAttribute('fill', fill);
+      newG.appendChild(pathEl);
+    }
+
+    textEl.parentNode.replaceChild(newG, textEl);
+  }
+
+  return new XMLSerializer().serializeToString(svgDoc);
+}
+
 // ─── 本地字體對應路徑 ─────────────────────────────────────
 const _LOCAL_FONTS = {
   '(中英)標準體':   '字體/標準體中、英文.ttf',
