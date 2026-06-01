@@ -520,8 +520,8 @@ function get2DSVG() {
   const origBgImg   = canvas2d.backgroundImage;
   const origBgColor = canvas2d.backgroundColor;
   if (isThermos) {
-    canvas2d.backgroundImage  = null;
-    canvas2d.backgroundColor  = 'rgba(0,0,0,0)';
+    canvas2d.backgroundImage = null;
+    canvas2d.backgroundColor = '';   // 空字串 = 不輸出背景矩形（rgba 在 SVG 無效會變黑）
   }
 
   canvas2d.renderAll();
