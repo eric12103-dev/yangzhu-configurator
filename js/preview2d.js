@@ -159,34 +159,22 @@ function init2DCanvas(productId) {
     }, 600);
   });
 
-  // 限制物件邊界不可拖出印刷邊界
+  // 限制物件邊界不可拖出 canvas 邊界
   canvas2d.on('object:moving', function(e) {
     const obj = e.target;
-    if (!obj || !currentProduct || !currentProduct.labelArea) return;
-    const la   = currentProduct.labelArea;
-    const w    = canvas2d.getWidth();
-    const h    = canvas2d.getHeight();
-    const xMin = w * la.xRatio;
-    const yMin = h * la.yRatio;
-    const xMax = w * (la.xRatio + la.wRatio);
-    const yMax = h * (la.yRatio + la.hRatio);
+    if (!obj) return;
+    const w = canvas2d.getWidth();
+    const h = canvas2d.getHeight();
     obj.setCoords();
     const br = obj.getBoundingRect(true, true);
     const objW = br.width, objH = br.height;
-    // 若物件比標籤還寬/高，至少鎖定中心點在邊界內
-    if (objW >= (xMax - xMin)) {
-      const cx = (xMin + xMax) / 2;
-      obj.left = cx; obj.originX = 'center';
-    } else {
-      if (br.left < xMin) obj.left += (xMin - br.left);
-      else if (br.left + objW > xMax) obj.left -= (br.left + objW - xMax);
+    if (objW < w) {
+      if (br.left < 0) obj.left += -br.left;
+      else if (br.left + objW > w) obj.left -= (br.left + objW - w);
     }
-    if (objH >= (yMax - yMin)) {
-      const cy = (yMin + yMax) / 2;
-      obj.top = cy; obj.originY = 'center';
-    } else {
-      if (br.top < yMin) obj.top += (yMin - br.top);
-      else if (br.top + objH > yMax) obj.top -= (br.top + objH - yMax);
+    if (objH < h) {
+      if (br.top < 0) obj.top += -br.top;
+      else if (br.top + objH > h) obj.top -= (br.top + objH - h);
     }
     obj.setCoords();
     if (typeof _updateFloatToolbar === 'function') _updateFloatToolbar();
@@ -299,6 +287,20 @@ function addDefaultElements() {
   setTimeout(() => { _saveHistory(); }, 300);
 }
 
+// 計算標準化 padding：補償不同字體 fontBoundingBox 差異，讓視覺間距趨於一致
+function _normPadding(font, fontSize, basePad) {
+  try {
+    const ctx = document.createElement('canvas').getContext('2d');
+    ctx.font = `${fontSize}px "${font}"`;
+    const m = ctx.measureText('楊Ag');
+    const fAsc = m.fontBoundingBoxAscent;
+    const fDes = m.fontBoundingBoxDescent;
+    if (typeof fAsc !== 'number' || typeof fDes !== 'number') return basePad;
+    const overflow = Math.max(0, (fAsc + fDes) - fontSize * 1.3);
+    return Math.max(0, basePad - Math.round(overflow / 2));
+  } catch(e) { return basePad; }
+}
+
 // ─── 加入文字（role: 'title' | 'subtitle'）────────────────
 // title   → 上方 25% 處
 // subtitle → 下方 75% 處
@@ -350,20 +352,9 @@ function _doAddText2D(text, color, size, font, role) {
     splitByGrapheme: true,
     editable: true,
     name: role,
-    padding: 6,
+    padding: _normPadding(font, size || defaultSize, 6),
     lineHeight: 1.3
   });
-
-  if (isThermos && la) {
-    const _inset = 5;
-    t.clipPath = new fabric.Rect({
-      left:   w * la.xRatio + _inset,
-      top:    h * la.yRatio + _inset,
-      width:  w * la.wRatio - _inset * 2,
-      height: h * la.hRatio - _inset * 2,
-      absolutePositioned: true
-    });
-  }
 
   canvas2d.add(t);
   canvas2d.bringToFront(t);

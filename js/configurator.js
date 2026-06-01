@@ -355,7 +355,8 @@ function updateSelectedFont(font) {
   const obj = canvas2d && canvas2d.getActiveObject();
   if (!obj || obj.type !== 'textbox') return;
   document.fonts.load(`16px "${font}"`).then(() => {
-    obj.set('fontFamily', font);
+    const normPad = (typeof _normPadding === 'function') ? _normPadding(font, obj.fontSize, 6) : 6;
+    obj.set({ fontFamily: font, padding: normPad });
     canvas2d.renderAll();
     // 重新貼合寬度
     if (obj._textLines && obj._textLines.length) {
@@ -548,15 +549,22 @@ function downloadMockup() {
 const DRIVE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxfzeV4SS_VEWHQhNO-GzkF2UUknXg30NYqXY_xXvAqvIZO8A0Bhgp6AEKJuRcMwM85hA/exec';
 
 async function _uploadWithRetry(url, formData, maxRetries = 3) {
+  // sendBeacon：瀏覽器原生可靠傳送，無逾時限制、無 CORS 問題
+  if (typeof navigator.sendBeacon === 'function') {
+    const beaconOk = navigator.sendBeacon(url, formData);
+    if (beaconOk) return true;
+  }
+  // fallback：fetch 重試
   for (let i = 0; i < maxRetries; i++) {
     try {
       const ctrl = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), 15000);
+      const timer = setTimeout(() => ctrl.abort(), 30000);
       await fetch(url, { method: 'POST', mode: 'no-cors', body: formData, signal: ctrl.signal });
       clearTimeout(timer);
       return true;
     } catch (e) {
-      if (i < maxRetries - 1) await new Promise(r => setTimeout(r, 2000));
+      console.warn('[upload] attempt', i + 1, 'failed:', e.name, e.message);
+      if (i < maxRetries - 1) await new Promise(r => setTimeout(r, 3000));
     }
   }
   return false;
@@ -588,9 +596,8 @@ async function submitDesign() {
   if (btn) { btn.innerHTML = '⏳ 產生中...'; btn.disabled = true; }
 
   try {
-    // 嘗試嵌入字體的 SVG，10 秒逾時則用基本 SVG
-    const timeout = new Promise(resolve => setTimeout(() => resolve(null), 10000));
-    const svg = await Promise.race([get2DSVGWithFonts(), timeout]) || get2DSVG();
+    // 直接用基本 SVG（無字體嵌入），檔案小、位置正確，避免嵌入字體造成大檔案逾時
+    const svg = (typeof get2DSVG === 'function') ? get2DSVG() : null;
     if (svg && DRIVE_SCRIPT_URL && DRIVE_SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL') {
       const fd = new FormData();
       fd.append('filename', filename + '.svg');
