@@ -437,7 +437,7 @@ function get2DLabelDataURL() {
   bgObjs.forEach(o => o.set('visible', false));
   _suppressOverlay = true;
   canvas2d.backgroundImage = null;
-  canvas2d.backgroundColor = 'rgba(0,0,0,0)';
+  canvas2d.backgroundColor = '#ffffff';
   canvas2d.renderAll();
 
   const dataURL = canvas2d.toDataURL({
