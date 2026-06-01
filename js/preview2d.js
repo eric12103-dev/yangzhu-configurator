@@ -476,23 +476,49 @@ function get2DCanvas() {
 // ─── 匯出 SVG（基本，無字體嵌入）────────────────────────────
 function get2DSVG() {
   if (!canvas2d) return null;
+  const isThermos = currentProduct && currentProduct.id === 'thermos';
+
   const bgObjs = canvas2d.getObjects().filter(o => !o.selectable && o.name !== 'bottle-bg');
   bgObjs.forEach(o => o.set('visible', false));
   _suppressOverlay = true;
-  canvas2d.renderAll();
 
+  // 隨行杯：移除瓶身背景圖與背景色，SVG 只保留文字元素
+  const origBgImg   = canvas2d.backgroundImage;
+  const origBgColor = canvas2d.backgroundColor;
+  if (isThermos) {
+    canvas2d.backgroundImage  = null;
+    canvas2d.backgroundColor  = 'rgba(0,0,0,0)';
+  }
+
+  canvas2d.renderAll();
   let svg = canvas2d.toSVG();
 
+  // 還原
+  if (isThermos) {
+    canvas2d.backgroundImage = origBgImg;
+    canvas2d.backgroundColor = origBgColor;
+  }
   _suppressOverlay = false;
   bgObjs.forEach(o => o.set('visible', true));
   canvas2d.renderAll();
 
-  // 後處理：設定正確印刷尺寸 85×46.5mm（各別替換，避免重複屬性）
+  // 後處理：印刷尺寸 85×46.5mm
   const cw = canvas2d.getWidth();
   const ch = canvas2d.getHeight();
   svg = svg.replace(/(<svg\b[^>]*)\swidth="[^"]*"/, '$1 width="85mm"');
   svg = svg.replace(/(<svg\b[^>]*)\sheight="[^"]*"/, '$1 height="46.5mm"');
-  svg = svg.replace(/(<svg\b[^>]*)\sviewBox="[^"]*"/, `$1 viewBox="0 0 ${cw} ${ch}"`);
+
+  // 隨行杯：viewBox 裁切到標籤印刷區，排除瓶身其他區域
+  if (isThermos && currentProduct.labelArea) {
+    const la  = currentProduct.labelArea;
+    const vbX = Math.round(cw * la.xRatio);
+    const vbY = Math.round(ch * la.yRatio);
+    const vbW = Math.round(cw * la.wRatio);
+    const vbH = Math.round(ch * la.hRatio);
+    svg = svg.replace(/(<svg\b[^>]*)\sviewBox="[^"]*"/, `$1 viewBox="${vbX} ${vbY} ${vbW} ${vbH}"`);
+  } else {
+    svg = svg.replace(/(<svg\b[^>]*)\sviewBox="[^"]*"/, `$1 viewBox="0 0 ${cw} ${ch}"`);
+  }
   return svg;
 }
 
