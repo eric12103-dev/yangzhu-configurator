@@ -607,9 +607,7 @@ async function submitDesign() {
       _uploadWithRetry(DRIVE_SCRIPT_URL, fd).then(ok => {
         if (!statusEl) return;
         if (ok) {
-          statusEl.textContent = '上傳成功請截圖';
-          statusEl.style.color = 'var(--green)';
-          statusEl.style.fontWeight = '700';
+          statusEl.textContent = '';
           if (btn) btn.style.display = 'none';
         } else {
           statusEl.textContent = '⚠️ 傳送失敗，請截圖序號後告知設計師手動處理';
