@@ -344,15 +344,20 @@ function initDesignStep() {
 
   const product = PRODUCTS[STATE.productId];
 
-  // SVG 框線載入（上傳模式：移除虛線邊框，改用卡片框線圖）
+  // SVG 框線載入（上傳模式：框線畫在圖片上方，圖片裁切在黑色虛線框內）
   if (isUploadOnly && typeof canvas2d !== 'undefined' && canvas2d) {
     canvas2d.off('after:render');
     canvas2d.backgroundColor = '#ffffff';
-    fabric.Image.fromURL('assets/card_landscape_frame.svg', img => {
-      if (!canvas2d) return;
-      img.set({ scaleX: canvas2d.getWidth() / img.width, scaleY: canvas2d.getHeight() / img.height });
-      canvas2d.setBackgroundImage(img, canvas2d.renderAll.bind(canvas2d));
-    }, { crossOrigin: 'anonymous' });
+    // 載入 SVG 框線圖，在 after:render 疊加於所有物件上方（不受 clipPath 影響）
+    const _svgFrame = new Image();
+    _svgFrame.onload = function() {
+      canvas2d.on('after:render', function() {
+        if (_suppressOverlay) return;
+        canvas2d.contextContainer.drawImage(_svgFrame, 0, 0, canvas2d.getWidth(), canvas2d.getHeight());
+      });
+      canvas2d.renderAll();
+    };
+    _svgFrame.src = 'assets/card_landscape_frame.svg';
   }
 
   // 圖片上傳

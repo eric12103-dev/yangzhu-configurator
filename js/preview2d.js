@@ -385,14 +385,43 @@ function uploadImage2D(file) {
     fabric.Image.fromURL(e.target.result, img => {
       const w = canvas2d.getWidth();
       const h = canvas2d.getHeight();
-      const scale = Math.min(w / img.width, h / img.height) * 0.65;
-      img.set({
-        left: w / 2, top: h / 2,
-        originX: 'center', originY: 'center',
-        scaleX: scale, scaleY: scale
-      });
+
+      // 卡片上傳模式：圖片填滿虛線框，並裁切在框線範圍內
+      const _isUploadOnly = typeof STATE !== 'undefined'
+        && STATE.productId === 'biz_card'
+        && STATE.materialId === 'easycard'
+        && STATE.orientationId === 'landscape';
+
+      if (_isUploadOnly) {
+        // 黑色虛線框範圍（SVG viewBox 259.7×170.1，角點 2.8~256.8 / 2.8~167.2）
+        const cx  = w * (2.8 / 259.7);
+        const cy  = h * (2.8 / 170.1);
+        const cw2 = w * ((256.8 - 2.8) / 259.7);
+        const ch2 = h * ((167.2 - 2.8) / 170.1);
+        // 填滿虛線框
+        const scale = Math.max(cw2 / img.width, ch2 / img.height);
+        img.set({
+          left: w / 2, top: h / 2,
+          originX: 'center', originY: 'center',
+          scaleX: scale, scaleY: scale
+        });
+        // 裁切：超出虛線框的部分不顯示
+        img.clipPath = new fabric.Rect({
+          left: cx, top: cy,
+          width: cw2, height: ch2,
+          absolutePositioned: true
+        });
+      } else {
+        const scale = Math.min(w / img.width, h / img.height) * 0.65;
+        img.set({
+          left: w / 2, top: h / 2,
+          originX: 'center', originY: 'center',
+          scaleX: scale, scaleY: scale
+        });
+      }
+
       canvas2d.add(img);
-      canvas2d.sendToBack(img);   // 圖片在文字下方
+      canvas2d.sendToBack(img);
       canvas2d.setActiveObject(img);
       canvas2d.renderAll();
       uploadedImage = img;
