@@ -436,16 +436,40 @@ function setBackground2D(color) {
   canvas2d.setBackgroundColor(color, canvas2d.renderAll.bind(canvas2d));
 }
 
-// ─── 取得 DataURL（含 after:render 疊加，供預覽顯示用）─────────
+// ─── 取得 DataURL（含 SVG 框線合成，供預覽與送出用）─────────────
+// 注意：after:render 繪圖不會被 toDataURL 擷取，需手動合成
+let _cachedCardFrameImg = null;
 function get2DDataURLWithFrame() {
-  if (!canvas2d) return null;
-  const bgObjs = canvas2d.getObjects().filter(o => !o.selectable && o.name !== 'bottle-bg');
-  bgObjs.forEach(o => o.set('visible', false));
-  canvas2d.renderAll();  // _suppressOverlay 保持 false，after:render 的框線會畫出
-  const dataURL = canvas2d.toDataURL({ format: 'png', multiplier: 2 });
-  bgObjs.forEach(o => o.set('visible', true));
-  canvas2d.renderAll();
-  return dataURL;
+  const base = get2DDataURL();
+  if (!base) return Promise.resolve(null);
+
+  const doComposite = (frameImg) => {
+    const w = canvas2d.getWidth() * 2;
+    const h = canvas2d.getHeight() * 2;
+    const tmp = document.createElement('canvas');
+    tmp.width = w; tmp.height = h;
+    const ctx = tmp.getContext('2d');
+    return new Promise(resolve => {
+      const baseImg = new Image();
+      baseImg.onload = () => {
+        ctx.drawImage(baseImg, 0, 0, w, h);
+        ctx.drawImage(frameImg, 0, 0, w, h);
+        resolve(tmp.toDataURL('image/png'));
+      };
+      baseImg.onerror = () => resolve(base);
+      baseImg.src = base;
+    });
+  };
+
+  if (_cachedCardFrameImg && _cachedCardFrameImg.complete && _cachedCardFrameImg.naturalWidth > 0) {
+    return doComposite(_cachedCardFrameImg);
+  }
+  return new Promise(resolve => {
+    const frameImg = new Image();
+    frameImg.onload = () => { _cachedCardFrameImg = frameImg; doComposite(frameImg).then(resolve); };
+    frameImg.onerror = () => resolve(base);
+    frameImg.src = 'assets/card_landscape_frame.svg';
+  });
 }
 
 // ─── 取得 DataURL（排除輔助線與虛線框）──────────────────────

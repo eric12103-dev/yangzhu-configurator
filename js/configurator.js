@@ -614,9 +614,7 @@ function initPreviewStep() {
   const flatEl    = document.getElementById('preview-flat');
   const mockupDiv = document.getElementById('preview-mockup');
   const btnMockup = document.getElementById('btn-download-mockup');
-  // 上傳模式用含框線版本（顯示與送出均含框線）
-  const dataURL = (isUploadOnly && typeof get2DDataURLWithFrame === 'function')
-    ? get2DDataURLWithFrame() : get2DDataURL();
+  const dataURL   = get2DDataURL();
   if (dataURL) STATE.designDataURL = dataURL;
 
   // 商品連結按鈕
@@ -635,6 +633,19 @@ function initPreviewStep() {
     if (flatEl && dataURL) {
       flatEl.innerHTML = `<img src="${dataURL}" style="max-width:280px;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.12);">`;
     }
+  } else if (isUploadOnly && typeof get2DDataURLWithFrame === 'function') {
+    // 卡片上傳模式：非同步合成框線後顯示
+    if (mockupDiv) mockupDiv.style.display = 'none';
+    if (btnMockup) btnMockup.style.display = '';
+    if (flatEl) flatEl.innerHTML = '<p style="color:var(--gray-400);">載入中...</p>';
+    get2DDataURLWithFrame().then(frameURL => {
+      if (frameURL) STATE.designDataURL = frameURL;
+      if (flatEl) {
+        flatEl.innerHTML = frameURL
+          ? `<img src="${frameURL}" style="max-width:100%;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.12);">`
+          : '<p style="color:var(--gray-400);">尚無設計圖，請返回編輯。</p>';
+      }
+    });
   } else {
     // 其他商品（馬克杯等）：顯示平面設計圖 + 設計稿確認送出
     if (mockupDiv) mockupDiv.style.display = 'none';
@@ -755,7 +766,7 @@ async function submitDesign() {
     // 卡片橫式上傳模式：以含框線的 PNG 包成 SVG（框線隨檔案送出）
     const _isUploadOnly = STATE.productId === 'biz_card' && STATE.materialId === 'easycard' && STATE.orientationId === 'landscape';
     if (_isUploadOnly && typeof get2DDataURLWithFrame === 'function') {
-      const _pngDataURL = get2DDataURLWithFrame();
+      const _pngDataURL = await get2DDataURLWithFrame();
       if (_pngDataURL) svg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="85.6mm" height="54mm"><image xlink:href="${_pngDataURL}" width="100%" height="100%"/></svg>`;
     }
     if (svg && DRIVE_SCRIPT_URL && DRIVE_SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL') {
