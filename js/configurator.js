@@ -91,6 +91,66 @@ function promptPassword(productId, callback) {
 }
 
 // ─── Step 1：選產品 ────────────────────────────────────────
+function renderProductGrid(parentId) {
+  parentId = parentId || null;
+  const grid = document.getElementById('product-grid');
+  const subtitle = document.getElementById('product-grid-subtitle');
+  if (!grid) return;
+
+  const products = Object.values(PRODUCTS).filter(p => (p.parentId || null) === parentId);
+
+  let html = '';
+  if (parentId) {
+    const parent = PRODUCTS[parentId];
+    if (subtitle) subtitle.textContent = (parent ? parent.name : '') + ' — 選擇商品';
+    html += `<div style="width:100%;margin-bottom:16px;">
+      <button onclick="renderProductGrid(null)" style="background:none;border:1.5px solid #ccc;border-radius:8px;padding:6px 16px;cursor:pointer;font-size:14px;color:#666;">← 返回</button>
+    </div>`;
+  } else {
+    if (subtitle) subtitle.textContent = '點選後自動進入下一步';
+  }
+
+  html += products.map(p => {
+    const isSvg = p.image && p.image.toLowerCase().endsWith('.svg');
+    const imgStyle = isSvg ? 'object-fit:contain;padding:8px;background:#f5f0ea;' : '';
+    const imgHtml = p.image
+      ? `<div class="product-img-wrap">
+           <img src="${p.image}" alt="${p.name}" class="product-img" loading="lazy"
+                style="${imgStyle}"
+                onerror="this.parentElement.outerHTML='<div class=\\'product-icon\\'>${p.icon || ''}</div>'">
+         </div>`
+      : `<div class="product-icon">${p.icon || ''}</div>`;
+
+    let onclick;
+    if (p.isCategory) {
+      onclick = p.password
+        ? `promptPassword('${p.id}', () => renderProductGrid('${p.id}'))`
+        : `renderProductGrid('${p.id}')`;
+    } else {
+      onclick = `selectProduct('${p.id}')`;
+    }
+
+    const badgeHtml = p.badge
+      ? `<div class="product-badge" style="background:${p.badgeColor || '#888'}">${p.isCategory && p.password ? '🔒 ' : ''}${p.badge}</div>`
+      : '';
+    const sizeHtml = !p.isCategory && p.displaySize
+      ? `<div class="product-size">${p.displaySize}</div>` : '';
+    const minQtyHtml = !p.isCategory && p.minQty
+      ? `<div class="product-min">最低 ${p.minQty} 個起</div>` : '';
+
+    return `<div class="product-card" data-product-id="${p.id}" onclick="${onclick}">
+      ${imgHtml}
+      ${badgeHtml}
+      <h3>${p.name}</h3>
+      <p>${p.description || ''}</p>
+      ${sizeHtml}
+      ${minQtyHtml}
+    </div>`;
+  }).join('');
+
+  grid.innerHTML = html;
+}
+
 function selectProduct(productId) {
   STATE.productId  = productId;
   STATE.materialId = null;
@@ -673,31 +733,7 @@ ${p.materialLabel || '材質'}：${mat.name}
 // ─── 初始化 ───────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   // 渲染產品卡片
-  const grid = document.getElementById('product-grid');
-  if (grid) {
-    grid.innerHTML = Object.values(PRODUCTS).map(p => {
-      const isSvg = p.image && p.image.toLowerCase().endsWith('.svg');
-      const imgStyle = isSvg ? 'object-fit:contain;padding:8px;background:#f5f0ea;' : '';
-      const sizeText = p.displaySize || `${p.size.w} × ${p.size.h} ${p.size.unit}`;
-      const imgHtml = p.image
-        ? `<div class="product-img-wrap">
-             <img src="${p.image}" alt="${p.name}" class="product-img" loading="lazy"
-                  style="${imgStyle}"
-                  onerror="this.parentElement.outerHTML='<div class=\\'product-icon\\'>${p.icon}</div>'">
-           </div>`
-        : `<div class="product-icon">${p.icon}</div>`;
-      return `
-      <div class="product-card" data-product-id="${p.id}" onclick="${p.password ? `promptPassword('${p.id}', () => selectProduct('${p.id}'))` : `selectProduct('${p.id}')`}">
-        ${imgHtml}
-        <div class="product-badge" style="background:${p.badgeColor}">${p.password ? '🔒 ' : ''}${p.badge}</div>
-        <h3>${p.name}</h3>
-        <p>${p.description}</p>
-        <div class="product-size">${sizeText}</div>
-        <div class="product-min">最低 ${p.minQty} 個起</div>
-      </div>
-    `;
-    }).join('');
-  }
+  renderProductGrid(null);
 
   // 綁定規格步驟事件（在切到 Step 2 時 render）
   document.querySelectorAll('.step-panel').forEach(panel => {
