@@ -552,12 +552,40 @@ function initPreviewStep() {
   }
 
   if (isThermos) {
-    // 隨行杯：直接展示帶瓶身背景的 canvas 匯出圖
+    // 隨行杯步驟4：設計疊加到正面圖（上方基準對齊，寬度等比縮放）
     if (flatEl)    flatEl.style.display    = '';
     if (mockupDiv) mockupDiv.style.display = 'none';
     if (btnMockup) btnMockup.style.display = '';
-    if (flatEl && dataURL) {
-      flatEl.innerHTML = `<img src="${dataURL}" style="max-width:280px;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.12);">`;
+    if (flatEl) {
+      const colorId = STATE.materialId || 'oat_tea';
+      const mdata   = (typeof MOCKUP_DATA !== 'undefined') ? MOCKUP_DATA[colorId] : null;
+      const frontSrc = mdata && mdata.frontSrc ? mdata.frontSrc : null;
+      const designURL = typeof get2DDataURLTransparent === 'function' ? get2DDataURLTransparent() : dataURL;
+
+      if (frontSrc && designURL) {
+        const frontImg  = new Image();
+        const designImg = new Image();
+        let loaded = 0;
+        const onLoad = () => {
+          if (++loaded < 2) return;
+          const c = document.createElement('canvas');
+          c.width  = frontImg.naturalWidth;
+          c.height = frontImg.naturalHeight;
+          const ctx = c.getContext('2d');
+          ctx.drawImage(frontImg, 0, 0);
+          // 設計圖從左上角疊加，寬度對齊正面圖
+          ctx.drawImage(designImg, 0, 0, frontImg.naturalWidth, Math.round(designImg.naturalHeight * frontImg.naturalWidth / designImg.naturalWidth));
+          const url = c.toDataURL('image/png');
+          STATE.designDataURL = url;
+          if (flatEl) flatEl.innerHTML = `<img src="${url}" style="max-width:280px;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.12);">`;
+        };
+        frontImg.onload  = onLoad;
+        designImg.onload = onLoad;
+        frontImg.src  = frontSrc;
+        designImg.src = designURL;
+      } else if (flatEl && dataURL) {
+        flatEl.innerHTML = `<img src="${dataURL}" style="max-width:280px;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.12);">`;
+      }
     }
   } else {
     // 其他商品（馬克杯等）：顯示平面設計圖 + 設計稿確認送出

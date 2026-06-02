@@ -5,16 +5,20 @@
 const MOCKUP_DATA = {
   mint_green:  { src: 'assets/thermos/mockup/thermos_mint_green.png',  W: 389, H: 875,
                  label: { tl:[5,204], tr:[384,204], br:[384,406], bl:[5,406] },
-                 labelSrc: 'assets/thermos/label_mint_green.png',  labelW: 361, labelH: 572 },
+                 labelSrc: 'assets/thermos/label_mint_green.png',  labelW: 361, labelH: 572,
+                 frontSrc: 'assets/thermos/front_mint_green.png' },
   cherry_pink: { src: 'assets/thermos/mockup/thermos_cherry_pink.png', W: 391, H: 875,
                  label: { tl:[5,204], tr:[386,204], br:[386,406], bl:[5,406] },
-                 labelSrc: 'assets/thermos/label_cherry_pink.png', labelW: 362, labelH: 569 },
+                 labelSrc: 'assets/thermos/label_cherry_pink.png', labelW: 362, labelH: 569,
+                 frontSrc: 'assets/thermos/front_cherry_pink.png' },
   milk_purple: { src: 'assets/thermos/mockup/thermos_milk_purple.png', W: 391, H: 875,
                  label: { tl:[5,204], tr:[386,204], br:[386,406], bl:[5,406] },
-                 labelSrc: 'assets/thermos/label_milk_purple.png', labelW: 365, labelH: 573 },
+                 labelSrc: 'assets/thermos/label_milk_purple.png', labelW: 365, labelH: 573,
+                 frontSrc: 'assets/thermos/front_milk_purple.png' },
   oat_tea:     { src: 'assets/thermos/mockup/thermos_oat_tea.png',     W: 393, H: 874,
                  label: { tl:[5,204], tr:[388,204], br:[388,405], bl:[5,405] },
-                 labelSrc: 'assets/thermos/label_oat_tea.png',     labelW: 360, labelH: 564 },
+                 labelSrc: 'assets/thermos/label_oat_tea.png',     labelW: 360, labelH: 564,
+                 frontSrc: 'assets/thermos/front_oat_tea.png' },
 };
 
 function _loadImg(src) {
