@@ -322,7 +322,19 @@ const _TEXT_COLORS = [
 function initDesignStep() {
   const isThermos = STATE.productId === 'thermos';
 
+  // 上傳框線模式：調整 canvas 比例為橫式卡片（259.7×170.1）
+  const isUploadOnly = STATE.productId === 'biz_card'
+    && STATE.materialId === 'easycard'
+    && STATE.orientationId === 'landscape';
+  let _origSize = null;
+  if (isUploadOnly) {
+    const _prod = PRODUCTS['biz_card'];
+    if (_prod) { _origSize = _prod.size; _prod.size = { w: 2597, h: 1701, unit: '' }; }
+  }
+
   init2DCanvas(STATE.productId);
+
+  if (isUploadOnly && _origSize) PRODUCTS['biz_card'].size = _origSize;
 
   if (STATE.canvasJSON && typeof loadCanvas2DJSON === 'function' && !isThermos) {
     loadCanvas2DJSON(STATE.canvasJSON);
@@ -330,11 +342,18 @@ function initDesignStep() {
 
   _initFreeTextUI();
 
-  // 特殊模式判斷：特定商品+規格組合 → 只顯示上傳圖檔
   const product = PRODUCTS[STATE.productId];
-  const isUploadOnly = STATE.productId === 'biz_card'
-    && STATE.materialId === 'easycard'
-    && STATE.orientationId === 'landscape';
+
+  // SVG 框線載入（上傳模式：移除虛線邊框，改用卡片框線圖）
+  if (isUploadOnly && typeof canvas2d !== 'undefined' && canvas2d) {
+    canvas2d.off('after:render');
+    canvas2d.backgroundColor = '#ffffff';
+    fabric.Image.fromURL('assets/card_landscape_frame.svg', img => {
+      if (!canvas2d) return;
+      img.set({ scaleX: canvas2d.getWidth() / img.width, scaleY: canvas2d.getHeight() / img.height });
+      canvas2d.setBackgroundImage(img, canvas2d.renderAll.bind(canvas2d));
+    }, { crossOrigin: 'anonymous' });
+  }
 
   // 圖片上傳
   const uploadSection = document.getElementById('upload-section');

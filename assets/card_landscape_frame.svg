@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 24.3.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="範例" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 259.7 170.1" style="enable-background:new 0 0 259.7 170.1;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:none;stroke:#E60012;stroke-miterlimit:10;}
+	.st1{fill:none;stroke:#3E3A39;stroke-width:0.25;stroke-miterlimit:10;}
+	.st2{fill:none;stroke:#3E3A39;stroke-width:0.25;stroke-miterlimit:10;stroke-dasharray:5.0813,5.0813;}
+	.st3{fill:none;stroke:#3E3A39;stroke-width:0.25;stroke-miterlimit:10;stroke-dasharray:5.1404,5.1404;}
+</style>
+<g>
+	<path class="st0" d="M251.1,152.2c0,5.2-4.2,9.3-9.3,9.3h-224c-5.2,0-9.3-4.2-9.3-9.3V17.8c0-5.2,4.2-9.3,9.3-9.3h224
+		c5.2,0,9.3,4.2,9.3,9.3V152.2z"/>
+	<g>
+		<g>
+			<polyline class="st1" points="256.8,164.7 256.8,167.2 254.3,167.2 			"/>
+			<line class="st2" x1="249.2" y1="167.2" x2="7.9" y2="167.2"/>
+			<polyline class="st1" points="5.3,167.2 2.8,167.2 2.8,164.7 			"/>
+			<line class="st3" x1="2.8" y1="159.6" x2="2.8" y2="7.9"/>
+			<polyline class="st1" points="2.8,5.3 2.8,2.8 5.3,2.8 			"/>
+			<line class="st2" x1="10.4" y1="2.8" x2="251.8" y2="2.8"/>
+			<polyline class="st1" points="254.3,2.8 256.8,2.8 256.8,5.3 			"/>
+			<line class="st3" x1="256.8" y1="10.5" x2="256.8" y2="162.2"/>
+		</g>
+	</g>
+</g>
+</svg>
