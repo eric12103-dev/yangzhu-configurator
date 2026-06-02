@@ -86,7 +86,7 @@ const PRODUCTS = {
     name: '悠遊卡專區',
     nameEn: 'EasyCard',
     icon: '💳',
-    image: 'assets/photos/acrylic_charm.png',  // 暫用佔位圖，請替換成悠遊卡圖片
+    image: 'assets/photos/easycard.png',
     badge: 'RAY專屬',
     badgeColor: '#1a4a8a',
     password: '38',
@@ -101,7 +101,7 @@ const PRODUCTS = {
     },
     materialLabel: '規格',
     materials: [
-      { id: 'standard', name: '標準款', priceBase: 0, image: 'assets/photos/acrylic_charm.png' }
+      { id: 'standard', name: '標準款', priceBase: 0, image: 'assets/photos/easycard.png' }
     ],
     finishes: [
       { id: 'uv_print', name: 'UV彩色噴印', price: 0 }
