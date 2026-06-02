@@ -88,8 +88,9 @@ function init2DCanvas(productId) {
   if (isThermos) {
     const _colorId = (typeof STATE !== 'undefined' && STATE.materialId) ? STATE.materialId : 'oat_tea';
     _mdata = (typeof MOCKUP_DATA !== 'undefined') ? MOCKUP_DATA[_colorId] : null;
-    const _aspect  = _mdata ? (_mdata.H / _mdata.W) : 2.35;
-    cw = Math.min(containerW - 40, 360);
+    // 使用預裁標籤圖的比例，只顯示印刷區
+    const _aspect = (_mdata && _mdata.labelW) ? (_mdata.labelH / _mdata.labelW) : 1.57;
+    cw = Math.min(containerW - 40, 480);
     ch = Math.round(cw * _aspect);
   } else {
     const ratio = currentProduct.size.h / currentProduct.size.w;
@@ -222,19 +223,16 @@ function init2DCanvas(productId) {
   });
 
   if (isThermos && _mdata) {
-    // 更新 labelArea / textLayout 對應瓶身標籤實際位置
-    const _lxr = _mdata.label.tl[0] / _mdata.W;
-    const _lyr = _mdata.label.tl[1] / _mdata.H;
-    const _lwr = (_mdata.label.tr[0] - _mdata.label.tl[0]) / _mdata.W;
-    const _lhr = (_mdata.label.bl[1] - _mdata.label.tl[1]) / _mdata.H;
-    currentProduct.labelArea  = { xRatio: _lxr, yRatio: _lyr, wRatio: _lwr, hRatio: _lhr };
+    // canvas 即為印刷標籤區，labelArea = 全畫布
+    currentProduct.labelArea  = { xRatio: 0, yRatio: 0, wRatio: 1, hRatio: 1 };
     currentProduct.textLayout = {
-      line1: { yRatio: _lyr + _lhr * 0.22, sizeRatio: _lhr * 0.19 },
-      line2: { yRatio: _lyr + _lhr * 0.52, sizeRatio: _lhr * 0.15 },
-      line3: { yRatio: _lyr + _lhr * 0.80, sizeRatio: _lhr * 0.12 },
+      line1: { yRatio: 0.22, sizeRatio: 0.19 },
+      line2: { yRatio: 0.52, sizeRatio: 0.15 },
+      line3: { yRatio: 0.80, sizeRatio: 0.12 },
     };
-    // 載入瓶身照片作為 canvas 不可選取背景
-    fabric.Image.fromURL(_mdata.src, img => {
+    // 使用預裁標籤圖作為背景，直接拉伸填滿 canvas
+    const bgSrc = _mdata.labelSrc || _mdata.src;
+    fabric.Image.fromURL(bgSrc, img => {
       if (!canvas2d) return;
       img.set({ scaleX: cw / img.width, scaleY: ch / img.height });
       canvas2d.setBackgroundImage(img, () => { addDefaultElements(); });
