@@ -352,9 +352,11 @@ function initDesignStep() {
     }
   }
 
-  // 新增文字按鈕（上傳模式時隱藏）
-  const addPanel = document.getElementById('panel-add');
-  if (addPanel) addPanel.style.display = isUploadOnly ? 'none' : '';
+  // 新增文字按鈕與文字屬性面板（上傳模式時全部隱藏）
+  const addPanel   = document.getElementById('panel-add');
+  const propsPanel = document.getElementById('panel-text-props');
+  if (addPanel)   addPanel.style.display   = isUploadOnly ? 'none' : '';
+  if (propsPanel) propsPanel.style.display = isUploadOnly ? 'none' : 'none'; // 預設隱藏，由 _syncTextPropsPanel 控制
 
   // 背景色
   const bgPicker = document.getElementById('design-bgcolor');
@@ -441,6 +443,16 @@ function _syncTextPropsPanel(obj) {
   const propsPanel = document.getElementById('panel-text-props');
   const addPanel   = document.getElementById('panel-add');
   const isText = obj && obj.type === 'textbox';
+
+  // 上傳模式：不顯示任何文字功能
+  const isUploadOnly = STATE.productId === 'biz_card'
+    && STATE.materialId === 'easycard'
+    && STATE.orientationId === 'landscape';
+  if (isUploadOnly) {
+    if (propsPanel) propsPanel.style.display = 'none';
+    if (addPanel)   addPanel.style.display   = 'none';
+    return;
+  }
 
   if (propsPanel) propsPanel.style.display = isText ? '' : 'none';
   if (addPanel)   addPanel.style.display   = isText ? 'none' : '';
