@@ -302,7 +302,12 @@ const PRODUCTS = {
     },
     materialLabel: '規格',
     materials: [
-      { id: 'standard', name: '標準款', priceBase: 150, image: 'assets/photos/acrylic_charm.png' }
+      { id: 'easycard', name: '悠遊卡', priceBase: 150, image: 'assets/photos/acrylic_charm.png' },
+      { id: 'ipass',    name: '一卡通', priceBase: 150, image: 'assets/photos/acrylic_charm.png' }
+    ],
+    orientations: [
+      { id: 'portrait',  name: '直式' },
+      { id: 'landscape', name: '橫式' }
     ],
     finishes: [
       { id: 'uv_print', name: 'UV彩色噴印', price: 0 }

@@ -11,6 +11,7 @@ const STATE = {
   materialId: null,
   finishId: null,
   capacityId: null,
+  orientationId: null,
   qty: 100,
   bgColor: '#ffffff',
   canvasJSON: null,
@@ -166,7 +167,8 @@ function selectProduct(productId) {
   const p = PRODUCTS[productId];
   STATE.materialId = p.materials[0].id;
   STATE.finishId   = p.finishes[0].id;
-  if (p.capacities) STATE.capacityId = p.capacities[0].id;
+  if (p.capacities)    STATE.capacityId    = p.capacities[0].id;
+  if (p.orientations)  STATE.orientationId = p.orientations[0].id;
 
   nextStep();
 }
@@ -243,6 +245,30 @@ function renderSpecStep() {
     });
   } else {
     capSection.classList.add('hidden');
+  }
+
+  // 方向（壓克力吊飾等才有）
+  const oriSection = document.getElementById('spec-orientation-section');
+  if (oriSection) {
+    if (p.orientations) {
+      oriSection.classList.remove('hidden');
+      const oriContainer = document.getElementById('spec-orientations');
+      oriContainer.innerHTML = p.orientations.map(o => `
+        <label class="spec-option ${o.id === STATE.orientationId ? 'selected' : ''}">
+          <input type="radio" name="orientation" value="${o.id}" ${o.id === STATE.orientationId ? 'checked' : ''}>
+          <span class="spec-label">${o.name}</span>
+        </label>
+      `).join('');
+      oriContainer.querySelectorAll('input').forEach(input => {
+        input.addEventListener('change', () => {
+          STATE.orientationId = input.value;
+          oriContainer.querySelectorAll('label').forEach(l => l.classList.remove('selected'));
+          input.closest('label').classList.add('selected');
+        });
+      });
+    } else {
+      oriSection.classList.add('hidden');
+    }
   }
 
   // 數量滑桿
