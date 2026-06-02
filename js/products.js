@@ -260,7 +260,7 @@ const PRODUCTS = {
   biz_plate: {
     id: 'biz_plate',
     parentId: 'bizzone',
-    name: '車牌悠遊卡',
+    name: '車牌電子票證',
     icon: '🚗',
     image: 'assets/photos/easycard.png',
     badge: 'RAY專屬',
@@ -281,7 +281,7 @@ const PRODUCTS = {
   biz_thick: {
     id: 'biz_thick',
     parentId: 'bizzone',
-    name: '厚切悠遊卡',
+    name: '厚切電子票證',
     icon: '🃏',
     image: 'assets/photos/easycard.png',
     badge: 'RAY專屬',
