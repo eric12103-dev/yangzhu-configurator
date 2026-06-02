@@ -987,14 +987,14 @@ body {
   .form-group textarea,
   .ai-input-row textarea { font-size: 16px !important; }
 
-  /* Step 3：Canvas 優先（順序：canvas → 工具 → 3D預覽） */
+  /* Step 3：手機版順序：工具 → canvas → 3D預覽 */
   .design-preview-layout {
     display: flex !important;
     flex-direction: column;
     gap: 16px;
   }
-  .design-preview-layout > :nth-child(1) { order: 2; } /* 工具面板 */
-  .design-preview-layout > :nth-child(2) { order: 1; } /* 2D Canvas ← 最先 */
+  .design-preview-layout > :nth-child(1) { order: 1; } /* 工具面板 ← 最先 */
+  .design-preview-layout > :nth-child(2) { order: 2; } /* 2D Canvas */
   .design-preview-layout > :nth-child(3) { order: 3; } /* 3D 預覽 */
 
   .canvas-wrap { padding: 8px; min-height: 180px; }

@@ -199,10 +199,6 @@
 
         <!-- 欄 2：2D Canvas / 即時 Mockup -->
         <div>
-          <div style="display:flex;gap:8px;justify-content:center;margin-bottom:8px;">
-            <button id="btn-undo" class="btn btn-secondary btn-sm" onclick="undo2D()" disabled title="復原 (Ctrl+Z)" style="min-width:80px;">↩ 復原</button>
-            <button id="btn-redo" class="btn btn-secondary btn-sm" onclick="redo2D()" disabled title="取消復原 (Ctrl+Y)" style="min-width:80px;">↪ 取消復原</button>
-          </div>
           <div id="canvas-2d-wrap" class="canvas-wrap">
             <canvas id="canvas-2d"></canvas>
             <div id="float-toolbar">
@@ -210,11 +206,14 @@
               <button title="複製" onclick="duplicateSelected2D()">⧉</button>
             </div>
           </div>
+          <div style="display:flex;gap:8px;justify-content:center;margin-top:8px;">
+            <button id="btn-undo" class="btn btn-secondary btn-sm" onclick="undo2D()" disabled title="復原 (Ctrl+Z)" style="min-width:80px;">↩ 復原</button>
+            <button id="btn-redo" class="btn btn-secondary btn-sm" onclick="redo2D()" disabled title="取消復原 (Ctrl+Y)" style="min-width:80px;">↪ 取消復原</button>
+          </div>
           <div id="live-mockup-wrap" style="display:none;text-align:center;">
             <div id="live-mockup-loading" style="color:var(--gray-400);padding:32px 0;font-size:13px;">合成中…</div>
             <canvas id="live-mockup-canvas" style="max-width:100%;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.12);display:none;"></canvas>
           </div>
-          <p id="canvas-note" style="font-size:11px;color:var(--gray-400);text-align:center;margin-top:8px;">虛線為刀模輪廓參考線</p>
         </div>
 
       </div><!-- /design-preview-layout -->
