@@ -196,6 +196,17 @@
             <button class="btn btn-danger btn-sm" onclick="clear2D()">清空重來</button>
           </div>
 
+          <!-- 縮放滑桿（upload-only 模式才顯示） -->
+          <div id="zoom-slider-section" style="display:none;margin-bottom:8px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+              <span style="font-size:13px;color:var(--gray-700);font-weight:600;">縮放</span>
+              <span id="zoom-value-display" style="font-size:12px;color:var(--gray-400);">100%</span>
+            </div>
+            <input type="range" id="zoom-slider" min="20" max="300" step="1" value="100"
+                   style="width:100%;cursor:pointer;accent-color:var(--green);"
+                   oninput="onZoomSlider(this.value)">
+          </div>
+
           <div style="display:flex;gap:8px;">
             <button id="btn-undo" class="btn btn-secondary btn-sm" onclick="undo2D()" disabled title="復原 (Ctrl+Z)" style="flex:1;">↩ 復原</button>
             <button id="btn-redo" class="btn btn-secondary btn-sm" onclick="redo2D()" disabled title="取消復原 (Ctrl+Y)" style="flex:1;">↪ 取消復原</button>

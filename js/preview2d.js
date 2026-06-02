@@ -5,6 +5,7 @@ let uploadedImage = null;
 let currentProduct = null;
 let _suppressOverlay  = false;
 let _showLabelBorder  = false;
+let _uploadBaseScale  = 1;
 
 // ─── Undo / Redo ─────────────────────────────
 let _historyStack = [];
@@ -400,6 +401,7 @@ function uploadImage2D(file) {
         const ch2 = h * ((167.2 - 2.8) / 170.1);
         // 填滿虛線框
         const scale = Math.max(cw2 / img.width, ch2 / img.height);
+        _uploadBaseScale = scale;
         img.set({
           left: w / 2, top: h / 2,
           originX: 'center', originY: 'center',
@@ -411,6 +413,11 @@ function uploadImage2D(file) {
           width: cw2, height: ch2,
           absolutePositioned: true
         });
+        // 重設滑桿為 100%
+        const _s = document.getElementById('zoom-slider');
+        const _d = document.getElementById('zoom-value-display');
+        if (_s) _s.value = 100;
+        if (_d) _d.textContent = '100%';
       } else {
         const scale = Math.min(w / img.width, h / img.height) * 0.65;
         img.set({
@@ -765,6 +772,19 @@ async function get2DSVGWithFonts() {
   return svgStr.replace(/(<svg[^>]*>)/, '$1<defs>' + style + '</defs>');
 }
 
+
+// ─── 縮放滑桿（upload-only 模式）────────────────────────────
+function onZoomSlider(value) {
+  const ratio = parseFloat(value) / 100;
+  const dispEl = document.getElementById('zoom-value-display');
+  if (dispEl) dispEl.textContent = Math.round(ratio * 100) + '%';
+  if (!canvas2d) return;
+  const img = canvas2d.getObjects().find(o => o.type === 'image' && o.selectable !== false);
+  if (!img) return;
+  img.set({ scaleX: _uploadBaseScale * ratio, scaleY: _uploadBaseScale * ratio });
+  img.setCoords();
+  canvas2d.renderAll();
+}
 
 // ─── 刪除選取 ─────────────────────────────────────────────
 function deleteSelected2D() {

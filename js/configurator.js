@@ -382,6 +382,14 @@ function initDesignStep() {
   if (addPanel)   addPanel.style.display   = isUploadOnly ? 'none' : '';
   if (propsPanel) propsPanel.style.display = isUploadOnly ? 'none' : 'none'; // 預設隱藏，由 _syncTextPropsPanel 控制
 
+  // 縮放滑桿（upload-only 才顯示）
+  const zoomSection = document.getElementById('zoom-slider-section');
+  if (zoomSection) zoomSection.style.display = isUploadOnly ? '' : 'none';
+  const zoomSlider = document.getElementById('zoom-slider');
+  const zoomDisplay = document.getElementById('zoom-value-display');
+  if (zoomSlider) { zoomSlider.value = 100; }
+  if (zoomDisplay) zoomDisplay.textContent = '100%';
+
   // 背景色
   const bgPicker = document.getElementById('design-bgcolor');
   if (bgPicker) {
