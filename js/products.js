@@ -119,8 +119,10 @@ const PRODUCTS = {
       { id: 'landscape', name: '橫式' }
     ],
     orientationImages: {
-      'easycard_portrait':       'assets/photos/easycard_portrait.png',
-      'easycard_landscape':      'assets/photos/easycard_landscape.png',
+      'easycard_portrait':        'assets/photos/easycard_portrait.png',
+      'easycard_landscape':       'assets/photos/easycard_landscape.png',
+      'ipass_portrait':           'assets/photos/ipass_portrait.png',
+      'ipass_landscape':          'assets/photos/ipass_landscape.png',
       'super_easycard_portrait':  'assets/photos/super_easycard_portrait.png',
       'super_easycard_landscape': 'assets/photos/super_easycard_landscape.png'
     },
@@ -325,8 +327,10 @@ const PRODUCTS = {
       { id: 'landscape', name: '橫式' }
     ],
     orientationImages: {
-      'easycard_portrait':       'assets/photos/easycard_portrait.png',
-      'easycard_landscape':      'assets/photos/easycard_landscape.png',
+      'easycard_portrait':        'assets/photos/easycard_portrait.png',
+      'easycard_landscape':       'assets/photos/easycard_landscape.png',
+      'ipass_portrait':           'assets/photos/ipass_portrait.png',
+      'ipass_landscape':          'assets/photos/ipass_landscape.png',
       'super_easycard_portrait':  'assets/photos/super_easycard_portrait.png',
       'super_easycard_landscape': 'assets/photos/super_easycard_landscape.png'
     },
