@@ -117,6 +117,9 @@ const PRODUCTS = {
       { id: 'portrait',  name: '直式' },
       { id: 'landscape', name: '橫式' }
     ],
+    orientationImages: {
+      'easycard_landscape': 'assets/photos/easycard_landscape.png'
+    },
     finishes: [{ id: 'uv_print', name: 'UV彩色噴印', price: 0 }],
     qtyBreaks: [{ min: 50, max: 9999, price: 0 }],
     minQty: 50, leadDays: 14, color: '#1a4a8a', textOnly: true
@@ -316,6 +319,9 @@ const PRODUCTS = {
       { id: 'portrait',  name: '直式' },
       { id: 'landscape', name: '橫式' }
     ],
+    orientationImages: {
+      'easycard_landscape': 'assets/photos/easycard_landscape.png'
+    },
     finishes: [
       { id: 'uv_print', name: 'UV彩色噴印', price: 0 }
     ],

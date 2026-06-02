@@ -264,6 +264,7 @@ function renderSpecStep() {
           STATE.orientationId = input.value;
           oriContainer.querySelectorAll('label').forEach(l => l.classList.remove('selected'));
           input.closest('label').classList.add('selected');
+          _updateColorPreview(p);
         });
       });
     } else {
@@ -773,12 +774,25 @@ document.addEventListener('DOMContentLoaded', () => {
   renderStep();
 });
 
-// 顏色預覽圖切換（僅保溫杯）
+// 顏色/規格預覽圖切換
 function _updateColorPreview(p) {
   const wrap = document.getElementById('spec-color-preview');
   const img  = document.getElementById('spec-color-img');
   const name = document.getElementById('spec-color-name');
   if (!wrap || !img) return;
+
+  // 優先：material + orientation 組合圖
+  const comboKey = STATE.materialId + '_' + STATE.orientationId;
+  if (p.orientationImages && STATE.orientationId && p.orientationImages[comboKey]) {
+    const mat = p.materials.find(m => m.id === STATE.materialId);
+    const ori = p.orientations && p.orientations.find(o => o.id === STATE.orientationId);
+    img.src = p.orientationImages[comboKey];
+    if (name) name.textContent = (mat ? mat.name : '') + (ori ? ' ' + ori.name : '');
+    wrap.style.display = 'block';
+    return;
+  }
+
+  // 次之：單一 material 圖
   const mat = p.materials.find(m => m.id === STATE.materialId);
   if (mat && mat.image) {
     img.src = mat.image;
