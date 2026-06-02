@@ -191,8 +191,9 @@
             <button class="btn btn-danger btn-sm" onclick="clear2D()">清空重來</button>
           </div>
 
-          <div style="background:var(--gray-100);border-radius:8px;padding:10px;font-size:11px;color:var(--gray-400);">
-            💡 拖拉元素調整位置，點選後可縮放旋轉。
+          <div style="display:flex;gap:8px;">
+            <button id="btn-undo" class="btn btn-secondary btn-sm" onclick="undo2D()" disabled title="復原 (Ctrl+Z)" style="flex:1;">↩ 復原</button>
+            <button id="btn-redo" class="btn btn-secondary btn-sm" onclick="redo2D()" disabled title="取消復原 (Ctrl+Y)" style="flex:1;">↪ 取消復原</button>
           </div>
 
         </div>
@@ -206,9 +207,8 @@
               <button title="複製" onclick="duplicateSelected2D()">⧉</button>
             </div>
           </div>
-          <div style="display:flex;gap:8px;justify-content:center;margin-top:8px;">
-            <button id="btn-undo" class="btn btn-secondary btn-sm" onclick="undo2D()" disabled title="復原 (Ctrl+Z)" style="min-width:80px;">↩ 復原</button>
-            <button id="btn-redo" class="btn btn-secondary btn-sm" onclick="redo2D()" disabled title="取消復原 (Ctrl+Y)" style="min-width:80px;">↪ 取消復原</button>
+          <div style="background:var(--gray-100);border-radius:8px;padding:10px;font-size:11px;color:var(--gray-400);margin-top:8px;">
+            💡 拖拉元素調整位置，點選後可縮放旋轉。
           </div>
           <div id="live-mockup-wrap" style="display:none;text-align:center;">
             <div id="live-mockup-loading" style="color:var(--gray-400);padding:32px 0;font-size:13px;">合成中…</div>
