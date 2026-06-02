@@ -97,7 +97,7 @@ const PRODUCTS = {
   biz_card: {
     id: 'biz_card',
     parentId: 'bizzone',
-    name: '卡片型悠遊卡',
+    name: '卡片型電子票證',
     icon: '💳',
     image: 'assets/photos/easycard.png',
     badge: 'RAY專屬',
@@ -134,7 +134,7 @@ const PRODUCTS = {
   biz_leather_round: {
     id: 'biz_leather_round',
     parentId: 'bizzone',
-    name: '圓形皮革悠遊卡',
+    name: '圓形皮革電子票證',
     icon: '⭕',
     image: 'assets/photos/easycard.png',
     badge: 'RAY專屬',
@@ -155,7 +155,7 @@ const PRODUCTS = {
   biz_leather_omamori: {
     id: 'biz_leather_omamori',
     parentId: 'bizzone',
-    name: '御守皮革悠遊卡',
+    name: '御守皮革電子票證',
     icon: '🎴',
     image: 'assets/photos/easycard.png',
     badge: 'RAY專屬',
