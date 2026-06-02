@@ -110,8 +110,9 @@ const PRODUCTS = {
     textLayout: { title: { yRatio: 0.42, sizeRatio: 0.11 }, subtitle: { yRatio: 0.62, sizeRatio: 0.08 } },
     materialLabel: '規格',
     materials: [
-      { id: 'easycard', name: '悠遊卡', priceBase: 0, image: 'assets/photos/easycard.png' },
-      { id: 'ipass',    name: '一卡通', priceBase: 0, image: 'assets/photos/easycard.png' }
+      { id: 'easycard',       name: '悠遊卡',     priceBase: 0, image: 'assets/photos/easycard.png' },
+      { id: 'ipass',          name: '一卡通',     priceBase: 0, image: 'assets/photos/easycard.png' },
+      { id: 'super_easycard', name: '超級悠遊卡', priceBase: 0, image: 'assets/photos/easycard.png' }
     ],
     orientations: [
       { id: 'portrait',  name: '直式' },
@@ -313,8 +314,9 @@ const PRODUCTS = {
     },
     materialLabel: '規格',
     materials: [
-      { id: 'easycard', name: '悠遊卡', priceBase: 150, image: 'assets/photos/acrylic_charm.png' },
-      { id: 'ipass',    name: '一卡通', priceBase: 150, image: 'assets/photos/acrylic_charm.png' }
+      { id: 'easycard',       name: '悠遊卡',     priceBase: 150, image: 'assets/photos/acrylic_charm.png' },
+      { id: 'ipass',          name: '一卡通',     priceBase: 150, image: 'assets/photos/acrylic_charm.png' },
+      { id: 'super_easycard', name: '超級悠遊卡', priceBase: 150, image: 'assets/photos/acrylic_charm.png' }
     ],
     orientations: [
       { id: 'portrait',  name: '直式' },
