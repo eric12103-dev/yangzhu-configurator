@@ -436,6 +436,18 @@ function setBackground2D(color) {
   canvas2d.setBackgroundColor(color, canvas2d.renderAll.bind(canvas2d));
 }
 
+// ─── 取得 DataURL（含 after:render 疊加，供預覽顯示用）─────────
+function get2DDataURLWithFrame() {
+  if (!canvas2d) return null;
+  const bgObjs = canvas2d.getObjects().filter(o => !o.selectable && o.name !== 'bottle-bg');
+  bgObjs.forEach(o => o.set('visible', false));
+  canvas2d.renderAll();  // _suppressOverlay 保持 false，after:render 的框線會畫出
+  const dataURL = canvas2d.toDataURL({ format: 'png', multiplier: 2 });
+  bgObjs.forEach(o => o.set('visible', true));
+  canvas2d.renderAll();
+  return dataURL;
+}
+
 // ─── 取得 DataURL（排除輔助線與虛線框）──────────────────────
 function get2DDataURL() {
   if (!canvas2d) return null;

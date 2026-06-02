@@ -610,10 +610,13 @@ function applyBgPreset(color) {
 // ─── Step 4：預覽 ──────────────────────────────────────────
 function initPreviewStep() {
   const isThermos = STATE.productId === 'thermos';
+  const isUploadOnly = STATE.productId === 'biz_card' && STATE.materialId === 'easycard' && STATE.orientationId === 'landscape';
   const flatEl    = document.getElementById('preview-flat');
   const mockupDiv = document.getElementById('preview-mockup');
   const btnMockup = document.getElementById('btn-download-mockup');
-  const dataURL   = get2DDataURL();
+  // 上傳模式用含框線版本（顯示與送出均含框線）
+  const dataURL = (isUploadOnly && typeof get2DDataURLWithFrame === 'function')
+    ? get2DDataURLWithFrame() : get2DDataURL();
   if (dataURL) STATE.designDataURL = dataURL;
 
   // 商品連結按鈕
@@ -749,6 +752,12 @@ async function submitDesign() {
       }
     }
     if (!svg) svg = (typeof get2DSVG === 'function') ? get2DSVG() : null;
+    // 卡片橫式上傳模式：以含框線的 PNG 包成 SVG（框線隨檔案送出）
+    const _isUploadOnly = STATE.productId === 'biz_card' && STATE.materialId === 'easycard' && STATE.orientationId === 'landscape';
+    if (_isUploadOnly && typeof get2DDataURLWithFrame === 'function') {
+      const _pngDataURL = get2DDataURLWithFrame();
+      if (_pngDataURL) svg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="85.6mm" height="54mm"><image xlink:href="${_pngDataURL}" width="100%" height="100%"/></svg>`;
+    }
     if (svg && DRIVE_SCRIPT_URL && DRIVE_SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL') {
       const fd = new FormData();
       fd.append('filename', filename + '.svg');
