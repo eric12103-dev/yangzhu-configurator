@@ -355,7 +355,9 @@ function _initFreeTextUI() {
     sel.innerHTML = FONTS.map(f => `<option value="${f.id}">${f.label}</option>`).join('');
     sel.value = FONTS[0].id;
   }
-  _buildDotPalette('text-color-dots', _TEXT_COLORS, false, color => {
+  const _activeProduct = PRODUCTS[STATE.productId];
+  const _colorPalette = (_activeProduct && _activeProduct.textColors) ? _activeProduct.textColors : _TEXT_COLORS;
+  _buildDotPalette('text-color-dots', _colorPalette, false, color => {
     const obj = canvas2d && canvas2d.getActiveObject();
     if (obj && obj.type === 'textbox') { obj.set('fill', color); canvas2d.renderAll(); }
     document.querySelectorAll('#text-color-dots .dot').forEach(d =>

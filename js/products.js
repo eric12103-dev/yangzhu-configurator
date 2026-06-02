@@ -39,7 +39,8 @@ const PRODUCTS = {
     minQty: 1,
     leadDays: 20,
     color: '#B87333',
-    textOnly: true
+    textOnly: true,
+    textColors: ['#000000']
   },
 
   mug: {
