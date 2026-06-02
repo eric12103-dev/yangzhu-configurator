@@ -203,19 +203,25 @@ function renderSpecStep() {
 }
 
 function updateLiveQuote() {
+  const el = document.getElementById('live-quote');
+  if (!el) return;
+
+  const p = PRODUCTS[STATE.productId];
+  if (p && p.noPrice) {
+    el.innerHTML = `<div class="quote-row total"><span>定價</span><strong>請洽詢報價</strong></div>`;
+    return;
+  }
+
   const q = calcQuote(STATE.productId, STATE.materialId, STATE.finishId, STATE.qty, STATE.capacityId);
   if (!q) return;
 
-  const el = document.getElementById('live-quote');
-  if (el) {
-    el.innerHTML = `
-      <div class="quote-row"><span>單價</span><strong>NT$ ${q.unitPrice.toLocaleString()}</strong></div>
-      <div class="quote-row"><span>數量 × ${q.qty.toLocaleString()}</span><strong>NT$ ${q.subtotal.toLocaleString()}</strong></div>
-      <div class="quote-row"><span>製版費</span><strong>NT$ ${q.setupFee.toLocaleString()}</strong></div>
-      <div class="quote-row total"><span>預估總計</span><strong>NT$ ${q.total.toLocaleString()}</strong></div>
-      <div class="quote-note">預計交期：下單後 ${q.leadDays} 個工作天</div>
-    `;
-  }
+  el.innerHTML = `
+    <div class="quote-row"><span>單價</span><strong>NT$ ${q.unitPrice.toLocaleString()}</strong></div>
+    <div class="quote-row"><span>數量 × ${q.qty.toLocaleString()}</span><strong>NT$ ${q.subtotal.toLocaleString()}</strong></div>
+    <div class="quote-row"><span>製版費</span><strong>NT$ ${q.setupFee.toLocaleString()}</strong></div>
+    <div class="quote-row total"><span>預估總計</span><strong>NT$ ${q.total.toLocaleString()}</strong></div>
+    <div class="quote-note">預計交期：下單後 ${q.leadDays} 個工作天</div>
+  `;
 }
 
 // ─── Step 3：設計 ──────────────────────────────────────────
@@ -656,7 +662,7 @@ function sendInquiry() {
 ${p.materialLabel || '材質'}：${mat.name}
 工藝：${fin.name}${cap ? `\n容量：${cap.name}` : ''}
 數量：${STATE.qty.toLocaleString()} 個
-預估總計：NT$ ${q ? q.total.toLocaleString() : '--'}（未稅，含製版費）
+預估總計：${p.noPrice ? '請洽詢報價' : `NT$ ${q ? q.total.toLocaleString() : '--'}（未稅，含製版費）`}
 
 --
 此詢價單由楊竹科技線上配置器自動產生
