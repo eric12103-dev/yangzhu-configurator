@@ -775,7 +775,8 @@ async function submitDesign() {
     const _isUploadOnly = STATE.productId === 'biz_card' && STATE.materialId === 'easycard' && STATE.orientationId === 'landscape';
     if (_isUploadOnly && typeof get2DDataURLWithFrame === 'function') {
       const _pngDataURL = await get2DDataURLWithFrame();
-      if (_pngDataURL) svg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="85.6mm" height="54mm"><image xlink:href="${_pngDataURL}" width="100%" height="100%"/></svg>`;
+      // 尺寸對應 card_landscape_frame.svg viewBox 259.7×170.1 pt（含 3mm 出血）= 91.6mm×60mm
+      if (_pngDataURL) svg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 259.7 170.1" width="91.6mm" height="60mm"><image xlink:href="${_pngDataURL}" width="259.7" height="170.1"/></svg>`;
     }
     if (svg && DRIVE_SCRIPT_URL && DRIVE_SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL') {
       const fd = new FormData();
