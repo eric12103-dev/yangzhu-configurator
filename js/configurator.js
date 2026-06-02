@@ -330,12 +330,18 @@ function initDesignStep() {
 
   _initFreeTextUI();
 
-  // 圖片上傳
+  // 特殊模式判斷：特定商品+規格組合 → 只顯示上傳圖檔
   const product = PRODUCTS[STATE.productId];
-  const uploadSection = document.getElementById('upload-section');
-  if (uploadSection) uploadSection.style.display = product?.textOnly ? 'none' : '';
+  const isUploadOnly = STATE.productId === 'biz_card'
+    && STATE.materialId === 'easycard'
+    && STATE.orientationId === 'landscape';
 
-  if (!product?.textOnly) {
+  // 圖片上傳
+  const uploadSection = document.getElementById('upload-section');
+  const showUpload = isUploadOnly || !product?.textOnly;
+  if (uploadSection) uploadSection.style.display = showUpload ? '' : 'none';
+
+  if (showUpload) {
     const fileInput = document.getElementById('design-upload');
     if (fileInput) {
       fileInput.replaceWith(fileInput.cloneNode(true));
@@ -345,6 +351,10 @@ function initDesignStep() {
       });
     }
   }
+
+  // 新增文字按鈕（上傳模式時隱藏）
+  const addPanel = document.getElementById('panel-add');
+  if (addPanel) addPanel.style.display = isUploadOnly ? 'none' : '';
 
   // 背景色
   const bgPicker = document.getElementById('design-bgcolor');
@@ -356,7 +366,7 @@ function initDesignStep() {
     });
   }
   const bgSection = document.getElementById('bg-color-section');
-  if (bgSection) bgSection.style.display = isThermos ? 'none' : '';
+  if (bgSection) bgSection.style.display = (isThermos || isUploadOnly) ? 'none' : '';
 
   // canvas 下方說明文字
   const canvasNote = document.getElementById('canvas-note');
