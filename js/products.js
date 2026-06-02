@@ -119,8 +119,10 @@ const PRODUCTS = {
       { id: 'landscape', name: '橫式' }
     ],
     orientationImages: {
-      'easycard_portrait':  'assets/photos/easycard_portrait.png',
-      'easycard_landscape': 'assets/photos/easycard_landscape.png'
+      'easycard_portrait':       'assets/photos/easycard_portrait.png',
+      'easycard_landscape':      'assets/photos/easycard_landscape.png',
+      'super_easycard_portrait':  'assets/photos/super_easycard_portrait.png',
+      'super_easycard_landscape': 'assets/photos/super_easycard_landscape.png'
     },
     finishes: [{ id: 'uv_print', name: 'UV彩色噴印', price: 0 }],
     qtyBreaks: [{ min: 50, max: 9999, price: 0 }],
@@ -323,8 +325,10 @@ const PRODUCTS = {
       { id: 'landscape', name: '橫式' }
     ],
     orientationImages: {
-      'easycard_portrait':  'assets/photos/easycard_portrait.png',
-      'easycard_landscape': 'assets/photos/easycard_landscape.png'
+      'easycard_portrait':       'assets/photos/easycard_portrait.png',
+      'easycard_landscape':      'assets/photos/easycard_landscape.png',
+      'super_easycard_portrait':  'assets/photos/super_easycard_portrait.png',
+      'super_easycard_landscape': 'assets/photos/super_easycard_landscape.png'
     },
     finishes: [
       { id: 'uv_print', name: 'UV彩色噴印', price: 0 }
