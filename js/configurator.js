@@ -574,7 +574,7 @@ function _loadDraft() {
     if (!data.objects || !data.objects.length) return;
     fabric.util.enlivenObjects(data.objects, objs => {
       if (!canvas2d) return;
-      objs.forEach(o => canvas2d.add(o));
+      objs.filter(o => o.selectable !== false).forEach(o => canvas2d.add(o));
       canvas2d.renderAll();
     });
     if (data.bgColor && STATE.productId !== 'thermos') {
@@ -759,9 +759,14 @@ async function submitDesign() {
   if (btn) { btn.innerHTML = '⏳ 產生中...'; btn.disabled = true; }
 
   try {
-    // 向量 SVG（文字轉路徑，不需安裝字體）；失敗時退回 PNG 包 SVG
     let svg = null;
-    if (typeof get2DSVGOutlined === 'function') {
+    // 卡片橫式上傳模式：優先呼叫 preview2d.js 的專屬函式（照片+向量框線，不走 canvas 渲染）
+    const _isUploadOnly = STATE.productId === 'biz_card' && STATE.materialId === 'easycard' && STATE.orientationId === 'landscape';
+    if (_isUploadOnly && typeof getUploadOnlySVG === 'function') {
+      svg = getUploadOnlySVG();
+    }
+    // 其餘商品走一般流程
+    if (!svg && typeof get2DSVGOutlined === 'function') {
       try { svg = await get2DSVGOutlined(); } catch(e) { console.warn('[submit] outline failed', e); }
     }
     if (!svg && STATE.productId === 'thermos' && typeof get2DLabelDataURL === 'function') {
@@ -771,13 +776,6 @@ async function submitDesign() {
       }
     }
     if (!svg) svg = (typeof get2DSVG === 'function') ? get2DSVG() : null;
-    // 卡片橫式上傳模式：以含框線的 PNG 包成 SVG（框線隨檔案送出）
-    const _isUploadOnly = STATE.productId === 'biz_card' && STATE.materialId === 'easycard' && STATE.orientationId === 'landscape';
-    if (_isUploadOnly && typeof get2DDataURLWithFrame === 'function') {
-      const _pngDataURL = await get2DDataURLWithFrame();
-      // 尺寸對應 card_landscape_frame.svg viewBox 259.7×170.1 pt（含 3mm 出血）= 91.6mm×60mm
-      if (_pngDataURL) svg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 259.7 170.1" width="91.6mm" height="60mm"><image xlink:href="${_pngDataURL}" width="259.7" height="170.1"/></svg>`;
-    }
     if (svg && DRIVE_SCRIPT_URL && DRIVE_SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL') {
       const fd = new FormData();
       fd.append('filename', filename + '.svg');

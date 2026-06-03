@@ -141,6 +141,8 @@ function init2DCanvas(productId) {
   canvas2d.on('object:scaling',  e => { if (typeof _updateFloatToolbar === 'function') _updateFloatToolbar(); });
   canvas2d.on('object:modified', e => {
     if (typeof _updateFloatToolbar === 'function') _updateFloatToolbar();
+    _updateTextOpacity();
+    canvas2d.requestRenderAll();
     _saveHistory();
     if (typeof _saveDraft === 'function') _saveDraft();
   });
@@ -153,6 +155,8 @@ function init2DCanvas(productId) {
     if (typeof _saveDraft === 'function') _saveDraft();
   });
   canvas2d.on('text:changed', () => {
+    _updateTextOpacity();
+    canvas2d.requestRenderAll();
     if (_textChangeTimer) clearTimeout(_textChangeTimer);
     _textChangeTimer = setTimeout(() => {
       _saveHistory();
@@ -160,34 +164,39 @@ function init2DCanvas(productId) {
     }, 600);
   });
 
-  // 限制物件邊界不可拖出 canvas 邊界
+  // 限制物件邊界不可拖出 canvas 邊界（隨行杯允許超出，由不透明度提示）
   canvas2d.on('object:moving', function(e) {
     const obj = e.target;
     if (!obj) return;
-    const w = canvas2d.getWidth();
-    const h = canvas2d.getHeight();
-    obj.setCoords();
-    const br = obj.getBoundingRect(true, true);
-    const objW = br.width, objH = br.height;
-    if (objW < w) {
-      if (br.left < 0) obj.left += -br.left;
-      else if (br.left + objW > w) obj.left -= (br.left + objW - w);
+    if (!isThermos) {
+      const w = canvas2d.getWidth();
+      const h = canvas2d.getHeight();
+      obj.setCoords();
+      const br = obj.getBoundingRect(true, true);
+      const objW = br.width, objH = br.height;
+      if (objW < w) {
+        if (br.left < 0) obj.left += -br.left;
+        else if (br.left + objW > w) obj.left -= (br.left + objW - w);
+      }
+      if (objH < h) {
+        if (br.top < 0) obj.top += -br.top;
+        else if (br.top + objH > h) obj.top -= (br.top + objH - h);
+      }
+      obj.setCoords();
     }
-    if (objH < h) {
-      if (br.top < 0) obj.top += -br.top;
-      else if (br.top + objH > h) obj.top -= (br.top + objH - h);
-    }
-    obj.setCoords();
     if (typeof _updateFloatToolbar === 'function') _updateFloatToolbar();
+    _updateTextOpacity();
   });
 
   // after:render — 有 labelArea 畫虛線印刷框（隨行杯僅選取時顯示）；其他畫圓角框
   canvas2d.on('after:render', function() {
     if (!currentProduct || _suppressOverlay) return;
-    if (isThermos && !_showLabelBorder) return;
     const ctx = canvas2d.contextContainer;
     const w   = canvas2d.getWidth();
     const h   = canvas2d.getHeight();
+
+    // 虛線框（隨行杯僅選取時顯示）
+    if (isThermos && !_showLabelBorder) return;
 
     ctx.save();
     ctx.setLineDash([10, 5]);
@@ -268,17 +277,8 @@ function _loadThermosBottleBg(cw, ch, withHint, imgUrl) {
 }
 
 function drawProductOutline(w, h) {
-  // 虛線外框已改為 after:render 事件繪製（永遠在最上層）
-  // 只保留品名浮水印
-  const watermark = new fabric.Text(currentProduct.name, {
-    left: w / 2, top: h / 2,
-    originX: 'center', originY: 'center',
-    fontSize: Math.round(h * 0.12),
-    fill: 'rgba(0,0,0,0.04)',
-    fontFamily: 'Arial',
-    selectable: false, evented: false
-  });
-  canvas2d.add(watermark);
+  // biz_card 不顯示品名浮水印
+  if (typeof STATE !== 'undefined' && STATE.productId === 'biz_card') return;
 }
 
 function addDefaultElements() {
@@ -383,6 +383,7 @@ function uploadImage2D(file) {
   if (!canvas2d || !file) return;
   const reader = new FileReader();
   reader.onload = e => {
+    _lastUploadedDataURL = e.target.result; // 保存原始圖片 URL，送出時使用
     fabric.Image.fromURL(e.target.result, img => {
       const w = canvas2d.getWidth();
       const h = canvas2d.getHeight();
@@ -443,9 +444,58 @@ function setBackground2D(color) {
   canvas2d.setBackgroundColor(color, canvas2d.renderAll.bind(canvas2d));
 }
 
+// ─── 隨行杯：文字超出 labelArea 時降低不透明度至 35% ──────────────
+function _updateTextOpacity() {
+  if (!canvas2d || !currentProduct || !currentProduct.labelArea) return;
+  const isTh = currentProduct && currentProduct.id === 'thermos';
+  if (!isTh) return;
+  const la = currentProduct.labelArea;
+  const w  = canvas2d.getWidth();
+  const h  = canvas2d.getHeight();
+  const laLeft   = w * la.xRatio;
+  const laTop    = h * la.yRatio;
+  const laRight  = laLeft + w * la.wRatio;
+  const laBottom = laTop  + h * la.hRatio;
+  canvas2d.getObjects().forEach(obj => {
+    if (!obj.selectable) return;
+    obj.setCoords();
+    const br = obj.getBoundingRect(true, true);
+    const outside = br.left < laLeft - 1 ||
+                    br.top  < laTop  - 1 ||
+                    (br.left + br.width)  > laRight  + 1 ||
+                    (br.top  + br.height) > laBottom + 1;
+    obj.opacity = outside ? 0.35 : 1.0;
+  });
+}
+
 // ─── 取得 DataURL（含 SVG 框線合成，供預覽與送出用）─────────────
 // 注意：after:render 繪圖不會被 toDataURL 擷取，需手動合成
 let _cachedCardFrameImg = null;
+var _lastUploadedDataURL = null;
+
+// 卡片橫式上傳模式：回傳向量 SVG（照片為 <image>，紅框+虛線為獨立向量路徑）
+// viewBox 259.7×170.1 pt = 91.6×60 mm（含出血），路徑取自 card_landscape_frame.svg
+function getUploadOnlySVG() {
+  if (!_lastUploadedDataURL) return null;
+  return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 259.7 170.1" width="91.6mm" height="60mm">
+<style>.st0{fill:none;stroke:#E60012;stroke-miterlimit:10;}.st1{fill:none;stroke:#3E3A39;stroke-width:0.25;stroke-miterlimit:10;}.st2{fill:none;stroke:#3E3A39;stroke-width:0.25;stroke-miterlimit:10;stroke-dasharray:5.0813,5.0813;}.st3{fill:none;stroke:#3E3A39;stroke-width:0.25;stroke-miterlimit:10;stroke-dasharray:5.1404,5.1404;}</style>
+<image xlink:href="${_lastUploadedDataURL}" x="0" y="0" width="259.7" height="170.1" preserveAspectRatio="none"/>
+<g>
+<path class="st0" d="M251.1,152.2c0,5.2-4.2,9.3-9.3,9.3h-224c-5.2,0-9.3-4.2-9.3-9.3V17.8c0-5.2,4.2-9.3,9.3-9.3h224c5.2,0,9.3,4.2,9.3,9.3V152.2z"/>
+<g><g>
+<polyline class="st1" points="256.8,164.7 256.8,167.2 254.3,167.2"/>
+<line class="st2" x1="249.2" y1="167.2" x2="7.9" y2="167.2"/>
+<polyline class="st1" points="5.3,167.2 2.8,167.2 2.8,164.7"/>
+<line class="st3" x1="2.8" y1="159.6" x2="2.8" y2="7.9"/>
+<polyline class="st1" points="2.8,5.3 2.8,2.8 5.3,2.8"/>
+<line class="st2" x1="10.4" y1="2.8" x2="251.8" y2="2.8"/>
+<polyline class="st1" points="254.3,2.8 256.8,2.8 256.8,5.3"/>
+<line class="st3" x1="256.8" y1="10.5" x2="256.8" y2="162.2"/>
+</g></g>
+</g>
+</svg>`;
+}
+
 function get2DDataURLWithFrame() {
   const base = get2DDataURL();
   if (!base) return Promise.resolve(null);
