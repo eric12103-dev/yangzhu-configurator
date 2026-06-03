@@ -479,7 +479,8 @@ function getUploadOnlySVG() {
   if (!_lastUploadedDataURL) return null;
   return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 259.7 170.1" width="91.6mm" height="60mm">
 <style>.st0{fill:none;stroke:#E60012;stroke-miterlimit:10;}.st1{fill:none;stroke:#3E3A39;stroke-width:0.25;stroke-miterlimit:10;}.st2{fill:none;stroke:#3E3A39;stroke-width:0.25;stroke-miterlimit:10;stroke-dasharray:5.0813,5.0813;}.st3{fill:none;stroke:#3E3A39;stroke-width:0.25;stroke-miterlimit:10;stroke-dasharray:5.1404,5.1404;}</style>
-<image xlink:href="${_lastUploadedDataURL}" x="0" y="0" width="259.7" height="170.1" preserveAspectRatio="none"/>
+<defs><clipPath id="card-clip"><rect x="2.8" y="2.8" width="254" height="164.4"/></clipPath></defs>
+<image xlink:href="${_lastUploadedDataURL}" x="0" y="0" width="259.7" height="170.1" preserveAspectRatio="none" clip-path="url(#card-clip)"/>
 <g>
 <path class="st0" d="M251.1,152.2c0,5.2-4.2,9.3-9.3,9.3h-224c-5.2,0-9.3-4.2-9.3-9.3V17.8c0-5.2,4.2-9.3,9.3-9.3h224c5.2,0,9.3,4.2,9.3,9.3V152.2z"/>
 <g><g>
