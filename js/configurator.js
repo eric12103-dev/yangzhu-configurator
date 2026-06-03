@@ -655,7 +655,7 @@ function initPreviewStep() {
       if (frameURL) STATE.designDataURL = frameURL;
       if (flatEl) {
         flatEl.innerHTML = frameURL
-          ? `<img src="${frameURL}" style="max-width:100%;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.12);">`
+          ? `<img src="${frameURL}" style="max-width:480px;width:100%;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.12);">`
           : '<p style="color:var(--gray-400);">尚無設計圖，請返回編輯。</p>';
       }
     });
@@ -664,7 +664,8 @@ function initPreviewStep() {
     if (mockupDiv) mockupDiv.style.display = 'none';
     if (btnMockup) btnMockup.style.display = '';
     if (flatEl && dataURL) {
-      flatEl.innerHTML = `<img src="${dataURL}" style="max-width:100%;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.12);">`;
+      const _imgW = STATE.productId === 'biz_card' ? '480px' : '100%';
+      flatEl.innerHTML = `<img src="${dataURL}" style="max-width:${_imgW};width:100%;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.12);">`;
     } else if (flatEl) {
       flatEl.innerHTML = '<p style="color:var(--gray-400);">尚無設計圖，請返回編輯。</p>';
     }
