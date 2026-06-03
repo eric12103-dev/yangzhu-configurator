@@ -559,6 +559,7 @@ function _draftKey() {
 }
 function _saveDraft() {
   if (!canvas2d) return;
+  if (typeof STATE !== 'undefined' && STATE.productId === 'biz_card') return;
   try {
     const objs = canvas2d.toJSON(['name', 'padding', 'lineHeight']).objects
       .filter(o => o.selectable !== false && o.name !== 'hint');
@@ -567,6 +568,10 @@ function _saveDraft() {
 }
 function _loadDraft() {
   if (!canvas2d) return;
+  if (typeof STATE !== 'undefined' && STATE.productId === 'biz_card') {
+    _clearDraft();
+    return;
+  }
   try {
     const raw = localStorage.getItem(_draftKey());
     if (!raw) return;
