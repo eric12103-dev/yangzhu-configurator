@@ -226,7 +226,7 @@ const PRODUCTS = {
     parentId: 'bizzone',
     name: '圓形小燈箱',
     icon: '💡',
-    image: 'assets/photos/easycard.png',
+    image: 'assets/photos/biz_lightbox.png',
     badge: 'RAY專屬',
     badgeColor: '#1a4a8a',
     description: '快速打樣',
