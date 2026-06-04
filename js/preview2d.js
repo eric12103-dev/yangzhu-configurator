@@ -485,6 +485,7 @@ function _updateTextOpacity() {
 // ─── 取得 DataURL（含 SVG 框線合成，供預覽與送出用）─────────────
 // 注意：after:render 繪圖不會被 toDataURL 擷取，需手動合成
 let _cachedCardFrameImg = null;
+let _cachedCardPortraitFrameImg = null;
 var _lastUploadedDataURL = null;
 
 // 卡片橫式上傳模式：回傳向量 SVG（照片為 <image>，紅框+虛線為獨立向量路徑）
@@ -556,14 +557,21 @@ function get2DDataURLWithFrame() {
     });
   };
 
-  if (_cachedCardFrameImg && _cachedCardFrameImg.complete && _cachedCardFrameImg.naturalWidth > 0) {
-    return doComposite(_cachedCardFrameImg);
+  const _isPortraitFrame = typeof STATE !== 'undefined' && STATE.orientationId === 'portrait';
+  const _frameSrc = _isPortraitFrame ? 'assets/card_portrait_frame.svg' : 'assets/card_landscape_frame.svg';
+  const _cachedFrame = _isPortraitFrame ? _cachedCardPortraitFrameImg : _cachedCardFrameImg;
+  if (_cachedFrame && _cachedFrame.complete && _cachedFrame.naturalWidth > 0) {
+    return doComposite(_cachedFrame);
   }
   return new Promise(resolve => {
     const frameImg = new Image();
-    frameImg.onload = () => { _cachedCardFrameImg = frameImg; doComposite(frameImg).then(resolve); };
+    frameImg.onload = () => {
+      if (_isPortraitFrame) _cachedCardPortraitFrameImg = frameImg;
+      else _cachedCardFrameImg = frameImg;
+      doComposite(frameImg).then(resolve);
+    };
     frameImg.onerror = () => resolve(base);
-    frameImg.src = 'assets/card_landscape_frame.svg';
+    frameImg.src = _frameSrc;
   });
 }
 
