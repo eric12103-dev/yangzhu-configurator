@@ -234,25 +234,11 @@ function init2DCanvas(productId) {
     _updateTextOpacity();
   });
 
-  // 隨行杯：點擊空白處新增文字
-  // 條件：按下時無選取物件（排除點擊以取消選取的情況）、放開時無目標、未拖曳
+  // 隨行杯：拖曳結束後隱藏咖啡色虛線
   if (isThermos) {
-    let _mdownE = null, _hadObjOnDown = false;
-    canvas2d.on('mouse:down', opt => {
-      _mdownE       = opt.e;
-      _hadObjOnDown = !!canvas2d.getActiveObject();
-    });
-    canvas2d.on('mouse:up', opt => {
-      // 拖曳結束：隱藏咖啡色虛線，保留綠色框線
+    canvas2d.on('mouse:up', () => {
       _showLabelBorder = false;
       canvas2d.requestRenderAll();
-      // 點擊空白處新增文字
-      if (opt.target || _hadObjOnDown || !_mdownE) return;
-      const dx = opt.e.clientX - _mdownE.clientX;
-      const dy = opt.e.clientY - _mdownE.clientY;
-      if (dx * dx + dy * dy > 25) return;
-      _mdownE = null;
-      if (typeof addFreeText === 'function') addFreeText();
     });
   }
 
