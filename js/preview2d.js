@@ -129,15 +129,24 @@ function init2DCanvas(productId) {
     fabric.Object.prototype.controls.mtr.cursorStyle = rotateCursorSvg;
   }
 
+  // 隨行杯文字：只允許等比例縮放，靜止時隱藏框線（拖曳時才顯示）
+  const _applyThermosTextControls = obj => {
+    if (!isThermos || !obj || obj.type !== 'textbox') return;
+    obj.setControlsVisibility({ ml: false, mr: false, mt: false, mb: false });
+    obj.set({ lockUniScaling: true, hasBorders: false });
+  };
+
   canvas2d.on('selection:created', e => {
     _showLabelBorder = true; canvas2d.requestRenderAll();
     const obj = e.selected?.[0] || canvas2d.getActiveObject();
+    _applyThermosTextControls(obj);
     if (typeof _syncTextPropsPanel === 'function') _syncTextPropsPanel(obj);
     if (typeof _updateFloatToolbar === 'function') _updateFloatToolbar();
   });
   canvas2d.on('selection:updated', e => {
     _showLabelBorder = true; canvas2d.requestRenderAll();
     const obj = e.selected?.[0] || canvas2d.getActiveObject();
+    _applyThermosTextControls(obj);
     if (typeof _syncTextPropsPanel === 'function') _syncTextPropsPanel(obj);
     if (typeof _updateFloatToolbar === 'function') _updateFloatToolbar();
   });
@@ -146,7 +155,10 @@ function init2DCanvas(productId) {
     if (typeof _syncTextPropsPanel === 'function') _syncTextPropsPanel(null);
     if (typeof _hideFloatToolbar === 'function') _hideFloatToolbar();
   });
-  canvas2d.on('object:scaling',  e => { if (typeof _updateFloatToolbar === 'function') _updateFloatToolbar(); });
+  canvas2d.on('object:scaling', e => {
+    if (isThermos && e.target && e.target.type === 'textbox') e.target.set('hasBorders', true);
+    if (typeof _updateFloatToolbar === 'function') _updateFloatToolbar();
+  });
   canvas2d.on('object:modified', e => {
     if (typeof _updateFloatToolbar === 'function') _updateFloatToolbar();
     _updateTextOpacity();
@@ -163,6 +175,25 @@ function init2DCanvas(productId) {
     if (typeof _saveDraft === 'function') _saveDraft();
   });
   canvas2d.on('text:changed', () => {
+    // 隨行杯：文字橫向自動展開，不換行（手動 Enter 仍可換行）
+    if (isThermos) {
+      const obj = canvas2d.getActiveObject();
+      if (obj && obj.type === 'textbox') {
+        obj.set('width', 10000);
+        if (typeof obj.initDimensions === 'function') obj.initDimensions();
+        let maxW = 0;
+        const lines = obj._textLines || [];
+        for (let i = 0; i < lines.length; i++) {
+          const lw = obj.getLineWidth(i);
+          if (lw > maxW) maxW = lw;
+        }
+        const margin = 3;
+        const pad = obj.padding || 0;
+        const fittedW = Math.max(Math.ceil(maxW) + 2, Math.ceil(maxW) + 2 * margin - 2 * pad);
+        obj.set('width', fittedW);
+        obj.setCoords();
+      }
+    }
     _updateTextOpacity();
     canvas2d.requestRenderAll();
     if (_textChangeTimer) clearTimeout(_textChangeTimer);
@@ -176,6 +207,7 @@ function init2DCanvas(productId) {
   canvas2d.on('object:moving', function(e) {
     const obj = e.target;
     if (!obj) return;
+    if (isThermos && obj.type === 'textbox') obj.set('hasBorders', true);
     if (!isThermos) {
       const w = canvas2d.getWidth();
       const h = canvas2d.getHeight();
@@ -195,6 +227,31 @@ function init2DCanvas(productId) {
     if (typeof _updateFloatToolbar === 'function') _updateFloatToolbar();
     _updateTextOpacity();
   });
+
+  // 隨行杯：點擊空白處新增文字
+  // 條件：按下時無選取物件（排除點擊以取消選取的情況）、放開時無目標、未拖曳
+  if (isThermos) {
+    let _mdownE = null, _hadObjOnDown = false;
+    canvas2d.on('mouse:down', opt => {
+      _mdownE       = opt.e;
+      _hadObjOnDown = !!canvas2d.getActiveObject();
+    });
+    canvas2d.on('mouse:up', opt => {
+      // 拖曳 / 縮放結束後隱藏框線
+      const activeObj = canvas2d.getActiveObject();
+      if (activeObj && activeObj.type === 'textbox') {
+        activeObj.set('hasBorders', false);
+        canvas2d.requestRenderAll();
+      }
+      // 點擊空白處新增文字
+      if (opt.target || _hadObjOnDown || !_mdownE) return;
+      const dx = opt.e.clientX - _mdownE.clientX;
+      const dy = opt.e.clientY - _mdownE.clientY;
+      if (dx * dx + dy * dy > 25) return;
+      _mdownE = null;
+      if (typeof addFreeText === 'function') addFreeText();
+    });
+  }
 
   // after:render — 有 labelArea 畫虛線印刷框（隨行杯僅選取時顯示）；其他畫圓角框
   canvas2d.on('after:render', function() {
@@ -296,12 +353,24 @@ function addDefaultElements() {
   setTimeout(() => { _saveHistory(); }, 300);
 }
 
-// 計算標準化 padding：補償不同字體 fontBoundingBox 差異，讓視覺間距趨於一致
-function _normPadding(font, fontSize, basePad) {
+// 計算標準化 padding：依實際字形像素高度（actualBoundingBox）讓選取框緊貼文字
+// 允許負值 padding，使框線可內縮至實際字形範圍
+function _normPadding(font, fontSize, basePad, textSample) {
   try {
     const ctx = document.createElement('canvas').getContext('2d');
     ctx.font = `${fontSize}px "${font}"`;
-    const m = ctx.measureText('楊Ag');
+    const isEn = font.startsWith('(英)');
+    const sample = textSample || (isEn ? 'Happy Agpq' : '楊竹Ag');
+    const m = ctx.measureText(sample);
+    const actAsc = m.actualBoundingBoxAscent;
+    const actDes = m.actualBoundingBoxDescent;
+    if (typeof actAsc === 'number' && actAsc > 0) {
+      const actualH = actAsc + actDes;
+      const fabricH = fontSize * 1.3; // Fabric.js 預設 lineHeight
+      const margin  = 3;              // 選取框在文字上下各留 3px
+      return Math.round((actualH + 2 * margin - fabricH) / 2);
+    }
+    // Fallback：舊邏輯（瀏覽器不支援 actualBoundingBox 時）
     const fAsc = m.fontBoundingBoxAscent;
     const fDes = m.fontBoundingBoxDescent;
     if (typeof fAsc !== 'number' || typeof fDes !== 'number') return basePad;
@@ -348,6 +417,8 @@ function _doAddText2D(text, color, size, font, role) {
   const boxWidth = la ? w * la.wRatio * (isThermos ? 0.93 : 1.0) : w * 0.92;
   const textCenterX = la ? w * (la.xRatio + la.wRatio / 2) : w / 2;
 
+  const _pad = _normPadding(font, size || defaultSize, 6, text);
+
   const t = new fabric.Textbox(text, {
     left: textCenterX,
     top: topPos,
@@ -358,30 +429,36 @@ function _doAddText2D(text, color, size, font, role) {
     fill: color,
     fontFamily: font,
     textAlign: 'center',
-    splitByGrapheme: true,
+    splitByGrapheme: !isThermos,
     editable: true,
     name: role,
-    padding: _normPadding(font, size || defaultSize, 6),
+    padding: _pad,
     lineHeight: 1.3
   });
 
   canvas2d.add(t);
   canvas2d.bringToFront(t);
+  // 隨行杯：新增時立即套用等比例縮放限制，隱藏靜止框線
+  if (isThermos) {
+    t.setControlsVisibility({ ml: false, mr: false, mt: false, mb: false });
+    t.set({ lockUniScaling: true, hasBorders: false });
+  }
   canvas2d.setActiveObject(t);
   canvas2d.renderAll();
-  // 縮小文字框寬度貼合實際文字（讓選取綠框不超過文字）
+  // 調整文字框寬度，讓選取框緊貼文字（補償 padding 對選取框寬度的影響）
+  // 目標：選取框寬 = maxW + 2×margin，即 t.width + 2×_pad = maxW + 2×margin
   if (t._textLines && t._textLines.length) {
     let maxW = 0;
     for (let i = 0; i < t._textLines.length; i++) {
       const lw = t.getLineWidth(i);
       if (lw > maxW) maxW = lw;
     }
-    const fittedW = Math.ceil(maxW) + 8;
-    if (fittedW < t.width) {
-      t.set('width', fittedW);
-      t.setCoords();
-      canvas2d.renderAll();
-    }
+    const margin   = 3;
+    const baseW    = Math.ceil(maxW) + 2 * margin - 2 * _pad;
+    const fittedW  = Math.max(Math.ceil(maxW) + 2, baseW);
+    t.set('width', fittedW);
+    t.setCoords();
+    canvas2d.renderAll();
   }
   return t;
 }

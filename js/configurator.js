@@ -566,41 +566,14 @@ function _hideFloatToolbar() {
 function _draftKey() {
   return `yangzhu_draft_${STATE.productId}_${STATE.materialId || ''}`;
 }
-function _saveDraft() {
-  if (!canvas2d) return;
-  if (typeof STATE !== 'undefined' && STATE.productId === 'biz_card') return;
-  try {
-    const objs = canvas2d.toJSON(['name', 'padding', 'lineHeight']).objects
-      .filter(o => o.selectable !== false && o.name !== 'hint');
-    localStorage.setItem(_draftKey(), JSON.stringify({ objects: objs, bgColor: STATE.bgColor }));
-  } catch(e) {}
-}
-function _loadDraft() {
-  if (!canvas2d) return;
-  if (typeof STATE !== 'undefined' && STATE.productId === 'biz_card') {
-    _clearDraft();
-    return;
-  }
-  try {
-    const raw = localStorage.getItem(_draftKey());
-    if (!raw) return;
-    const data = JSON.parse(raw);
-    if (!data.objects || !data.objects.length) return;
-    fabric.util.enlivenObjects(data.objects, objs => {
-      if (!canvas2d) return;
-      objs.filter(o => o.selectable !== false).forEach(o => canvas2d.add(o));
-      canvas2d.renderAll();
-    });
-    if (data.bgColor && STATE.productId !== 'thermos') {
-      STATE.bgColor = data.bgColor;
-      if (typeof setBackground2D === 'function') setBackground2D(data.bgColor);
-      const picker = document.getElementById('design-bgcolor');
-      if (picker) picker.value = data.bgColor;
-    }
-  } catch(e) {}
-}
+function _saveDraft() {}
+function _loadDraft()  { _clearDraft(); }
 function _clearDraft() {
-  try { localStorage.removeItem(_draftKey()); } catch(e) {}
+  try {
+    Object.keys(localStorage)
+      .filter(k => k.startsWith('yangzhu_draft_'))
+      .forEach(k => localStorage.removeItem(k));
+  } catch(e) {}
 }
 
 async function _refreshLiveMockup() {
