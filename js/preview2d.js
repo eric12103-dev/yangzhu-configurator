@@ -182,8 +182,8 @@ function init2DCanvas(productId) {
     if (isThermos) {
       const obj = canvas2d.getActiveObject();
       if (obj && obj.type === 'textbox') {
-        // 依目前字體重新計算 padding（內容改變時同步更新）
-        const newPad = _normPadding(obj.fontFamily, obj.fontSize, 6);
+        // 依目前字體與文字內容重新計算 padding
+        const newPad = _normPadding(obj.fontFamily, obj.fontSize, 6, obj.text || '');
         obj.set('padding', newPad);
         obj.set('width', 10000);
         if (typeof obj.initDimensions === 'function') obj.initDimensions();
@@ -351,10 +351,10 @@ function _normPadding(font, fontSize, basePad, textSample) {
     const ctx = document.createElement('canvas').getContext('2d');
     ctx.font = `${fontSize}px "${font}"`;
     const isEn = font.startsWith('(英)');
-    // 英文字體用完整字母集，確保涵蓋所有升部/降部（如簽名體 Y、G、J 尾巴特長）
-    const sample = isEn
-      ? 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
-      : (textSample || '楊竹Ag');
+    // 優先用實際文字做量測；無文字時用代表性預設樣本
+    const sample = (textSample && textSample.trim())
+      ? textSample
+      : (isEn ? 'Happy Agpq' : '楊竹Ag');
     const m = ctx.measureText(sample);
     const actAsc = m.actualBoundingBoxAscent;
     const actDes = m.actualBoundingBoxDescent;
@@ -530,7 +530,7 @@ function setBackground2D(color) {
 }
 
 // ─── 隨行杯：文字超出 labelArea 時降低不透明度至 35% ──────────────
-// 以實際文字尺寸（obj.width/height，不含 padding）判斷，並補償旋轉角度
+// 直接量測當前文字的 actualBoundingBox，不依賴 padding 推算
 function _updateTextOpacity() {
   if (!canvas2d || !currentProduct || !currentProduct.labelArea) return;
   const isTh = currentProduct && currentProduct.id === 'thermos';
@@ -542,6 +542,7 @@ function _updateTextOpacity() {
   const laTop    = h * la.yRatio;
   const laRight  = laLeft + w * la.wRatio;
   const laBottom = laTop  + h * la.hRatio;
+  const _mCtx = document.createElement('canvas').getContext('2d');
   canvas2d.getObjects().forEach(obj => {
     if (!obj.selectable) return;
     const center = obj.getCenterPoint();
@@ -550,12 +551,30 @@ function _updateTextOpacity() {
     const angle  = ((obj.angle || 0) * Math.PI) / 180;
     const cosA   = Math.abs(Math.cos(angle));
     const sinA   = Math.abs(Math.sin(angle));
-    const pad = obj.padding || 0;
-    // 用 selection box 尺寸（= obj 尺寸 + 2×padding），
-    // 因為 padding 已依 actualBoundingBox 校正，能正確涵蓋所有字形
-    const tw = (obj.width  + 2 * pad) * scaleX;
-    const th = (obj.height + 2 * pad) * scaleY;
-    // 旋轉後的軸對齊包圍盒
+    let tw, th;
+    if (obj.type === 'textbox' && obj.text && obj.text.trim()) {
+      // 直接量測當前文字字形範圍
+      _mCtx.font = `${obj.fontSize}px "${obj.fontFamily}"`;
+      const tm = _mCtx.measureText(obj.text);
+      const actAsc = tm.actualBoundingBoxAscent || obj.fontSize * 0.8;
+      const actDes = tm.actualBoundingBoxDescent || obj.fontSize * 0.2;
+      let maxW = 0;
+      if (obj._textLines && obj._textLines.length) {
+        for (let i = 0; i < obj._textLines.length; i++) {
+          const lw = obj.getLineWidth(i);
+          if (lw > maxW) maxW = lw;
+        }
+      } else { maxW = tm.width; }
+      const numLines = (obj._textLines || ['']).length;
+      const lh = obj.fontSize * (obj.lineHeight || 1.3);
+      th = numLines === 1 ? (actAsc + actDes) : ((numLines - 1) * lh + actAsc + actDes);
+      tw = maxW;
+    } else {
+      tw = obj.width;
+      th = obj.height;
+    }
+    tw *= scaleX;
+    th *= scaleY;
     const rotW = tw * cosA + th * sinA;
     const rotH = tw * sinA + th * cosA;
     const outside = (center.x - rotW / 2) < laLeft   - 1 ||
