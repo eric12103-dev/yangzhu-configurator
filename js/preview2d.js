@@ -390,9 +390,10 @@ function uploadImage2D(file) {
 
       // 卡片上傳模式：圖片填滿虛線框，並裁切在框線範圍內
       const _isUploadOnly = typeof STATE !== 'undefined'
-        && STATE.productId === 'biz_card'
-        && ['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId)
-        && STATE.orientationId === 'landscape';
+        && STATE.productId === 'biz_card' && (
+          (['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId) && STATE.orientationId === 'landscape') ||
+          (STATE.materialId === 'easycard' && STATE.orientationId === 'portrait')
+        );
 
       if (_isUploadOnly) {
         // 黑色虛線框範圍（SVG viewBox 259.7×170.1，角點 2.8~256.8 / 2.8~167.2）
@@ -477,6 +478,29 @@ var _lastUploadedDataURL = null;
 // viewBox 259.7×170.1 pt = 91.6×60 mm（含出血），路徑取自 card_landscape_frame.svg
 function getUploadOnlySVG() {
   if (!_lastUploadedDataURL) return null;
+  const isPortrait = typeof STATE !== 'undefined' && STATE.orientationId === 'portrait';
+  if (isPortrait) {
+    // 直式：viewBox 170.1×259.7，裁切邊 x=2.8,y=2.8 → 167.2,256.8
+    return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 170.1 259.7" width="60mm" height="91.6mm">
+<style>.st0{fill:none;stroke:#E60012;stroke-miterlimit:10;}.st1{fill:none;stroke:#3E3A39;stroke-width:0.25;stroke-miterlimit:10;}.st2{fill:none;stroke:#3E3A39;stroke-width:0.25;stroke-miterlimit:10;stroke-dasharray:5.0813,5.0813;}.st3{fill:none;stroke:#3E3A39;stroke-width:0.25;stroke-miterlimit:10;stroke-dasharray:5.1404,5.1404;}</style>
+<defs><clipPath id="card-clip"><rect x="2.8" y="2.8" width="164.4" height="254"/></clipPath></defs>
+<image xlink:href="${_lastUploadedDataURL}" x="0" y="0" width="170.1" height="259.7" preserveAspectRatio="none" clip-path="url(#card-clip)"/>
+<g>
+<path class="st0" d="M17.8,251.1c-5.2,0-9.3-4.2-9.3-9.3v-224c0-5.2,4.2-9.3,9.3-9.3h134.4c5.2,0,9.3,4.2,9.3,9.3v224c0,5.2-4.2,9.3-9.3,9.3H17.8z"/>
+<g><g>
+<polyline class="st1" points="5.3,256.8 2.8,256.8 2.8,254.3"/>
+<line class="st2" x1="2.8" y1="249.2" x2="2.8" y2="7.9"/>
+<polyline class="st1" points="2.8,5.3 2.8,2.8 5.3,2.8"/>
+<line class="st3" x1="10.5" y1="2.8" x2="162.2" y2="2.8"/>
+<polyline class="st1" points="164.7,2.8 167.2,2.8 167.2,5.3"/>
+<line class="st2" x1="167.2" y1="10.4" x2="167.2" y2="251.8"/>
+<polyline class="st1" points="167.2,254.3 167.2,256.8 164.7,256.8"/>
+<line class="st3" x1="159.6" y1="256.8" x2="7.9" y2="256.8"/>
+</g></g>
+</g>
+</svg>`;
+  }
+  // 橫式：viewBox 259.7×170.1，裁切邊 x=2.8,y=2.8 → 256.8,167.2
   return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 259.7 170.1" width="91.6mm" height="60mm">
 <style>.st0{fill:none;stroke:#E60012;stroke-miterlimit:10;}.st1{fill:none;stroke:#3E3A39;stroke-width:0.25;stroke-miterlimit:10;}.st2{fill:none;stroke:#3E3A39;stroke-width:0.25;stroke-miterlimit:10;stroke-dasharray:5.0813,5.0813;}.st3{fill:none;stroke:#3E3A39;stroke-width:0.25;stroke-miterlimit:10;stroke-dasharray:5.1404,5.1404;}</style>
 <defs><clipPath id="card-clip"><rect x="2.8" y="2.8" width="254" height="164.4"/></clipPath></defs>

@@ -322,14 +322,20 @@ const _TEXT_COLORS = [
 function initDesignStep() {
   const isThermos = STATE.productId === 'thermos';
 
-  // 上傳框線模式：調整 canvas 比例為橫式卡片（259.7×170.1）
-  const isUploadOnly = STATE.productId === 'biz_card'
-    && ['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId)
-    && STATE.orientationId === 'landscape';
+  // 上傳框線模式：橫式（三種規格）或悠遊卡直式
+  const isUploadOnly = STATE.productId === 'biz_card' && (
+    (['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId) && STATE.orientationId === 'landscape') ||
+    (STATE.materialId === 'easycard' && STATE.orientationId === 'portrait')
+  );
   let _origSize = null;
   if (isUploadOnly) {
     const _prod = PRODUCTS['biz_card'];
-    if (_prod) { _origSize = _prod.size; _prod.size = { w: 2597, h: 1701, unit: '' }; }
+    if (_prod) {
+      _origSize = _prod.size;
+      _prod.size = STATE.orientationId === 'portrait'
+        ? { w: 1701, h: 2597, unit: '' }
+        : { w: 2597, h: 1701, unit: '' };
+    }
   }
 
   init2DCanvas(STATE.productId);
@@ -357,7 +363,9 @@ function initDesignStep() {
       });
       canvas2d.renderAll();
     };
-    _svgFrame.src = 'assets/card_landscape_frame.svg';
+    _svgFrame.src = STATE.orientationId === 'portrait'
+      ? 'assets/card_portrait_frame.svg'
+      : 'assets/card_landscape_frame.svg';
   }
 
   // 圖片上傳
@@ -477,9 +485,10 @@ function _syncTextPropsPanel(obj) {
   const isText = obj && obj.type === 'textbox';
 
   // 上傳模式：不顯示任何文字功能
-  const isUploadOnly = STATE.productId === 'biz_card'
-    && ['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId)
-    && STATE.orientationId === 'landscape';
+  const isUploadOnly = STATE.productId === 'biz_card' && (
+    (['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId) && STATE.orientationId === 'landscape') ||
+    (STATE.materialId === 'easycard' && STATE.orientationId === 'portrait')
+  );
   if (isUploadOnly) {
     if (propsPanel) propsPanel.style.display = 'none';
     if (addPanel)   addPanel.style.display   = 'none';
@@ -623,7 +632,10 @@ function applyBgPreset(color) {
 // ─── Step 4：預覽 ──────────────────────────────────────────
 function initPreviewStep() {
   const isThermos = STATE.productId === 'thermos';
-  const isUploadOnly = STATE.productId === 'biz_card' && ['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId) && STATE.orientationId === 'landscape';
+  const isUploadOnly = STATE.productId === 'biz_card' && (
+    (['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId) && STATE.orientationId === 'landscape') ||
+    (STATE.materialId === 'easycard' && STATE.orientationId === 'portrait')
+  );
   const flatEl    = document.getElementById('preview-flat');
   const mockupDiv = document.getElementById('preview-mockup');
   const btnMockup = document.getElementById('btn-download-mockup');
@@ -767,7 +779,10 @@ async function submitDesign() {
   try {
     let svg = null;
     // 卡片橫式上傳模式：優先呼叫 preview2d.js 的專屬函式（照片+向量框線，不走 canvas 渲染）
-    const _isUploadOnly = STATE.productId === 'biz_card' && ['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId) && STATE.orientationId === 'landscape';
+    const _isUploadOnly = STATE.productId === 'biz_card' && (
+      (['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId) && STATE.orientationId === 'landscape') ||
+      (STATE.materialId === 'easycard' && STATE.orientationId === 'portrait')
+    );
     if (_isUploadOnly && typeof getUploadOnlySVG === 'function') {
       svg = getUploadOnlySVG();
     }
