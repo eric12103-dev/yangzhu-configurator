@@ -348,6 +348,7 @@ body {
 }
 
 .design-tools { display: flex; flex-direction: column; gap: 16px; }
+#panel-text-props { display: flex; flex-direction: column; gap: 16px; }
 
 .tool-section h4 { font-size: 13px; font-weight: 700; color: var(--gray-700); margin-bottom: 8px; }
 
