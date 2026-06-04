@@ -165,7 +165,8 @@ function init2DCanvas(productId) {
   canvas2d.on('object:modified', e => {
     if (typeof _updateFloatToolbar === 'function') _updateFloatToolbar();
     _updateTextOpacity();
-    // biz_lightbox：圖片移動／縮放後，依最終位置更新 clipPath 到最近的圓圈
+    // biz_lightbox：圖片移動／縮放後，依最終位置更新 clipPath
+    // 使用距離比較：只有明顯靠近另一圓圈（超過兩圓距離 20%）才切換，避免鏡射/複製圖片誤判
     if (productId === 'biz_lightbox' && e.target && e.target.type === 'image') {
       const _w = canvas2d.getWidth();
       const _h = canvas2d.getHeight();
@@ -173,7 +174,21 @@ function init2DCanvas(productId) {
       const _rightCX = _w * (277.4 / 348.2);
       const _cy = _h * (74.6 / 145.2);
       const _r  = _w * (51 / 348.2);
-      const _nearCX = e.target.left < _w / 2 ? _leftCX : _rightCX;
+      const _switchThreshold = (_rightCX - _leftCX) * 0.2;
+      const _curClipCX = e.target.clipPath ? e.target.clipPath.left : null;
+      const _dLeft  = Math.abs(e.target.left - _leftCX);
+      const _dRight = Math.abs(e.target.left - _rightCX);
+      let _nearCX;
+      if (_curClipCX !== null) {
+        const _curDist   = _curClipCX < _w / 2 ? _dLeft  : _dRight;
+        const _otherDist = _curClipCX < _w / 2 ? _dRight : _dLeft;
+        // 只有明顯更靠近另一側才切換
+        _nearCX = (_otherDist < _curDist - _switchThreshold)
+          ? (_curClipCX < _w / 2 ? _rightCX : _leftCX)
+          : _curClipCX;
+      } else {
+        _nearCX = _dLeft <= _dRight ? _leftCX : _rightCX;
+      }
       e.target.clipPath = new fabric.Circle({
         radius: _r, left: _nearCX, top: _cy,
         originX: 'center', originY: 'center',
