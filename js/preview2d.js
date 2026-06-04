@@ -476,10 +476,10 @@ function uploadImage2D(file) {
         );
 
       if (_isLeatherRound) {
-        // 圓形皮革：圖片填滿並裁切到圓形印刷區（SVG viewBox 162.1×177.9，印刷圓心 81.3,97.2 半徑 58.1）
+        // 圓形皮革：圖片填滿並裁切到紅色出血圈（SVG viewBox 162.1×177.9，圓心 81.3,97.2 半徑 66.6）
         const cx = w * (81.3 / 162.1);
         const cy = h * (97.2 / 177.9);
-        const r  = w * (58.1 / 162.1);
+        const r  = w * (66.6 / 162.1);
         const scale = Math.max((r * 2) / img.width, (r * 2) / img.height);
         _uploadBaseScale = scale;
         img.set({
@@ -640,7 +640,7 @@ function getUploadOnlyRoundSVG() {
   const _canvasDataURL = (typeof get2DDataURL === 'function' && get2DDataURL()) || _lastUploadedDataURL;
   return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 162.1 177.9" width="57.2mm" height="62.8mm">
 <style>.st0{fill:none;stroke:#000000;stroke-miterlimit:10;}.st1{fill:none;stroke:#000000;stroke-width:0.8;stroke-miterlimit:10;stroke-dasharray:3;}.st2{fill:none;stroke:#E71F19;stroke-miterlimit:10;stroke-dasharray:4.809,4.8095;}</style>
-<defs><clipPath id="round-clip"><circle cx="81.3" cy="97.2" r="58.1"/></clipPath></defs>
+<defs><clipPath id="round-clip"><circle cx="81.3" cy="97.2" r="66.6"/></clipPath></defs>
 <image xlink:href="${_canvasDataURL}" x="0" y="0" width="162.1" height="177.9" preserveAspectRatio="none" clip-path="url(#round-clip)"/>
 <g>
 <path class="st0" d="M81.3,33.4c3.3,0,6.5,0.2,9.6,0.7V14.8H71.6v19.3C74.8,33.7,78,33.4,81.3,33.4z"/>
