@@ -182,6 +182,9 @@ function init2DCanvas(productId) {
     if (isThermos) {
       const obj = canvas2d.getActiveObject();
       if (obj && obj.type === 'textbox') {
+        // 依目前字體重新計算 padding（內容改變時同步更新）
+        const newPad = _normPadding(obj.fontFamily, obj.fontSize, 6);
+        obj.set('padding', newPad);
         obj.set('width', 10000);
         if (typeof obj.initDimensions === 'function') obj.initDimensions();
         let maxW = 0;
@@ -191,8 +194,7 @@ function init2DCanvas(productId) {
           if (lw > maxW) maxW = lw;
         }
         const margin = 3;
-        const pad = obj.padding || 0;
-        const fittedW = Math.max(Math.ceil(maxW) + 2, Math.ceil(maxW) + 2 * margin - 2 * pad);
+        const fittedW = Math.max(Math.ceil(maxW) + 2, Math.ceil(maxW) + 2 * margin - 2 * newPad);
         obj.set('width', fittedW);
         obj.setCoords();
       }
@@ -349,7 +351,10 @@ function _normPadding(font, fontSize, basePad, textSample) {
     const ctx = document.createElement('canvas').getContext('2d');
     ctx.font = `${fontSize}px "${font}"`;
     const isEn = font.startsWith('(英)');
-    const sample = textSample || (isEn ? 'Happy Agpq' : '楊竹Ag');
+    // 英文字體用完整字母集，確保涵蓋所有升部/降部（如簽名體 Y、G、J 尾巴特長）
+    const sample = isEn
+      ? 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+      : (textSample || '楊竹Ag');
     const m = ctx.measureText(sample);
     const actAsc = m.actualBoundingBoxAscent;
     const actDes = m.actualBoundingBoxDescent;
