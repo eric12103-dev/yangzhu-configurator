@@ -322,8 +322,8 @@ const _TEXT_COLORS = [
 function initDesignStep() {
   const isThermos = STATE.productId === 'thermos';
 
-  // 上傳框線模式：biz_card（橫式／直式）、biz_leather_round 或 biz_leather_omamori
-  const isUploadOnly = STATE.productId === 'biz_leather_round' || STATE.productId === 'biz_leather_omamori' || (STATE.productId === 'biz_card' && (
+  // 上傳框線模式：biz_card（橫式／直式）、biz_leather_round、biz_leather_omamori 或 biz_lightbox
+  const isUploadOnly = STATE.productId === 'biz_leather_round' || STATE.productId === 'biz_leather_omamori' || STATE.productId === 'biz_lightbox' || (STATE.productId === 'biz_card' && (
     (['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId) && STATE.orientationId === 'landscape') ||
     (['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId) && STATE.orientationId === 'portrait')
   ));
@@ -367,6 +367,8 @@ function initDesignStep() {
       _svgFrame.src = 'assets/leather_round_frame.svg';
     } else if (STATE.productId === 'biz_leather_omamori') {
       _svgFrame.src = 'assets/leather_omamori_frame.svg';
+    } else if (STATE.productId === 'biz_lightbox') {
+      _svgFrame.src = 'assets/lightbox_frame.svg';
     } else {
       _svgFrame.src = STATE.orientationId === 'portrait'
         ? 'assets/card_portrait_frame.svg'
@@ -491,7 +493,7 @@ function _syncTextPropsPanel(obj) {
   const isText = obj && obj.type === 'textbox';
 
   // 上傳模式：不顯示任何文字功能
-  const isUploadOnly = STATE.productId === 'biz_leather_round' || STATE.productId === 'biz_leather_omamori' || (STATE.productId === 'biz_card' && (
+  const isUploadOnly = STATE.productId === 'biz_leather_round' || STATE.productId === 'biz_leather_omamori' || STATE.productId === 'biz_lightbox' || (STATE.productId === 'biz_card' && (
     (['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId) && STATE.orientationId === 'landscape') ||
     (['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId) && STATE.orientationId === 'portrait')
   ));
@@ -611,7 +613,7 @@ function applyBgPreset(color) {
 // ─── Step 4：預覽 ──────────────────────────────────────────
 function initPreviewStep() {
   const isThermos = STATE.productId === 'thermos';
-  const isUploadOnly = STATE.productId === 'biz_leather_round' || STATE.productId === 'biz_leather_omamori' || (STATE.productId === 'biz_card' && (
+  const isUploadOnly = STATE.productId === 'biz_leather_round' || STATE.productId === 'biz_leather_omamori' || STATE.productId === 'biz_lightbox' || (STATE.productId === 'biz_card' && (
     (['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId) && STATE.orientationId === 'landscape') ||
     (['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId) && STATE.orientationId === 'portrait')
   ));
@@ -648,6 +650,8 @@ function initPreviewStep() {
         let _imgStyle;
         if (STATE.productId === 'biz_leather_round') {
           _imgStyle = 'max-width:320px;width:100%;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.12);';
+        } else if (STATE.productId === 'biz_lightbox') {
+          _imgStyle = 'max-width:480px;width:100%;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.12);';
         } else {
           const _isPortrait = STATE.orientationId === 'portrait';
           _imgStyle = _isPortrait
@@ -767,7 +771,7 @@ async function submitDesign() {
   try {
     let svg = null;
     // 卡片橫式上傳模式：優先呼叫 preview2d.js 的專屬函式（照片+向量框線，不走 canvas 渲染）
-    const _isUploadOnly = STATE.productId === 'biz_leather_round' || STATE.productId === 'biz_leather_omamori' || (STATE.productId === 'biz_card' && (
+    const _isUploadOnly = STATE.productId === 'biz_leather_round' || STATE.productId === 'biz_leather_omamori' || STATE.productId === 'biz_lightbox' || (STATE.productId === 'biz_card' && (
       (['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId) && STATE.orientationId === 'landscape') ||
       (['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId) && STATE.orientationId === 'portrait')
     ));
@@ -776,6 +780,8 @@ async function submitDesign() {
         svg = getUploadOnlyRoundSVG();
       } else if (STATE.productId === 'biz_leather_omamori' && typeof getUploadOnlyOmamoriSVG === 'function') {
         svg = getUploadOnlyOmamoriSVG();
+      } else if (STATE.productId === 'biz_lightbox' && typeof getUploadOnlyLightboxSVG === 'function') {
+        svg = getUploadOnlyLightboxSVG();
       } else if (typeof getUploadOnlySVG === 'function') {
         svg = getUploadOnlySVG();
       }

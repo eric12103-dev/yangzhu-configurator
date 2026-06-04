@@ -469,6 +469,7 @@ function uploadImage2D(file) {
 
       const _isLeatherRound = typeof STATE !== 'undefined' && STATE.productId === 'biz_leather_round';
       const _isLeatherOmamori = typeof STATE !== 'undefined' && STATE.productId === 'biz_leather_omamori';
+      const _isLightbox = typeof STATE !== 'undefined' && STATE.productId === 'biz_lightbox';
       // 卡片上傳模式：圖片填滿虛線框，並裁切在框線範圍內
       const _isUploadOnly = typeof STATE !== 'undefined'
         && STATE.productId === 'biz_card' && (
@@ -481,6 +482,28 @@ function uploadImage2D(file) {
         const cx = w * (81.3 / 162.1);
         const cy = h * (97.2 / 177.9);
         const r  = w * (66.6 / 162.1);
+        const scale = Math.max((r * 2) / img.width, (r * 2) / img.height);
+        _uploadBaseScale = scale;
+        img.set({
+          left: cx, top: cy,
+          originX: 'center', originY: 'center',
+          scaleX: scale, scaleY: scale
+        });
+        img.clipPath = new fabric.Circle({
+          radius: r,
+          left: cx, top: cy,
+          originX: 'center', originY: 'center',
+          absolutePositioned: true
+        });
+        const _s = document.getElementById('zoom-slider');
+        const _d = document.getElementById('zoom-value-display');
+        if (_s) _s.value = 100;
+        if (_d) _d.textContent = '100%';
+      } else if (_isLightbox) {
+        // 圓形小燈箱：圖片填滿並裁切到左圓印刷區（SVG viewBox 348.2×145.2，左圓心 71.4,74.6 半徑 51）
+        const cx = w * (71.4 / 348.2);
+        const cy = h * (74.6 / 145.2);
+        const r  = w * (51 / 348.2);
         const scale = Math.max((r * 2) / img.width, (r * 2) / img.height);
         _uploadBaseScale = scale;
         img.set({
@@ -607,6 +630,7 @@ let _cachedCardFrameImg = null;
 let _cachedCardPortraitFrameImg = null;
 let _cachedLeatherRoundFrameImg = null;
 let _cachedLeatherOmamoriFrameImg = null;
+let _cachedLightboxFrameImg = null;
 var _lastUploadedDataURL = null;
 
 // 卡片橫式上傳模式：回傳向量 SVG（照片為 <image>，紅框+虛線為獨立向量路徑）
@@ -690,6 +714,54 @@ function getUploadOnlyOmamoriSVG() {
 </svg>`;
 }
 
+// 圓形小燈箱上傳模式：回傳向量 SVG（照片裁切至雙圓 + 框線路徑）
+// viewBox 348.2×145.2，左圓心 71.4,74.6 右圓心 277.4,74.6 印刷半徑 51
+function getUploadOnlyLightboxSVG() {
+  if (!_lastUploadedDataURL) return null;
+  const _canvasDataURL = (typeof get2DDataURL === 'function' && get2DDataURL()) || _lastUploadedDataURL;
+  return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 348.2 145.2">
+<style>.st2{fill:#1F1E1D;stroke:#000000;stroke-width:0.75;}.st3{fill:url(#SVGID_5_);stroke:#B5B5B6;stroke-width:0.5;stroke-miterlimit:10;}.st4{fill:url(#SVGID_6_);stroke:#B5B5B6;stroke-width:0.5;stroke-miterlimit:10;}.st5{fill:url(#SVGID_7_);stroke:#B5B5B6;stroke-width:0.5;stroke-miterlimit:10;}.st6{opacity:0.5;fill:url(#SVGID_8_);enable-background:new;}.st7{opacity:0.5;fill:url(#SVGID_9_);enable-background:new;}.st8{fill:#F7F8F8;stroke:#B5B5B6;stroke-width:0.5;stroke-miterlimit:10;}.st9{fill:#FFFFFF;stroke:#B5B5B6;stroke-width:0.5;stroke-miterlimit:10;}.st10{fill:url(#SVGID_10_);stroke:#B5B5B6;stroke-width:0.5;stroke-miterlimit:10;}.st11{fill:url(#SVGID_11_);stroke:#B5B5B6;stroke-width:0.5;stroke-miterlimit:10;}.st12{fill:url(#SVGID_12_);stroke:#B5B5B6;stroke-width:0.5;stroke-miterlimit:10;}.st13{opacity:0.5;fill:url(#SVGID_13_);enable-background:new;}.st14{opacity:0.5;fill:url(#SVGID_14_);enable-background:new;}.st15{fill:none;stroke:#E60012;stroke-width:0.7105;}</style>
+<defs>
+<clipPath id="lb-left-clip"><circle cx="71.4" cy="74.6" r="51"/></clipPath>
+<clipPath id="lb-right-clip"><circle cx="277.4" cy="74.6" r="51"/></clipPath>
+<linearGradient id="SVGID_5_" gradientUnits="userSpaceOnUse" x1="176.0893" y1="330.6606" x2="176.0893" y2="427.3789" gradientTransform="matrix(-1 0 0 1 358.4922 -304.9051)"><stop offset="1.4e-07" style="stop-color:#DCDDDD"/><stop offset="0.0578" style="stop-color:#F4F4F4"/><stop offset="0.1833" style="stop-color:#F4F4F4"/><stop offset="0.9521" style="stop-color:#F4F4F4"/><stop offset="0.9592" style="stop-color:#F9F9F9"/><stop offset="0.9742" style="stop-color:#FEFEFE"/><stop offset="1" style="stop-color:#FFFFFF"/></linearGradient>
+<linearGradient id="SVGID_6_" gradientUnits="userSpaceOnUse" x1="147.3893" y1="398.4865" x2="147.3893" y2="409.9677" gradientTransform="matrix(-1 0 0 1 358.4922 -304.9051)"><stop offset="0" style="stop-color:#DCDDDD"/><stop offset="0.0415" style="stop-color:#E1E2E2"/><stop offset="0.2017" style="stop-color:#EFF0F0"/><stop offset="0.3854" style="stop-color:#F9F9F9"/><stop offset="0.6109" style="stop-color:#FEFEFE"/><stop offset="1" style="stop-color:#FFFFFF"/></linearGradient>
+<linearGradient id="SVGID_7_" gradientUnits="userSpaceOnUse" x1="147.3893" y1="346.5735" x2="147.3893" y2="358.0992" gradientTransform="matrix(-1 0 0 1 358.4922 -304.9051)"><stop offset="0" style="stop-color:#DCDDDD"/><stop offset="0.0415" style="stop-color:#E1E2E2"/><stop offset="0.2017" style="stop-color:#EFF0F0"/><stop offset="0.3854" style="stop-color:#F9F9F9"/><stop offset="0.6109" style="stop-color:#FEFEFE"/><stop offset="1" style="stop-color:#FFFFFF"/></linearGradient>
+<linearGradient id="SVGID_8_" gradientUnits="userSpaceOnUse" x1="128.3769" y1="405.0235" x2="146.3756" y2="405.0235" gradientTransform="matrix(-1 0 0 1 358.4922 -304.9051)"><stop offset="1.4e-07" style="stop-color:#C9CACA"/><stop offset="0.2387" style="stop-color:#CCCDCD;stop-opacity:0.7613"/><stop offset="0.463" style="stop-color:#D5D5D6;stop-opacity:0.537"/><stop offset="0.6814" style="stop-color:#E3E3E3;stop-opacity:0.3186"/><stop offset="0.8949" style="stop-color:#F5F5F6;stop-opacity:0.1051"/><stop offset="1" style="stop-color:#FFFFFF;stop-opacity:0"/></linearGradient>
+<linearGradient id="SVGID_9_" gradientUnits="userSpaceOnUse" x1="128.3769" y1="353.9734" x2="146.3756" y2="353.9734" gradientTransform="matrix(-1 0 0 1 358.4922 -304.9051)"><stop offset="1.4e-07" style="stop-color:#C9CACA"/><stop offset="0.2387" style="stop-color:#CCCDCD;stop-opacity:0.7613"/><stop offset="0.463" style="stop-color:#D5D5D6;stop-opacity:0.537"/><stop offset="0.6814" style="stop-color:#E3E3E3;stop-opacity:0.3186"/><stop offset="0.8949" style="stop-color:#F5F5F6;stop-opacity:0.1051"/><stop offset="1" style="stop-color:#FFFFFF;stop-opacity:0"/></linearGradient>
+<linearGradient id="SVGID_10_" gradientUnits="userSpaceOnUse" x1="251.4424" y1="330.6606" x2="251.4424" y2="427.3789" gradientTransform="matrix(1 0 0 1 -85.0395 -304.9051)"><stop offset="1.4e-07" style="stop-color:#DCDDDD"/><stop offset="0.0578" style="stop-color:#F4F4F4"/><stop offset="0.1833" style="stop-color:#F4F4F4"/><stop offset="0.9521" style="stop-color:#F4F4F4"/><stop offset="0.9592" style="stop-color:#F9F9F9"/><stop offset="0.9742" style="stop-color:#FEFEFE"/><stop offset="1" style="stop-color:#FFFFFF"/></linearGradient>
+<linearGradient id="SVGID_11_" gradientUnits="userSpaceOnUse" x1="222.7424" y1="398.4865" x2="222.7424" y2="409.9677" gradientTransform="matrix(1 0 0 1 -85.0395 -304.9051)"><stop offset="0" style="stop-color:#DCDDDD"/><stop offset="0.0415" style="stop-color:#E1E2E2"/><stop offset="0.2017" style="stop-color:#EFF0F0"/><stop offset="0.3854" style="stop-color:#F9F9F9"/><stop offset="0.6109" style="stop-color:#FEFEFE"/><stop offset="1" style="stop-color:#FFFFFF"/></linearGradient>
+<linearGradient id="SVGID_12_" gradientUnits="userSpaceOnUse" x1="222.7424" y1="346.5735" x2="222.7424" y2="358.0992" gradientTransform="matrix(1 0 0 1 -85.0395 -304.9051)"><stop offset="0" style="stop-color:#DCDDDD"/><stop offset="0.0415" style="stop-color:#E1E2E2"/><stop offset="0.2017" style="stop-color:#EFF0F0"/><stop offset="0.3854" style="stop-color:#F9F9F9"/><stop offset="0.6109" style="stop-color:#FEFEFE"/><stop offset="1" style="stop-color:#FFFFFF"/></linearGradient>
+<linearGradient id="SVGID_13_" gradientUnits="userSpaceOnUse" x1="203.67" y1="405.0235" x2="221.6686" y2="405.0235" gradientTransform="matrix(1 0 0 1 -85.0395 -304.9051)"><stop offset="1.4e-07" style="stop-color:#C9CACA"/><stop offset="0.2387" style="stop-color:#CCCDCD;stop-opacity:0.7613"/><stop offset="0.463" style="stop-color:#D5D5D6;stop-opacity:0.537"/><stop offset="0.6814" style="stop-color:#E3E3E3;stop-opacity:0.3186"/><stop offset="0.8949" style="stop-color:#F5F5F6;stop-opacity:0.1051"/><stop offset="1" style="stop-color:#FFFFFF;stop-opacity:0"/></linearGradient>
+<linearGradient id="SVGID_14_" gradientUnits="userSpaceOnUse" x1="203.67" y1="354.0235" x2="221.6686" y2="354.0235" gradientTransform="matrix(1 0 0 1 -85.0395 -304.9051)"><stop offset="1.4e-07" style="stop-color:#C9CACA"/><stop offset="0.2387" style="stop-color:#CCCDCD;stop-opacity:0.7613"/><stop offset="0.463" style="stop-color:#D5D5D6;stop-opacity:0.537"/><stop offset="0.6814" style="stop-color:#E3E3E3;stop-opacity:0.3186"/><stop offset="0.8949" style="stop-color:#F5F5F6;stop-opacity:0.1051"/><stop offset="1" style="stop-color:#FFFFFF;stop-opacity:0"/></linearGradient>
+</defs>
+<image xlink:href="${_canvasDataURL}" x="0" y="0" width="348.2" height="145.2" preserveAspectRatio="none" clip-path="url(#lb-left-clip)"/>
+<image xlink:href="${_canvasDataURL}" x="0" y="0" width="348.2" height="145.2" preserveAspectRatio="none" clip-path="url(#lb-right-clip)" transform="translate(348.2,0) scale(-1,1)"/>
+<g>
+<rect x="273.2" y="15.1" class="st2" width="2.8" height="5.7"/>
+<polygon class="st3" points="178.2,25 186.7,25 186.7,124.2 178.2,124.2"/>
+<polygon class="st4" points="186.7,93 235.6,93 235.6,107.2 186.7,107.2"/>
+<polygon class="st5" points="186.7,42 235.6,42 235.6,56.1 186.7,56.1"/>
+<polygon class="st6" points="233.5,93 210.2,93 210.2,107.2 233.5,107.2"/>
+<polygon class="st7" points="233.5,42 210.2,42 210.2,56.1 233.5,56.1"/>
+<circle class="st8" cx="277.4" cy="74.6" r="56.7"/>
+<circle class="st9" cx="277.4" cy="74.6" r="53.9"/>
+</g>
+<g>
+<rect x="72.9" y="15" class="st2" width="2.8" height="5.7"/>
+<rect x="162.2" y="25" class="st10" width="8.5" height="99.2"/>
+<rect x="113.3" y="93" class="st11" width="48.9" height="14.2"/>
+<rect x="113.3" y="42" class="st12" width="48.9" height="14.2"/>
+<rect x="115.3" y="93" class="st13" width="23.4" height="14.2"/>
+<rect x="115.3" y="42" class="st14" width="23.4" height="14.2"/>
+<circle class="st8" cx="71.4" cy="74.6" r="56.7"/>
+<circle class="st9" cx="71.4" cy="74.6" r="53.9"/>
+</g>
+<circle class="st15" cx="71.4" cy="74.6" r="51"/>
+<circle class="st15" cx="277.4" cy="74.6" r="51"/>
+</svg>`;
+}
+
 function get2DDataURLWithFrame() {
   const base = get2DDataURL();
   if (!base) return Promise.resolve(null);
@@ -714,7 +786,8 @@ function get2DDataURLWithFrame() {
 
   const _isLeatherRound = typeof STATE !== 'undefined' && STATE.productId === 'biz_leather_round';
   const _isLeatherOmamori = typeof STATE !== 'undefined' && STATE.productId === 'biz_leather_omamori';
-  const _isPortraitFrame = !_isLeatherRound && !_isLeatherOmamori && typeof STATE !== 'undefined' && STATE.orientationId === 'portrait';
+  const _isLightboxFrame = typeof STATE !== 'undefined' && STATE.productId === 'biz_lightbox';
+  const _isPortraitFrame = !_isLeatherRound && !_isLeatherOmamori && !_isLightboxFrame && typeof STATE !== 'undefined' && STATE.orientationId === 'portrait';
   let _frameSrc, _cachedFrame;
   if (_isLeatherRound) {
     _frameSrc = 'assets/leather_round_frame.svg';
@@ -722,6 +795,9 @@ function get2DDataURLWithFrame() {
   } else if (_isLeatherOmamori) {
     _frameSrc = 'assets/leather_omamori_frame.svg';
     _cachedFrame = _cachedLeatherOmamoriFrameImg;
+  } else if (_isLightboxFrame) {
+    _frameSrc = 'assets/lightbox_frame.svg';
+    _cachedFrame = _cachedLightboxFrameImg;
   } else {
     _frameSrc = _isPortraitFrame ? 'assets/card_portrait_frame.svg' : 'assets/card_landscape_frame.svg';
     _cachedFrame = _isPortraitFrame ? _cachedCardPortraitFrameImg : _cachedCardFrameImg;
@@ -734,6 +810,7 @@ function get2DDataURLWithFrame() {
     frameImg.onload = () => {
       if (_isLeatherRound) _cachedLeatherRoundFrameImg = frameImg;
       else if (_isLeatherOmamori) _cachedLeatherOmamoriFrameImg = frameImg;
+      else if (_isLightboxFrame) _cachedLightboxFrameImg = frameImg;
       else if (_isPortraitFrame) _cachedCardPortraitFrameImg = frameImg;
       else _cachedCardFrameImg = frameImg;
       doComposite(frameImg).then(resolve);
