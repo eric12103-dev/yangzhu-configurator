@@ -525,6 +525,7 @@ function setBackground2D(color) {
 }
 
 // ─── 隨行杯：文字超出 labelArea 時降低不透明度至 35% ──────────────
+// 以實際文字尺寸（obj.width/height，不含 padding）判斷，並補償旋轉角度
 function _updateTextOpacity() {
   if (!canvas2d || !currentProduct || !currentProduct.labelArea) return;
   const isTh = currentProduct && currentProduct.id === 'thermos';
@@ -538,12 +539,21 @@ function _updateTextOpacity() {
   const laBottom = laTop  + h * la.hRatio;
   canvas2d.getObjects().forEach(obj => {
     if (!obj.selectable) return;
-    obj.setCoords();
-    const br = obj.getBoundingRect(true, true);
-    const outside = br.left < laLeft - 1 ||
-                    br.top  < laTop  - 1 ||
-                    (br.left + br.width)  > laRight  + 1 ||
-                    (br.top  + br.height) > laBottom + 1;
+    const center = obj.getCenterPoint();
+    const scaleX = obj.scaleX || 1;
+    const scaleY = obj.scaleY || 1;
+    const angle  = ((obj.angle || 0) * Math.PI) / 180;
+    const cosA   = Math.abs(Math.cos(angle));
+    const sinA   = Math.abs(Math.sin(angle));
+    const tw = obj.width  * scaleX;
+    const th = obj.height * scaleY;
+    // 旋轉後的軸對齊包圍盒
+    const rotW = tw * cosA + th * sinA;
+    const rotH = tw * sinA + th * cosA;
+    const outside = (center.x - rotW / 2) < laLeft   - 1 ||
+                    (center.y - rotH / 2) < laTop    - 1 ||
+                    (center.x + rotW / 2) > laRight  + 1 ||
+                    (center.y + rotH / 2) > laBottom + 1;
     obj.opacity = outside ? 0.35 : 1.0;
   });
 }
