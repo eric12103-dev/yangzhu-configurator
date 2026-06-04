@@ -391,7 +391,7 @@ function uploadImage2D(file) {
       // 卡片上傳模式：圖片填滿虛線框，並裁切在框線範圍內
       const _isUploadOnly = typeof STATE !== 'undefined'
         && STATE.productId === 'biz_card'
-        && STATE.materialId === 'easycard'
+        && ['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId)
         && STATE.orientationId === 'landscape';
 
       if (_isUploadOnly) {

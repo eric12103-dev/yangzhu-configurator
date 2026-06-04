@@ -324,7 +324,7 @@ function initDesignStep() {
 
   // 上傳框線模式：調整 canvas 比例為橫式卡片（259.7×170.1）
   const isUploadOnly = STATE.productId === 'biz_card'
-    && STATE.materialId === 'easycard'
+    && ['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId)
     && STATE.orientationId === 'landscape';
   let _origSize = null;
   if (isUploadOnly) {
@@ -478,7 +478,7 @@ function _syncTextPropsPanel(obj) {
 
   // 上傳模式：不顯示任何文字功能
   const isUploadOnly = STATE.productId === 'biz_card'
-    && STATE.materialId === 'easycard'
+    && ['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId)
     && STATE.orientationId === 'landscape';
   if (isUploadOnly) {
     if (propsPanel) propsPanel.style.display = 'none';
@@ -623,7 +623,7 @@ function applyBgPreset(color) {
 // ─── Step 4：預覽 ──────────────────────────────────────────
 function initPreviewStep() {
   const isThermos = STATE.productId === 'thermos';
-  const isUploadOnly = STATE.productId === 'biz_card' && STATE.materialId === 'easycard' && STATE.orientationId === 'landscape';
+  const isUploadOnly = STATE.productId === 'biz_card' && ['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId) && STATE.orientationId === 'landscape';
   const flatEl    = document.getElementById('preview-flat');
   const mockupDiv = document.getElementById('preview-mockup');
   const btnMockup = document.getElementById('btn-download-mockup');
@@ -767,7 +767,7 @@ async function submitDesign() {
   try {
     let svg = null;
     // 卡片橫式上傳模式：優先呼叫 preview2d.js 的專屬函式（照片+向量框線，不走 canvas 渲染）
-    const _isUploadOnly = STATE.productId === 'biz_card' && STATE.materialId === 'easycard' && STATE.orientationId === 'landscape';
+    const _isUploadOnly = STATE.productId === 'biz_card' && ['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId) && STATE.orientationId === 'landscape';
     if (_isUploadOnly && typeof getUploadOnlySVG === 'function') {
       svg = getUploadOnlySVG();
     }
