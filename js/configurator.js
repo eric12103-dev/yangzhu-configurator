@@ -325,7 +325,7 @@ function initDesignStep() {
   // 上傳框線模式：橫式（三種規格）或悠遊卡直式
   const isUploadOnly = STATE.productId === 'biz_card' && (
     (['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId) && STATE.orientationId === 'landscape') ||
-    (STATE.materialId === 'easycard' && STATE.orientationId === 'portrait')
+    (['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId) && STATE.orientationId === 'portrait')
   );
   let _origSize = null;
   if (isUploadOnly) {
@@ -487,7 +487,7 @@ function _syncTextPropsPanel(obj) {
   // 上傳模式：不顯示任何文字功能
   const isUploadOnly = STATE.productId === 'biz_card' && (
     (['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId) && STATE.orientationId === 'landscape') ||
-    (STATE.materialId === 'easycard' && STATE.orientationId === 'portrait')
+    (['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId) && STATE.orientationId === 'portrait')
   );
   if (isUploadOnly) {
     if (propsPanel) propsPanel.style.display = 'none';
@@ -634,7 +634,7 @@ function initPreviewStep() {
   const isThermos = STATE.productId === 'thermos';
   const isUploadOnly = STATE.productId === 'biz_card' && (
     (['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId) && STATE.orientationId === 'landscape') ||
-    (STATE.materialId === 'easycard' && STATE.orientationId === 'portrait')
+    (['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId) && STATE.orientationId === 'portrait')
   );
   const flatEl    = document.getElementById('preview-flat');
   const mockupDiv = document.getElementById('preview-mockup');
@@ -785,7 +785,7 @@ async function submitDesign() {
     // 卡片橫式上傳模式：優先呼叫 preview2d.js 的專屬函式（照片+向量框線，不走 canvas 渲染）
     const _isUploadOnly = STATE.productId === 'biz_card' && (
       (['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId) && STATE.orientationId === 'landscape') ||
-      (STATE.materialId === 'easycard' && STATE.orientationId === 'portrait')
+      (['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId) && STATE.orientationId === 'portrait')
     );
     if (_isUploadOnly && typeof getUploadOnlySVG === 'function') {
       svg = getUploadOnlySVG();

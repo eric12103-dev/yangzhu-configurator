@@ -400,7 +400,7 @@ function uploadImage2D(file) {
       const _isUploadOnly = typeof STATE !== 'undefined'
         && STATE.productId === 'biz_card' && (
           (['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId) && STATE.orientationId === 'landscape') ||
-          (STATE.materialId === 'easycard' && STATE.orientationId === 'portrait')
+          (['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId) && STATE.orientationId === 'portrait')
         );
 
       if (_isUploadOnly) {
