@@ -735,8 +735,6 @@ function getUploadOnlyLightboxSVG() {
 <linearGradient id="SVGID_13_" gradientUnits="userSpaceOnUse" x1="203.67" y1="405.0235" x2="221.6686" y2="405.0235" gradientTransform="matrix(1 0 0 1 -85.0395 -304.9051)"><stop offset="1.4e-07" style="stop-color:#C9CACA"/><stop offset="0.2387" style="stop-color:#CCCDCD;stop-opacity:0.7613"/><stop offset="0.463" style="stop-color:#D5D5D6;stop-opacity:0.537"/><stop offset="0.6814" style="stop-color:#E3E3E3;stop-opacity:0.3186"/><stop offset="0.8949" style="stop-color:#F5F5F6;stop-opacity:0.1051"/><stop offset="1" style="stop-color:#FFFFFF;stop-opacity:0"/></linearGradient>
 <linearGradient id="SVGID_14_" gradientUnits="userSpaceOnUse" x1="203.67" y1="354.0235" x2="221.6686" y2="354.0235" gradientTransform="matrix(1 0 0 1 -85.0395 -304.9051)"><stop offset="1.4e-07" style="stop-color:#C9CACA"/><stop offset="0.2387" style="stop-color:#CCCDCD;stop-opacity:0.7613"/><stop offset="0.463" style="stop-color:#D5D5D6;stop-opacity:0.537"/><stop offset="0.6814" style="stop-color:#E3E3E3;stop-opacity:0.3186"/><stop offset="0.8949" style="stop-color:#F5F5F6;stop-opacity:0.1051"/><stop offset="1" style="stop-color:#FFFFFF;stop-opacity:0"/></linearGradient>
 </defs>
-<image xlink:href="${_canvasDataURL}" x="0" y="0" width="348.2" height="145.2" preserveAspectRatio="none" clip-path="url(#lb-left-clip)"/>
-<image xlink:href="${_canvasDataURL}" x="0" y="0" width="348.2" height="145.2" preserveAspectRatio="none" clip-path="url(#lb-right-clip)" transform="translate(348.2,0) scale(-1,1)"/>
 <g>
 <rect x="273.2" y="15.1" class="st2" width="2.8" height="5.7"/>
 <polygon class="st3" points="178.2,25 186.7,25 186.7,124.2 178.2,124.2"/>
@@ -757,6 +755,8 @@ function getUploadOnlyLightboxSVG() {
 <circle class="st8" cx="71.4" cy="74.6" r="56.7"/>
 <circle class="st9" cx="71.4" cy="74.6" r="53.9"/>
 </g>
+<image xlink:href="${_canvasDataURL}" x="0" y="0" width="348.2" height="145.2" preserveAspectRatio="none" clip-path="url(#lb-left-clip)"/>
+<image xlink:href="${_canvasDataURL}" x="0" y="0" width="348.2" height="145.2" preserveAspectRatio="none" clip-path="url(#lb-right-clip)" transform="translate(348.2,0) scale(-1,1)"/>
 <circle class="st15" cx="71.4" cy="74.6" r="51"/>
 <circle class="st15" cx="277.4" cy="74.6" r="51"/>
 </svg>`;
