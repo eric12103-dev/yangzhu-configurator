@@ -11,8 +11,8 @@
 	.st5{fill:url(#SVGID_7_);stroke:#B5B5B6;stroke-width:0.5;stroke-miterlimit:10;}
 	.st6{opacity:0.5;fill:url(#SVGID_8_);enable-background:new    ;}
 	.st7{opacity:0.5;fill:url(#SVGID_9_);enable-background:new    ;}
-	.st8{fill:none;stroke:#B5B5B6;stroke-width:5.7;stroke-miterlimit:10;}
-	.st9{fill:none;stroke:#D8D9DA;stroke-width:0.5;stroke-miterlimit:10;}
+	.st8{fill:none;}
+	.st9{fill:none;}
 	.st10{fill:url(#SVGID_10_);stroke:#B5B5B6;stroke-width:0.5;stroke-miterlimit:10;}
 	.st11{fill:url(#SVGID_11_);stroke:#B5B5B6;stroke-width:0.5;stroke-miterlimit:10;}
 	.st12{fill:url(#SVGID_12_);stroke:#B5B5B6;stroke-width:0.5;stroke-miterlimit:10;}
@@ -76,10 +76,16 @@
 		<path d="M270.1,169.9c0.8-1.2,1.5-2.7,1.5-4.9s-0.6-3.7-1.5-4.9h0.8c0.8,1,1.6,2.5,1.6,4.9s-0.8,3.9-1.6,4.9H270.1z"/>
 	</g>
 </g>
+<defs>
+  <!-- 裁切：整個 SVG 範圍扣除兩側印刷圓圈（r=51），讓柱子不進入圓圈內部 -->
+  <clipPath id="arms-clip">
+    <path fill-rule="evenodd" d="M0,0 H348.2 V145.2 H0 Z M122.4,74.6 A51,51 0 1,0 20.4,74.6 A51,51 0 1,0 122.4,74.6 Z M328.4,74.6 A51,51 0 1,0 226.4,74.6 A51,51 0 1,0 328.4,74.6 Z"/>
+  </clipPath>
+</defs>
 <g id="圖層_1">
 	<g id="圖案放置圖層_2_">
 	</g>
-	<g>
+	<g clip-path="url(#arms-clip)">
 		<rect x="273.2" y="15.1" class="st2" width="2.8" height="5.7"/>
 		
 			<linearGradient id="SVGID_5_" gradientUnits="userSpaceOnUse" x1="176.0893" y1="330.6606" x2="176.0893" y2="427.3789" gradientTransform="matrix(-1 0 0 1 358.4922 -304.9051)">
@@ -132,10 +138,10 @@
 			<stop  offset="1" style="stop-color:#FFFFFF;stop-opacity:0"/>
 		</linearGradient>
 		<polygon class="st7" points="233.5,42 210.2,42 210.2,56.1 233.5,56.1 		"/>
-		<circle class="st8" cx="277.4" cy="74.6" r="56.7"/>
-		<circle class="st9" cx="277.4" cy="74.6" r="53.9"/>
+		<!-- 右圓外框環（r=53.9~56.7 的灰色環，evenodd donut） -->
+		<path fill="#F7F8F8" stroke="#B5B5B6" stroke-width="0.5" fill-rule="evenodd" d="M334.1,74.6 A56.7,56.7 0 1,0 220.7,74.6 A56.7,56.7 0 1,0 334.1,74.6 Z M331.3,74.6 A53.9,53.9 0 1,0 223.5,74.6 A53.9,53.9 0 1,0 331.3,74.6 Z"/>
 	</g>
-	<g>
+	<g clip-path="url(#arms-clip)">
 		<rect x="72.9" y="15" class="st2" width="2.8" height="5.7"/>
 		
 			<linearGradient id="SVGID_10_" gradientUnits="userSpaceOnUse" x1="251.4424" y1="330.6606" x2="251.4424" y2="427.3789" gradientTransform="matrix(1 0 0 1 -85.0395 -304.9051)">
@@ -188,8 +194,8 @@
 			<stop  offset="1" style="stop-color:#FFFFFF;stop-opacity:0"/>
 		</linearGradient>
 		<rect x="115.3" y="42" class="st14" width="23.4" height="14.2"/>
-		<circle class="st8" cx="71.4" cy="74.6" r="56.7"/>
-		<circle class="st9" cx="71.4" cy="74.6" r="53.9"/>
+		<!-- 左圓外框環（r=53.9~56.7 的灰色環，evenodd donut） -->
+		<path fill="#F7F8F8" stroke="#B5B5B6" stroke-width="0.5" fill-rule="evenodd" d="M128.1,74.6 A56.7,56.7 0 1,0 14.7,74.6 A56.7,56.7 0 1,0 128.1,74.6 Z M125.3,74.6 A53.9,53.9 0 1,0 17.5,74.6 A53.9,53.9 0 1,0 125.3,74.6 Z"/>
 	</g>
 </g>
 <g id="圖層_5">
