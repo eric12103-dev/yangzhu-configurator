@@ -593,6 +593,47 @@ function uploadImage2D(file) {
   reader.readAsDataURL(file);
 }
 
+// ─── 圓形小燈箱：鏡射圖片到另一側 ──────────────────────────
+function mirrorLightboxImage() {
+  if (!canvas2d) return;
+  const w = canvas2d.getWidth();
+  const h = canvas2d.getHeight();
+  const leftCX  = w * (71.4  / 348.2);
+  const rightCX = w * (277.4 / 348.2);
+  const cy = h * (74.6 / 145.2);
+  const r  = w * (51 / 348.2);
+
+  const images = canvas2d.getObjects().filter(o => o.selectable && o.type === 'image');
+  if (images.length === 0) return;
+
+  const activeObj = canvas2d.getActiveObject();
+  const srcImg = (activeObj && activeObj.type === 'image') ? activeObj : images[0];
+  const srcIsLeft = srcImg.left < w / 2;
+  const targetCX = srcIsLeft ? rightCX : leftCX;
+
+  // 移除目標側舊圖
+  images.filter(o => o !== srcImg && (o.left < w / 2) !== srcIsLeft)
+        .forEach(o => canvas2d.remove(o));
+
+  srcImg.clone(cloned => {
+    cloned.set({
+      left: targetCX, top: cy,
+      flipX: !srcImg.flipX,
+      originX: 'center', originY: 'center'
+    });
+    cloned.clipPath = new fabric.Circle({
+      radius: r, left: targetCX, top: cy,
+      originX: 'center', originY: 'center',
+      absolutePositioned: true
+    });
+    canvas2d.add(cloned);
+    canvas2d.sendToBack(cloned);
+    canvas2d.setActiveObject(cloned);
+    canvas2d.renderAll();
+    if (typeof _saveHistory === 'function') _saveHistory();
+  });
+}
+
 // ─── 背景色 ──────────────────────────────────────────────
 function setBackground2D(color) {
   if (!canvas2d) return;
@@ -756,7 +797,7 @@ function getUploadOnlyLightboxSVG() {
 <circle class="st9" cx="71.4" cy="74.6" r="53.9"/>
 </g>
 <image xlink:href="${_canvasDataURL}" x="0" y="0" width="348.2" height="145.2" preserveAspectRatio="none" clip-path="url(#lb-left-clip)"/>
-<image xlink:href="${_canvasDataURL}" x="0" y="0" width="348.2" height="145.2" preserveAspectRatio="none" clip-path="url(#lb-right-clip)" transform="translate(348.2,0) scale(-1,1)"/>
+<image xlink:href="${_canvasDataURL}" x="0" y="0" width="348.2" height="145.2" preserveAspectRatio="none" clip-path="url(#lb-right-clip)"/>
 <circle class="st15" cx="71.4" cy="74.6" r="51"/>
 <circle class="st15" cx="277.4" cy="74.6" r="51"/>
 </svg>`;

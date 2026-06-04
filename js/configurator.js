@@ -398,6 +398,10 @@ function initDesignStep() {
   if (addPanel)   addPanel.style.display   = isUploadOnly ? 'none' : '';
   if (propsPanel) propsPanel.style.display = isUploadOnly ? 'none' : 'none'; // 預設隱藏，由 _syncTextPropsPanel 控制
 
+  // 鏡射按鈕（僅 biz_lightbox 顯示）
+  const mirrorBtn = document.getElementById('btn-mirror-lightbox');
+  if (mirrorBtn) mirrorBtn.style.display = STATE.productId === 'biz_lightbox' ? '' : 'none';
+
   // 縮放滑桿（upload-only 才顯示）
   const zoomSection = document.getElementById('zoom-slider-section');
   if (zoomSection) zoomSection.style.display = isUploadOnly ? '' : 'none';
