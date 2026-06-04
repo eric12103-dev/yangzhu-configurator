@@ -676,6 +676,62 @@ function mirrorLightboxImage() {
   });
 }
 
+// ─── 圓形小燈箱：複製圖片到另一側（不翻轉）──────────────────
+function copyLightboxImage() {
+  if (!canvas2d) return;
+  const w = canvas2d.getWidth();
+  const h = canvas2d.getHeight();
+  const leftCX  = w * (71.4  / 348.2);
+  const rightCX = w * (277.4 / 348.2);
+  const cy = h * (74.6 / 145.2);
+  const r  = w * (51 / 348.2);
+
+  const images = canvas2d.getObjects().filter(o => o.selectable && o.type === 'image');
+  if (images.length === 0) return;
+
+  const activeObj = canvas2d.getActiveObject();
+  const srcImg = (activeObj && activeObj.type === 'image') ? activeObj : images[0];
+  const srcIsLeft = srcImg.clipPath
+    ? srcImg.clipPath.left < w / 2
+    : srcImg.left < w / 2;
+  const targetCX = srcIsLeft ? rightCX : leftCX;
+
+  // 移除目標側舊圖
+  images
+    .filter(o => o !== srcImg)
+    .filter(o => {
+      const oIsLeft = o.clipPath ? o.clipPath.left < w / 2 : o.left < w / 2;
+      return oIsLeft !== srcIsLeft;
+    })
+    .forEach(o => canvas2d.remove(o));
+
+  const canvasDataURL = get2DDataURL();
+  if (!canvasDataURL) return;
+
+  // 不翻轉：源圓圈內容直接映射到目標圓圈同一位置（不加 flipX）
+  const sourceCX = srcIsLeft ? leftCX : rightCX;
+  fabric.Image.fromURL(canvasDataURL, copiedImg => {
+    copiedImg.set({
+      left: targetCX - sourceCX + w / 2,
+      top: h / 2,
+      scaleX: 0.5,
+      scaleY: 0.5,
+      originX: 'center',
+      originY: 'center'
+    });
+    copiedImg.clipPath = new fabric.Circle({
+      radius: r, left: targetCX, top: cy,
+      originX: 'center', originY: 'center',
+      absolutePositioned: true
+    });
+    canvas2d.add(copiedImg);
+    canvas2d.sendToBack(copiedImg);
+    canvas2d.setActiveObject(copiedImg);
+    canvas2d.renderAll();
+    if (typeof _saveHistory === 'function') _saveHistory();
+  });
+}
+
 // ─── 背景色 ──────────────────────────────────────────────
 function setBackground2D(color) {
   if (!canvas2d) return;
