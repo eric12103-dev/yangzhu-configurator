@@ -494,11 +494,13 @@ function getUploadOnlySVG() {
   if (!_lastUploadedDataURL) return null;
   const isPortrait = typeof STATE !== 'undefined' && STATE.orientationId === 'portrait';
   if (isPortrait) {
-    // 直式：viewBox 170.1×259.7，裁切邊 x=2.8,y=2.8 → 167.2,256.8
+    // 直式：使用畫布渲染結果（含使用者縮放/裁切），避免原圖比例不符造成變形
+    const _canvasDataURL = (typeof get2DDataURL === 'function' && get2DDataURL()) || _lastUploadedDataURL;
+    // viewBox 170.1×259.7，裁切邊 x=2.8,y=2.8 → 167.2,256.8
     return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 170.1 259.7" width="60mm" height="91.6mm">
 <style>.st0{fill:none;stroke:#E60012;stroke-miterlimit:10;}.st1{fill:none;stroke:#3E3A39;stroke-width:0.25;stroke-miterlimit:10;}.st2{fill:none;stroke:#3E3A39;stroke-width:0.25;stroke-miterlimit:10;stroke-dasharray:5.0813,5.0813;}.st3{fill:none;stroke:#3E3A39;stroke-width:0.25;stroke-miterlimit:10;stroke-dasharray:5.1404,5.1404;}</style>
 <defs><clipPath id="card-clip"><rect x="2.8" y="2.8" width="164.4" height="254"/></clipPath></defs>
-<image xlink:href="${_lastUploadedDataURL}" x="0" y="0" width="170.1" height="259.7" preserveAspectRatio="none" clip-path="url(#card-clip)"/>
+<image xlink:href="${_canvasDataURL}" x="0" y="0" width="170.1" height="259.7" preserveAspectRatio="none" clip-path="url(#card-clip)"/>
 <g>
 <path class="st0" d="M17.8,251.1c-5.2,0-9.3-4.2-9.3-9.3v-224c0-5.2,4.2-9.3,9.3-9.3h134.4c5.2,0,9.3,4.2,9.3,9.3v224c0,5.2-4.2,9.3-9.3,9.3H17.8z"/>
 <g><g>
