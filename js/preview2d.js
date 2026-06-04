@@ -468,6 +468,7 @@ function uploadImage2D(file) {
       const h = canvas2d.getHeight();
 
       const _isLeatherRound = typeof STATE !== 'undefined' && STATE.productId === 'biz_leather_round';
+      const _isLeatherOmamori = typeof STATE !== 'undefined' && STATE.productId === 'biz_leather_omamori';
       // 卡片上傳模式：圖片填滿虛線框，並裁切在框線範圍內
       const _isUploadOnly = typeof STATE !== 'undefined'
         && STATE.productId === 'biz_card' && (
@@ -490,6 +491,27 @@ function uploadImage2D(file) {
         img.clipPath = new fabric.Circle({
           radius: r,
           left: cx, top: cy,
+          originX: 'center', originY: 'center',
+          absolutePositioned: true
+        });
+        const _s = document.getElementById('zoom-slider');
+        const _d = document.getElementById('zoom-value-display');
+        if (_s) _s.value = 100;
+        if (_d) _d.textContent = '100%';
+      } else if (_isLeatherOmamori) {
+        // 御守皮革：圖片填滿並裁切到御守形狀（SVG viewBox 83,166,138×237）
+        const scale = Math.max(w / img.width, h / img.height);
+        _uploadBaseScale = scale;
+        img.set({
+          left: w / 2, top: h / 2,
+          originX: 'center', originY: 'center',
+          scaleX: scale, scaleY: scale
+        });
+        const _omamoriPath = 'M105.6,400.8c-10.3,0-20-9.4-20-19.2V223.2c0-10,3.5-17.9,9.5-21.7c3.1-2,7.5-3.8,11.6-5.5c3.3-1.4,6.5-2.7,8.4-3.9c2.7-1.6,6.4-6.3,9-9.6c1.3-1.6,2.4-3.1,3.3-4c2.9-3.1,9.7-10.1,24.7-10.1s21.7,7.1,24.6,10.1c0.9,1,2.1,2.4,3.4,4.1c2.7,3.4,6.3,8,9.1,9.6c1.9,1.2,5.1,2.5,8.4,3.9c4.2,1.7,8.5,3.5,11.6,5.5c6.1,3.8,9.5,11.7,9.5,21.7v158.4c0,9.9-9.7,19.2-20,19.2h-93.1V400.8z';
+        img.clipPath = new fabric.Path(_omamoriPath, {
+          scaleX: w / 133.2,
+          scaleY: h / 232.4,
+          left: w / 2, top: h / 2,
           originX: 'center', originY: 'center',
           absolutePositioned: true
         });
@@ -582,6 +604,7 @@ function _updateTextOpacity() {
 let _cachedCardFrameImg = null;
 let _cachedCardPortraitFrameImg = null;
 let _cachedLeatherRoundFrameImg = null;
+let _cachedLeatherOmamoriFrameImg = null;
 var _lastUploadedDataURL = null;
 
 // 卡片橫式上傳模式：回傳向量 SVG（照片為 <image>，紅框+虛線為獨立向量路徑）
@@ -651,6 +674,20 @@ function getUploadOnlyRoundSVG() {
 </svg>`;
 }
 
+// 御守皮革上傳模式：回傳向量 SVG（照片裁切至御守形狀 + 框線路徑）
+// viewBox 83,166,138×237，御守印刷區路徑
+function getUploadOnlyOmamoriSVG() {
+  if (!_lastUploadedDataURL) return null;
+  const _canvasDataURL = (typeof get2DDataURL === 'function' && get2DDataURL()) || _lastUploadedDataURL;
+  return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="83 166 138 237">
+<style>.st0{fill:none;stroke:#000000;stroke-width:1.5;stroke-miterlimit:10;}.st1{fill:none;stroke:#E60012;stroke-miterlimit:10;stroke-dasharray:8;}</style>
+<defs><clipPath id="omamori-clip"><path d="M105.6,400.8c-10.3,0-20-9.4-20-19.2V223.2c0-10,3.5-17.9,9.5-21.7c3.1-2,7.5-3.8,11.6-5.5c3.3-1.4,6.5-2.7,8.4-3.9c2.7-1.6,6.4-6.3,9-9.6c1.3-1.6,2.4-3.1,3.3-4c2.9-3.1,9.7-10.1,24.7-10.1s21.7,7.1,24.6,10.1c0.9,1,2.1,2.4,3.4,4.1c2.7,3.4,6.3,8,9.1,9.6c1.9,1.2,5.1,2.5,8.4,3.9c4.2,1.7,8.5,3.5,11.6,5.5c6.1,3.8,9.5,11.7,9.5,21.7v158.4c0,9.9-9.7,19.2-20,19.2h-93.1V400.8z"/></clipPath></defs>
+<image xlink:href="${_canvasDataURL}" x="83" y="166" width="138" height="237" preserveAspectRatio="none" clip-path="url(#omamori-clip)"/>
+<path class="st0" d="M207.8,203.9c-5.5-3.4-15.5-6.6-20-9.3s-10.3-11.4-13-14.1c-2.6-2.7-8.8-9.3-22.6-9.3s-20,6.5-22.6,9.3c-2.6,2.7-8.4,11.4-13,14.1c-4.5,2.7-14.5,5.9-20,9.3c-5.5,3.4-8.2,10.8-8.2,19.3s0,150.3,0,158.4c0,8.1,8.1,16.4,17.2,16.4s35.5,0,46.6,0c11.2,0,37.5,0,46.6,0s17.2-8.3,17.2-16.4s0-149.8,0-158.4C216,214.7,213.2,207.3,207.8,203.9z M152.2,204.1c-3.9,0-7.1-3.2-7.1-7.1c0-3.9,3.2-7.1,7.1-7.1c3.9,0,7.1,3.2,7.1,7.1C159.3,200.9,156.1,204.1,152.2,204.1z"/>
+<path class="st1" d="M105.6,400.8c-10.3,0-20-9.4-20-19.2V223.2c0-10,3.5-17.9,9.5-21.7c3.1-2,7.5-3.8,11.6-5.5c3.3-1.4,6.5-2.7,8.4-3.9c2.7-1.6,6.4-6.3,9-9.6c1.3-1.6,2.4-3.1,3.3-4c2.9-3.1,9.7-10.1,24.7-10.1s21.7,7.1,24.6,10.1c0.9,1,2.1,2.4,3.4,4.1c2.7,3.4,6.3,8,9.1,9.6c1.9,1.2,5.1,2.5,8.4,3.9c4.2,1.7,8.5,3.5,11.6,5.5c6.1,3.8,9.5,11.7,9.5,21.7v158.4c0,9.9-9.7,19.2-20,19.2h-93.1V400.8z"/>
+</svg>`;
+}
+
 function get2DDataURLWithFrame() {
   const base = get2DDataURL();
   if (!base) return Promise.resolve(null);
@@ -674,11 +711,15 @@ function get2DDataURLWithFrame() {
   };
 
   const _isLeatherRound = typeof STATE !== 'undefined' && STATE.productId === 'biz_leather_round';
-  const _isPortraitFrame = !_isLeatherRound && typeof STATE !== 'undefined' && STATE.orientationId === 'portrait';
+  const _isLeatherOmamori = typeof STATE !== 'undefined' && STATE.productId === 'biz_leather_omamori';
+  const _isPortraitFrame = !_isLeatherRound && !_isLeatherOmamori && typeof STATE !== 'undefined' && STATE.orientationId === 'portrait';
   let _frameSrc, _cachedFrame;
   if (_isLeatherRound) {
     _frameSrc = 'assets/leather_round_frame.svg';
     _cachedFrame = _cachedLeatherRoundFrameImg;
+  } else if (_isLeatherOmamori) {
+    _frameSrc = 'assets/leather_omamori_frame.svg';
+    _cachedFrame = _cachedLeatherOmamoriFrameImg;
   } else {
     _frameSrc = _isPortraitFrame ? 'assets/card_portrait_frame.svg' : 'assets/card_landscape_frame.svg';
     _cachedFrame = _isPortraitFrame ? _cachedCardPortraitFrameImg : _cachedCardFrameImg;
@@ -690,6 +731,7 @@ function get2DDataURLWithFrame() {
     const frameImg = new Image();
     frameImg.onload = () => {
       if (_isLeatherRound) _cachedLeatherRoundFrameImg = frameImg;
+      else if (_isLeatherOmamori) _cachedLeatherOmamoriFrameImg = frameImg;
       else if (_isPortraitFrame) _cachedCardPortraitFrameImg = frameImg;
       else _cachedCardFrameImg = frameImg;
       doComposite(frameImg).then(resolve);
