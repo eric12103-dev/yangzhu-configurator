@@ -165,6 +165,21 @@ function init2DCanvas(productId) {
   canvas2d.on('object:modified', e => {
     if (typeof _updateFloatToolbar === 'function') _updateFloatToolbar();
     _updateTextOpacity();
+    // biz_lightbox：圖片移動／縮放後，依最終位置更新 clipPath 到最近的圓圈
+    if (productId === 'biz_lightbox' && e.target && e.target.type === 'image') {
+      const _w = canvas2d.getWidth();
+      const _h = canvas2d.getHeight();
+      const _leftCX  = _w * (71.4  / 348.2);
+      const _rightCX = _w * (277.4 / 348.2);
+      const _cy = _h * (74.6 / 145.2);
+      const _r  = _w * (51 / 348.2);
+      const _nearCX = e.target.left < _w / 2 ? _leftCX : _rightCX;
+      e.target.clipPath = new fabric.Circle({
+        radius: _r, left: _nearCX, top: _cy,
+        originX: 'center', originY: 'center',
+        absolutePositioned: true
+      });
+    }
     canvas2d.requestRenderAll();
     _saveHistory();
     if (typeof _saveDraft === 'function') _saveDraft();
@@ -500,10 +515,18 @@ function uploadImage2D(file) {
         if (_s) _s.value = 100;
         if (_d) _d.textContent = '100%';
       } else if (_isLightbox) {
-        // 圓形小燈箱：圖片填滿並裁切到左圓印刷區（SVG viewBox 348.2×145.2，左圓心 71.4,74.6 半徑 51）
-        const cx = w * (71.4 / 348.2);
-        const cy = h * (74.6 / 145.2);
-        const r  = w * (51 / 348.2);
+        // 圓形小燈箱：偵測左圓是否已有圖，有則放右圓，否則放左圓
+        const _leftCX  = w * (71.4  / 348.2);
+        const _rightCX = w * (277.4 / 348.2);
+        const _lbCy = h * (74.6 / 145.2);
+        const r = w * (51 / 348.2);
+        const _existingImgs = canvas2d.getObjects().filter(o => o.selectable && o.type === 'image');
+        const _hasLeft = _existingImgs.some(o => {
+          const ox = o.clipPath ? o.clipPath.left : o.left;
+          return ox < w / 2;
+        });
+        const cx = _hasLeft ? _rightCX : _leftCX;
+        const cy = _lbCy;
         const scale = Math.max((r * 2) / img.width, (r * 2) / img.height);
         _uploadBaseScale = scale;
         img.set({
@@ -594,6 +617,7 @@ function uploadImage2D(file) {
 }
 
 // ─── 圓形小燈箱：鏡射圖片到另一側 ──────────────────────────
+// 以 canvas 目前截圖（已套用 clip）做水平翻轉，讓紅圈內的內容鏡射到另一側
 function mirrorLightboxImage() {
   if (!canvas2d) return;
   const w = canvas2d.getWidth();
@@ -608,27 +632,43 @@ function mirrorLightboxImage() {
 
   const activeObj = canvas2d.getActiveObject();
   const srcImg = (activeObj && activeObj.type === 'image') ? activeObj : images[0];
-  const srcIsLeft = srcImg.left < w / 2;
+
+  // 以 clipPath 中心判斷來源側，比 left 位置更可靠
+  const srcIsLeft = srcImg.clipPath
+    ? srcImg.clipPath.left < w / 2
+    : srcImg.left < w / 2;
   const targetCX = srcIsLeft ? rightCX : leftCX;
 
   // 移除目標側舊圖
-  images.filter(o => o !== srcImg && (o.left < w / 2) !== srcIsLeft)
-        .forEach(o => canvas2d.remove(o));
+  images
+    .filter(o => o !== srcImg)
+    .filter(o => {
+      const oIsLeft = o.clipPath ? o.clipPath.left < w / 2 : o.left < w / 2;
+      return oIsLeft !== srcIsLeft;
+    })
+    .forEach(o => canvas2d.remove(o));
 
-  srcImg.clone(cloned => {
-    cloned.set({
-      left: targetCX, top: cy,
-      flipX: !srcImg.flipX,
+  // 取 canvas 目前截圖（Fabric clipPath 已套用），2x 解析度
+  const canvasDataURL = get2DDataURL();
+  if (!canvasDataURL) return;
+
+  // 把截圖水平翻轉後放到目標圓圈：
+  // 截圖以 canvas 中心翻轉 → 左圓內容映射到右圓位置（反之亦然）
+  fabric.Image.fromURL(canvasDataURL, mirroredImg => {
+    mirroredImg.set({
+      left: w / 2, top: h / 2,
+      scaleX: 0.5, scaleY: 0.5,  // DataURL 是 2x，縮回 canvas 尺寸
+      flipX: true,
       originX: 'center', originY: 'center'
     });
-    cloned.clipPath = new fabric.Circle({
+    mirroredImg.clipPath = new fabric.Circle({
       radius: r, left: targetCX, top: cy,
       originX: 'center', originY: 'center',
       absolutePositioned: true
     });
-    canvas2d.add(cloned);
-    canvas2d.sendToBack(cloned);
-    canvas2d.setActiveObject(cloned);
+    canvas2d.add(mirroredImg);
+    canvas2d.sendToBack(mirroredImg);
+    canvas2d.setActiveObject(mirroredImg);
     canvas2d.renderAll();
     if (typeof _saveHistory === 'function') _saveHistory();
   });
