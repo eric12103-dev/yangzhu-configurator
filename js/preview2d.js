@@ -94,8 +94,16 @@ function init2DCanvas(productId) {
     ch = Math.round(cw * _aspect);
   } else {
     const ratio = currentProduct.size.h / currentProduct.size.w;
-    cw = Math.min(containerW - 40, 480);
-    ch = Math.round(cw * ratio);
+    const _isPortraitCard = currentProduct.id === 'biz_card'
+      && typeof STATE !== 'undefined' && STATE.orientationId === 'portrait';
+    if (_isPortraitCard) {
+      // 直式卡：以高度為基準（與橫式 canvas 長邊相同）
+      ch = Math.min(containerW - 40, 480);
+      cw = Math.round(ch / ratio);
+    } else {
+      cw = Math.min(containerW - 40, 480);
+      ch = Math.round(cw * ratio);
+    }
   }
 
   el.width  = cw;
@@ -396,11 +404,16 @@ function uploadImage2D(file) {
         );
 
       if (_isUploadOnly) {
-        // 黑色虛線框範圍（SVG viewBox 259.7×170.1，角點 2.8~256.8 / 2.8~167.2）
-        const cx  = w * (2.8 / 259.7);
-        const cy  = h * (2.8 / 170.1);
-        const cw2 = w * ((256.8 - 2.8) / 259.7);
-        const ch2 = h * ((167.2 - 2.8) / 170.1);
+        // 黑色虛線框範圍：依方向選對應 SVG viewBox 尺寸
+        const _portrait = typeof STATE !== 'undefined' && STATE.orientationId === 'portrait';
+        const _vw = _portrait ? 170.1 : 259.7;
+        const _vh = _portrait ? 259.7 : 170.1;
+        const _rx = _portrait ? 167.2 : 256.8;
+        const _ry = _portrait ? 256.8 : 167.2;
+        const cx  = w * (2.8 / _vw);
+        const cy  = h * (2.8 / _vh);
+        const cw2 = w * ((_rx - 2.8) / _vw);
+        const ch2 = h * ((_ry - 2.8) / _vh);
         // 填滿虛線框
         const scale = Math.max(cw2 / img.width, ch2 / img.height);
         _uploadBaseScale = scale;
