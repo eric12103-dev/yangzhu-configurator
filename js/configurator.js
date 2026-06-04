@@ -668,7 +668,7 @@ function initPreviewStep() {
       if (flatEl) {
         const _isPortrait = STATE.orientationId === 'portrait';
         const _imgStyle = _isPortrait
-          ? 'max-height:480px;width:auto;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.12);'
+          ? 'max-width:314px;width:100%;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.12);'
           : 'max-width:480px;width:100%;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.12);';
         flatEl.innerHTML = frameURL
           ? `<img src="${frameURL}" style="${_imgStyle}">`
