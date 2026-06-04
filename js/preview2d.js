@@ -551,36 +551,40 @@ function _updateTextOpacity() {
     const angle  = ((obj.angle || 0) * Math.PI) / 180;
     const cosA   = Math.abs(Math.cos(angle));
     const sinA   = Math.abs(Math.sin(angle));
-    let tw, th;
+    let tw, th, gcx, gcy;
     if (obj.type === 'textbox' && obj.text && obj.text.trim()) {
-      // 直接量測當前文字字形範圍
       _mCtx.font = `${obj.fontSize}px "${obj.fontFamily}"`;
       const tm = _mCtx.measureText(obj.text);
       const actAsc = tm.actualBoundingBoxAscent || obj.fontSize * 0.8;
       const actDes = tm.actualBoundingBoxDescent || obj.fontSize * 0.2;
       let maxW = 0;
-      if (obj._textLines && obj._textLines.length) {
-        for (let i = 0; i < obj._textLines.length; i++) {
-          const lw = obj.getLineWidth(i);
-          if (lw > maxW) maxW = lw;
-        }
-      } else { maxW = tm.width; }
-      const numLines = (obj._textLines || ['']).length;
+      const lines = obj._textLines || [obj.text];
+      for (let i = 0; i < lines.length; i++) {
+        const lw = obj.getLineWidth ? obj.getLineWidth(i) : 0;
+        if (lw > maxW) maxW = lw;
+      }
+      const numLines = lines.length;
       const lh = obj.fontSize * (obj.lineHeight || 1.3);
-      th = numLines === 1 ? (actAsc + actDes) : ((numLines - 1) * lh + actAsc + actDes);
-      tw = maxW;
+      // 字形實際視覺高度（文字從 content box 頂端排列，非置中）
+      const glyphH = (numLines - 1) * lh + actAsc + actDes;
+      // 字形中心 = content box 頂端 + glyphH/2
+      // content box 頂端 = center.y - obj.height/2（Fabric 的 originY:center）
+      gcx = center.x;
+      gcy = center.y + (glyphH / 2 - obj.height / 2) * scaleY;
+      tw = maxW * scaleX;
+      th = glyphH * scaleY;
     } else {
-      tw = obj.width;
-      th = obj.height;
+      gcx = center.x;
+      gcy = center.y;
+      tw = obj.width * scaleX;
+      th = obj.height * scaleY;
     }
-    tw *= scaleX;
-    th *= scaleY;
     const rotW = tw * cosA + th * sinA;
     const rotH = tw * sinA + th * cosA;
-    const outside = (center.x - rotW / 2) < laLeft   - 1 ||
-                    (center.y - rotH / 2) < laTop    - 1 ||
-                    (center.x + rotW / 2) > laRight  + 1 ||
-                    (center.y + rotH / 2) > laBottom + 1;
+    const outside = (gcx - rotW / 2) < laLeft   - 1 ||
+                    (gcy - rotH / 2) < laTop    - 1 ||
+                    (gcx + rotW / 2) > laRight  + 1 ||
+                    (gcy + rotH / 2) > laBottom + 1;
     obj.opacity = outside ? 0.35 : 1.0;
   });
 }
