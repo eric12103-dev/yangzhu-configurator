@@ -467,6 +467,7 @@ function uploadImage2D(file) {
       const w = canvas2d.getWidth();
       const h = canvas2d.getHeight();
 
+      const _isLeatherRound = typeof STATE !== 'undefined' && STATE.productId === 'biz_leather_round';
       // 卡片上傳模式：圖片填滿虛線框，並裁切在框線範圍內
       const _isUploadOnly = typeof STATE !== 'undefined'
         && STATE.productId === 'biz_card' && (
@@ -474,7 +475,29 @@ function uploadImage2D(file) {
           (['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId) && STATE.orientationId === 'portrait')
         );
 
-      if (_isUploadOnly) {
+      if (_isLeatherRound) {
+        // 圓形皮革：圖片填滿並裁切到圓形印刷區（SVG viewBox 162.1×177.9，印刷圓心 81.3,97.2 半徑 58.1）
+        const cx = w * (81.3 / 162.1);
+        const cy = h * (97.2 / 177.9);
+        const r  = w * (58.1 / 162.1);
+        const scale = Math.max((r * 2) / img.width, (r * 2) / img.height);
+        _uploadBaseScale = scale;
+        img.set({
+          left: cx, top: cy,
+          originX: 'center', originY: 'center',
+          scaleX: scale, scaleY: scale
+        });
+        img.clipPath = new fabric.Circle({
+          radius: r,
+          left: cx, top: cy,
+          originX: 'center', originY: 'center',
+          absolutePositioned: true
+        });
+        const _s = document.getElementById('zoom-slider');
+        const _d = document.getElementById('zoom-value-display');
+        if (_s) _s.value = 100;
+        if (_d) _d.textContent = '100%';
+      } else if (_isUploadOnly) {
         // 黑色虛線框範圍：依方向選對應 SVG viewBox 尺寸
         const _portrait = typeof STATE !== 'undefined' && STATE.orientationId === 'portrait';
         const _vw = _portrait ? 170.1 : 259.7;
@@ -558,6 +581,7 @@ function _updateTextOpacity() {
 // 注意：after:render 繪圖不會被 toDataURL 擷取，需手動合成
 let _cachedCardFrameImg = null;
 let _cachedCardPortraitFrameImg = null;
+let _cachedLeatherRoundFrameImg = null;
 var _lastUploadedDataURL = null;
 
 // 卡片橫式上傳模式：回傳向量 SVG（照片為 <image>，紅框+虛線為獨立向量路徑）
@@ -609,6 +633,24 @@ function getUploadOnlySVG() {
 </svg>`;
 }
 
+// 圓形皮革上傳模式：回傳向量 SVG（照片裁切至圓形印刷區 + 框線路徑）
+// viewBox 162.1×177.9 pt，印刷圓 cx=81.3 cy=97.2 r=58.1
+function getUploadOnlyRoundSVG() {
+  if (!_lastUploadedDataURL) return null;
+  const _canvasDataURL = (typeof get2DDataURL === 'function' && get2DDataURL()) || _lastUploadedDataURL;
+  return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 162.1 177.9" width="57.2mm" height="62.8mm">
+<style>.st0{fill:none;stroke:#000000;stroke-miterlimit:10;}.st1{fill:none;stroke:#000000;stroke-width:0.8;stroke-miterlimit:10;stroke-dasharray:3;}.st2{fill:none;stroke:#E71F19;stroke-miterlimit:10;stroke-dasharray:4.809,4.8095;}</style>
+<defs><clipPath id="round-clip"><circle cx="81.3" cy="97.2" r="58.1"/></clipPath></defs>
+<image xlink:href="${_canvasDataURL}" x="0" y="0" width="162.1" height="177.9" preserveAspectRatio="none" clip-path="url(#round-clip)"/>
+<g>
+<path class="st0" d="M81.3,33.4c3.3,0,6.5,0.2,9.6,0.7V14.8H71.6v19.3C74.8,33.7,78,33.4,81.3,33.4z"/>
+<path class="st1" d="M139.4,97.2c0,32.1-26,58.1-58.1,58.1s-58.1-26-58.1-58.1s26-58.1,58.1-58.1S139.4,65.1,139.4,97.2z"/>
+<path class="st0" d="M145.1,97.2c0,35.2-28.6,63.8-63.8,63.8s-63.8-28.6-63.8-63.8s28.6-63.8,63.8-63.8S145.1,62,145.1,97.2z"/>
+</g>
+<circle class="st2" cx="81.3" cy="97.2" r="66.6"/>
+</svg>`;
+}
+
 function get2DDataURLWithFrame() {
   const base = get2DDataURL();
   if (!base) return Promise.resolve(null);
@@ -631,16 +673,24 @@ function get2DDataURLWithFrame() {
     });
   };
 
-  const _isPortraitFrame = typeof STATE !== 'undefined' && STATE.orientationId === 'portrait';
-  const _frameSrc = _isPortraitFrame ? 'assets/card_portrait_frame.svg' : 'assets/card_landscape_frame.svg';
-  const _cachedFrame = _isPortraitFrame ? _cachedCardPortraitFrameImg : _cachedCardFrameImg;
+  const _isLeatherRound = typeof STATE !== 'undefined' && STATE.productId === 'biz_leather_round';
+  const _isPortraitFrame = !_isLeatherRound && typeof STATE !== 'undefined' && STATE.orientationId === 'portrait';
+  let _frameSrc, _cachedFrame;
+  if (_isLeatherRound) {
+    _frameSrc = 'assets/leather_round_frame.svg';
+    _cachedFrame = _cachedLeatherRoundFrameImg;
+  } else {
+    _frameSrc = _isPortraitFrame ? 'assets/card_portrait_frame.svg' : 'assets/card_landscape_frame.svg';
+    _cachedFrame = _isPortraitFrame ? _cachedCardPortraitFrameImg : _cachedCardFrameImg;
+  }
   if (_cachedFrame && _cachedFrame.complete && _cachedFrame.naturalWidth > 0) {
     return doComposite(_cachedFrame);
   }
   return new Promise(resolve => {
     const frameImg = new Image();
     frameImg.onload = () => {
-      if (_isPortraitFrame) _cachedCardPortraitFrameImg = frameImg;
+      if (_isLeatherRound) _cachedLeatherRoundFrameImg = frameImg;
+      else if (_isPortraitFrame) _cachedCardPortraitFrameImg = frameImg;
       else _cachedCardFrameImg = frameImg;
       doComposite(frameImg).then(resolve);
     };

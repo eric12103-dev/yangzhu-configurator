@@ -322,13 +322,13 @@ const _TEXT_COLORS = [
 function initDesignStep() {
   const isThermos = STATE.productId === 'thermos';
 
-  // 上傳框線模式：橫式（三種規格）或悠遊卡直式
-  const isUploadOnly = STATE.productId === 'biz_card' && (
+  // 上傳框線模式：biz_card（橫式／直式）或 biz_leather_round
+  const isUploadOnly = STATE.productId === 'biz_leather_round' || (STATE.productId === 'biz_card' && (
     (['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId) && STATE.orientationId === 'landscape') ||
     (['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId) && STATE.orientationId === 'portrait')
-  );
+  ));
   let _origSize = null;
-  if (isUploadOnly) {
+  if (isUploadOnly && STATE.productId === 'biz_card') {
     const _prod = PRODUCTS['biz_card'];
     if (_prod) {
       _origSize = _prod.size;
@@ -340,7 +340,7 @@ function initDesignStep() {
 
   init2DCanvas(STATE.productId);
 
-  if (isUploadOnly && _origSize) PRODUCTS['biz_card'].size = _origSize;
+  if (_origSize) PRODUCTS['biz_card'].size = _origSize;
 
   if (STATE.canvasJSON && typeof loadCanvas2DJSON === 'function' && !isThermos) {
     loadCanvas2DJSON(STATE.canvasJSON);
@@ -363,9 +363,13 @@ function initDesignStep() {
       });
       canvas2d.renderAll();
     };
-    _svgFrame.src = STATE.orientationId === 'portrait'
-      ? 'assets/card_portrait_frame.svg'
-      : 'assets/card_landscape_frame.svg';
+    if (STATE.productId === 'biz_leather_round') {
+      _svgFrame.src = 'assets/leather_round_frame.svg';
+    } else {
+      _svgFrame.src = STATE.orientationId === 'portrait'
+        ? 'assets/card_portrait_frame.svg'
+        : 'assets/card_landscape_frame.svg';
+    }
   }
 
   // 圖片上傳
@@ -485,10 +489,10 @@ function _syncTextPropsPanel(obj) {
   const isText = obj && obj.type === 'textbox';
 
   // 上傳模式：不顯示任何文字功能
-  const isUploadOnly = STATE.productId === 'biz_card' && (
+  const isUploadOnly = STATE.productId === 'biz_leather_round' || (STATE.productId === 'biz_card' && (
     (['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId) && STATE.orientationId === 'landscape') ||
     (['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId) && STATE.orientationId === 'portrait')
-  );
+  ));
   if (isUploadOnly) {
     if (propsPanel) propsPanel.style.display = 'none';
     if (addPanel)   addPanel.style.display   = 'none';
@@ -605,10 +609,10 @@ function applyBgPreset(color) {
 // ─── Step 4：預覽 ──────────────────────────────────────────
 function initPreviewStep() {
   const isThermos = STATE.productId === 'thermos';
-  const isUploadOnly = STATE.productId === 'biz_card' && (
+  const isUploadOnly = STATE.productId === 'biz_leather_round' || (STATE.productId === 'biz_card' && (
     (['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId) && STATE.orientationId === 'landscape') ||
     (['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId) && STATE.orientationId === 'portrait')
-  );
+  ));
   const flatEl    = document.getElementById('preview-flat');
   const mockupDiv = document.getElementById('preview-mockup');
   const btnMockup = document.getElementById('btn-download-mockup');
@@ -639,10 +643,15 @@ function initPreviewStep() {
     get2DDataURLWithFrame().then(frameURL => {
       if (frameURL) STATE.designDataURL = frameURL;
       if (flatEl) {
-        const _isPortrait = STATE.orientationId === 'portrait';
-        const _imgStyle = _isPortrait
-          ? 'max-width:314px;width:100%;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.12);'
-          : 'max-width:480px;width:100%;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.12);';
+        let _imgStyle;
+        if (STATE.productId === 'biz_leather_round') {
+          _imgStyle = 'max-width:320px;width:100%;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.12);';
+        } else {
+          const _isPortrait = STATE.orientationId === 'portrait';
+          _imgStyle = _isPortrait
+            ? 'max-width:314px;width:100%;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.12);'
+            : 'max-width:480px;width:100%;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.12);';
+        }
         flatEl.innerHTML = frameURL
           ? `<img src="${frameURL}" style="${_imgStyle}">`
           : '<p style="color:var(--gray-400);">尚無設計圖，請返回編輯。</p>';
@@ -756,12 +765,16 @@ async function submitDesign() {
   try {
     let svg = null;
     // 卡片橫式上傳模式：優先呼叫 preview2d.js 的專屬函式（照片+向量框線，不走 canvas 渲染）
-    const _isUploadOnly = STATE.productId === 'biz_card' && (
+    const _isUploadOnly = STATE.productId === 'biz_leather_round' || (STATE.productId === 'biz_card' && (
       (['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId) && STATE.orientationId === 'landscape') ||
       (['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId) && STATE.orientationId === 'portrait')
-    );
-    if (_isUploadOnly && typeof getUploadOnlySVG === 'function') {
-      svg = getUploadOnlySVG();
+    ));
+    if (_isUploadOnly) {
+      if (STATE.productId === 'biz_leather_round' && typeof getUploadOnlyRoundSVG === 'function') {
+        svg = getUploadOnlyRoundSVG();
+      } else if (typeof getUploadOnlySVG === 'function') {
+        svg = getUploadOnlySVG();
+      }
     }
     // 其餘商品走一般流程
     if (!svg && typeof get2DSVGOutlined === 'function') {
