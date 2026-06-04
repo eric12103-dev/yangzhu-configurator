@@ -137,14 +137,17 @@ function init2DCanvas(productId) {
   };
 
   canvas2d.on('selection:created', e => {
-    _showLabelBorder = true; canvas2d.requestRenderAll();
+    // 隨行杯：選取時不顯示咖啡色虛線，只有拖曳中才顯示
+    _showLabelBorder = !isThermos;
+    canvas2d.requestRenderAll();
     const obj = e.selected?.[0] || canvas2d.getActiveObject();
     _applyThermosTextControls(obj);
     if (typeof _syncTextPropsPanel === 'function') _syncTextPropsPanel(obj);
     if (typeof _updateFloatToolbar === 'function') _updateFloatToolbar();
   });
   canvas2d.on('selection:updated', e => {
-    _showLabelBorder = true; canvas2d.requestRenderAll();
+    _showLabelBorder = !isThermos;
+    canvas2d.requestRenderAll();
     const obj = e.selected?.[0] || canvas2d.getActiveObject();
     _applyThermosTextControls(obj);
     if (typeof _syncTextPropsPanel === 'function') _syncTextPropsPanel(obj);
@@ -207,7 +210,10 @@ function init2DCanvas(productId) {
   canvas2d.on('object:moving', function(e) {
     const obj = e.target;
     if (!obj) return;
-    if (isThermos && obj.type === 'textbox') obj.set('hasBorders', true);
+    if (isThermos && obj.type === 'textbox') {
+      obj.set('hasBorders', true);
+      _showLabelBorder = true;
+    }
     if (!isThermos) {
       const w = canvas2d.getWidth();
       const h = canvas2d.getHeight();
@@ -237,12 +243,13 @@ function init2DCanvas(productId) {
       _hadObjOnDown = !!canvas2d.getActiveObject();
     });
     canvas2d.on('mouse:up', opt => {
-      // 拖曳 / 縮放結束後隱藏框線
+      // 拖曳 / 縮放結束後隱藏框線與咖啡色虛線
       const activeObj = canvas2d.getActiveObject();
       if (activeObj && activeObj.type === 'textbox') {
         activeObj.set('hasBorders', false);
-        canvas2d.requestRenderAll();
       }
+      _showLabelBorder = false;
+      canvas2d.requestRenderAll();
       // 點擊空白處新增文字
       if (opt.target || _hadObjOnDown || !_mdownE) return;
       const dx = opt.e.clientX - _mdownE.clientX;
