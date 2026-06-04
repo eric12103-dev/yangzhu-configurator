@@ -133,7 +133,7 @@ function init2DCanvas(productId) {
   const _applyThermosTextControls = obj => {
     if (!isThermos || !obj || obj.type !== 'textbox') return;
     obj.setControlsVisibility({ ml: false, mr: false, mt: false, mb: false });
-    obj.set({ lockUniScaling: true, hasBorders: false });
+    obj.set({ lockUniScaling: true, hasBorders: true });
   };
 
   canvas2d.on('selection:created', e => {
@@ -243,11 +243,7 @@ function init2DCanvas(productId) {
       _hadObjOnDown = !!canvas2d.getActiveObject();
     });
     canvas2d.on('mouse:up', opt => {
-      // 拖曳 / 縮放結束後隱藏框線與咖啡色虛線
-      const activeObj = canvas2d.getActiveObject();
-      if (activeObj && activeObj.type === 'textbox') {
-        activeObj.set('hasBorders', false);
-      }
+      // 拖曳結束：隱藏咖啡色虛線，保留綠色框線
       _showLabelBorder = false;
       canvas2d.requestRenderAll();
       // 點擊空白處新增文字
@@ -448,7 +444,7 @@ function _doAddText2D(text, color, size, font, role) {
   // 隨行杯：新增時立即套用等比例縮放限制，隱藏靜止框線
   if (isThermos) {
     t.setControlsVisibility({ ml: false, mr: false, mt: false, mb: false });
-    t.set({ lockUniScaling: true, hasBorders: false });
+    t.set({ lockUniScaling: true, hasBorders: true });
   }
   canvas2d.setActiveObject(t);
   canvas2d.renderAll();
