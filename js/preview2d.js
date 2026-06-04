@@ -550,8 +550,11 @@ function _updateTextOpacity() {
     const angle  = ((obj.angle || 0) * Math.PI) / 180;
     const cosA   = Math.abs(Math.cos(angle));
     const sinA   = Math.abs(Math.sin(angle));
-    const tw = obj.width  * scaleX;
-    const th = obj.height * scaleY;
+    const pad = obj.padding || 0;
+    // 用 selection box 尺寸（= obj 尺寸 + 2×padding），
+    // 因為 padding 已依 actualBoundingBox 校正，能正確涵蓋所有字形
+    const tw = (obj.width  + 2 * pad) * scaleX;
+    const th = (obj.height + 2 * pad) * scaleY;
     // 旋轉後的軸對齊包圍盒
     const rotW = tw * cosA + th * sinA;
     const rotH = tw * sinA + th * cosA;
