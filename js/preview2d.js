@@ -530,7 +530,7 @@ function setBackground2D(color) {
 }
 
 // ─── 隨行杯：文字超出 labelArea 時降低不透明度至 35% ──────────────
-// 直接量測當前文字的 actualBoundingBox，不依賴 padding 推算
+// 直接用 getBoundingRect()（已含 padding 校正），判斷 selection box 是否超出邊界
 function _updateTextOpacity() {
   if (!canvas2d || !currentProduct || !currentProduct.labelArea) return;
   const isTh = currentProduct && currentProduct.id === 'thermos';
@@ -542,49 +542,14 @@ function _updateTextOpacity() {
   const laTop    = h * la.yRatio;
   const laRight  = laLeft + w * la.wRatio;
   const laBottom = laTop  + h * la.hRatio;
-  const _mCtx = document.createElement('canvas').getContext('2d');
   canvas2d.getObjects().forEach(obj => {
     if (!obj.selectable) return;
-    const center = obj.getCenterPoint();
-    const scaleX = obj.scaleX || 1;
-    const scaleY = obj.scaleY || 1;
-    const angle  = ((obj.angle || 0) * Math.PI) / 180;
-    const cosA   = Math.abs(Math.cos(angle));
-    const sinA   = Math.abs(Math.sin(angle));
-    let tw, th, gcx, gcy;
-    if (obj.type === 'textbox' && obj.text && obj.text.trim()) {
-      _mCtx.font = `${obj.fontSize}px "${obj.fontFamily}"`;
-      const tm = _mCtx.measureText(obj.text);
-      const actAsc = tm.actualBoundingBoxAscent || obj.fontSize * 0.8;
-      const actDes = tm.actualBoundingBoxDescent || obj.fontSize * 0.2;
-      let maxW = 0;
-      const lines = obj._textLines || [obj.text];
-      for (let i = 0; i < lines.length; i++) {
-        const lw = obj.getLineWidth ? obj.getLineWidth(i) : 0;
-        if (lw > maxW) maxW = lw;
-      }
-      const numLines = lines.length;
-      const lh = obj.fontSize * (obj.lineHeight || 1.3);
-      // 字形實際視覺高度（文字從 content box 頂端排列，非置中）
-      const glyphH = (numLines - 1) * lh + actAsc + actDes;
-      // 字形中心 = content box 頂端 + glyphH/2
-      // content box 頂端 = center.y - obj.height/2（Fabric 的 originY:center）
-      gcx = center.x;
-      gcy = center.y + (glyphH / 2 - obj.height / 2) * scaleY;
-      tw = maxW * scaleX;
-      th = glyphH * scaleY;
-    } else {
-      gcx = center.x;
-      gcy = center.y;
-      tw = obj.width * scaleX;
-      th = obj.height * scaleY;
-    }
-    const rotW = tw * cosA + th * sinA;
-    const rotH = tw * sinA + th * cosA;
-    const outside = (gcx - rotW / 2) < laLeft   - 1 ||
-                    (gcy - rotH / 2) < laTop    - 1 ||
-                    (gcx + rotW / 2) > laRight  + 1 ||
-                    (gcy + rotH / 2) > laBottom + 1;
+    obj.setCoords();
+    const br = obj.getBoundingRect(true, true);
+    const outside = br.left < laLeft - 1 ||
+                    br.top  < laTop  - 1 ||
+                    (br.left + br.width)  > laRight  + 1 ||
+                    (br.top  + br.height) > laBottom + 1;
     obj.opacity = outside ? 0.35 : 1.0;
   });
 }
