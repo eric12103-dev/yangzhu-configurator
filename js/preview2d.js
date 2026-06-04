@@ -231,7 +231,9 @@ function init2DCanvas(productId) {
       obj.set('hasBorders', true);
       _showLabelBorder = true;
     }
-    if (!isThermos) {
+    // biz_lightbox 圖片可自由移動（clipPath 負責裁切，不需限制 canvas 邊界）
+    const _isLbImg = productId === 'biz_lightbox' && obj.type === 'image';
+    if (!isThermos && !_isLbImg) {
       const w = canvas2d.getWidth();
       const h = canvas2d.getHeight();
       obj.setCoords();
