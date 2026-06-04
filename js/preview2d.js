@@ -380,14 +380,23 @@ function addDefaultElements() {
 // 允許負值 padding，使框線可內縮至實際字形範圍
 function _normPadding(font, fontSize, basePad, textSample) {
   try {
-    const ctx = document.createElement('canvas').getContext('2d');
-    ctx.font = `${fontSize}px "${font}"`;
+    // 優先使用 Fabric canvas context（字體已確保載入）
+    // 新建 <canvas> 不保證能存取 @font-face 自訂字體，會 fallback 成系統字體導致量測錯誤
+    let _ctx, _savedFont;
+    if (canvas2d && canvas2d.lowerCanvasEl) {
+      _ctx = canvas2d.lowerCanvasEl.getContext('2d');
+      _savedFont = _ctx.font;
+      _ctx.font = `${fontSize}px "${font}"`;
+    } else {
+      _ctx = document.createElement('canvas').getContext('2d');
+      _ctx.font = `${fontSize}px "${font}"`;
+    }
     const isEn = font.startsWith('(英)');
-    // 優先用實際文字做量測；無文字時用代表性預設樣本
     const sample = (textSample && textSample.trim())
       ? textSample
       : (isEn ? 'Happy Agpq' : '楊竹Ag');
-    const m = ctx.measureText(sample);
+    const m = _ctx.measureText(sample);
+    if (_savedFont !== undefined) _ctx.font = _savedFont; // 還原 Fabric canvas 字體
     const actAsc = m.actualBoundingBoxAscent;
     const actDes = m.actualBoundingBoxDescent;
     if (typeof actAsc === 'number' && actAsc > 0) {
