@@ -236,7 +236,7 @@ const PRODUCTS = {
     labelArea: { xRatio: 0.05, yRatio: 0.05, wRatio: 0.90, hRatio: 0.90 },
     textLayout: { title: { yRatio: 0.42, sizeRatio: 0.11 }, subtitle: { yRatio: 0.62, sizeRatio: 0.08 } },
     materialLabel: '規格',
-    materials: [{ id: 'standard', name: '標準款', priceBase: 0, image: 'assets/photos/easycard.png' }],
+    materials: [{ id: 'standard', name: '雙面', priceBase: 0, image: 'assets/photos/biz_lightbox_double.png' }],
     finishes: [{ id: 'uv_print', name: 'UV彩色噴印', price: 0 }],
     qtyBreaks: [{ min: 50, max: 9999, price: 0 }],
     minQty: 50, leadDays: 14, color: '#1a4a8a', textOnly: true
