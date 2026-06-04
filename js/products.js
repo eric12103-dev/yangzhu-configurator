@@ -147,8 +147,8 @@ const PRODUCTS = {
     textLayout: { title: { yRatio: 0.42, sizeRatio: 0.11 }, subtitle: { yRatio: 0.62, sizeRatio: 0.08 } },
     materialLabel: '規格',
     materials: [
-      { id: 'easycard', name: '悠遊卡', priceBase: 0, image: 'assets/photos/biz_leather_round.png' },
-      { id: 'ipass',    name: '一卡通', priceBase: 0, image: 'assets/photos/biz_leather_round.png' }
+      { id: 'easycard', name: '悠遊卡', priceBase: 0, image: 'assets/photos/biz_leather_round_easycard.png' },
+      { id: 'ipass',    name: '一卡通', priceBase: 0, image: 'assets/photos/biz_leather_round_ipass.png' }
     ],
     finishes: [{ id: 'uv_print', name: 'UV彩色噴印', price: 0 }],
     qtyBreaks: [{ min: 50, max: 9999, price: 0 }],
