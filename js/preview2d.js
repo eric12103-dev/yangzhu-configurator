@@ -941,38 +941,45 @@ async function getUploadOnlyRoundSVG() {
   if (!canvas2d) return null;
   const W_VB = 324.2, H_VB = 177.9, R_VB = 66.6;
   const logW = canvas2d.getWidth(), logH = canvas2d.getHeight();
+  // SCALE=12：480px canvas → 5760px，圓直徑≈2364px → 47mm@~1278DPI
+  const SCALE = 12;
 
-  // 裁切圓形區域，始終壓制覆蓋→圖片只含用戶照片
+  // 一次高解析渲染，兩圓共用
+  const bgObjs = canvas2d.getObjects().filter(o => !o.selectable && o.name !== 'bottle-bg');
+  bgObjs.forEach(o => o.set('visible', false));
+  canvas2d.discardActiveObject();
+  _suppressOverlay = true;
+  const origBg    = canvas2d.backgroundColor;
+  const origBgImg = canvas2d.backgroundImage || null;
+  canvas2d.backgroundColor = 'rgba(0,0,0,0)';
+  canvas2d.backgroundImage = null;
+  const hiResURL = canvas2d.toDataURL({ multiplier: SCALE, format: 'png' });
+  canvas2d.backgroundColor = origBg;
+  canvas2d.backgroundImage = origBgImg;
+  _suppressOverlay = false;
+  bgObjs.forEach(o => o.set('visible', true));
+  canvas2d.renderAll();
+
+  // 載入高解析圖後裁切兩圓
+  const hiResImg = await new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = hiResURL;
+  });
+
   function _cropCircle(cx_vb, cy_vb) {
-    const cx_log = logW * (cx_vb / W_VB);
-    const cy_log = logH * (cy_vb / H_VB);
-    const r_log  = logW * (R_VB  / W_VB);
-    const bgObjs = canvas2d.getObjects().filter(o => !o.selectable && o.name !== 'bottle-bg');
-    bgObjs.forEach(o => o.set('visible', false));
-    canvas2d.discardActiveObject();
-    _suppressOverlay = true;
-    const origBg    = canvas2d.backgroundColor;
-    const origBgImg = canvas2d.backgroundImage || null;
-    canvas2d.backgroundColor = 'rgba(0,0,0,0)';
-    canvas2d.backgroundImage = null;
-    canvas2d.renderAll();
-    const lc      = canvas2d.lowerCanvasEl;
-    const pxScale = lc.width / logW;
-    const sx = Math.round((cx_log - r_log) * pxScale);
-    const sy = Math.round((cy_log - r_log) * pxScale);
-    const sd = Math.round(r_log * 2 * pxScale);
+    const cx_px = Math.round(logW * (cx_vb / W_VB) * SCALE);
+    const cy_px = Math.round(logH * (cy_vb / H_VB) * SCALE);
+    const r_px  = Math.round(logW * (R_VB  / W_VB) * SCALE);
+    const sd = r_px * 2;
     const tmp = document.createElement('canvas');
     tmp.width  = sd; tmp.height = sd;
     const ctx  = tmp.getContext('2d');
     ctx.beginPath();
     ctx.arc(sd / 2, sd / 2, sd / 2, 0, Math.PI * 2);
     ctx.clip();
-    ctx.drawImage(lc, sx, sy, sd, sd, 0, 0, sd, sd);
-    canvas2d.backgroundColor = origBg;
-    canvas2d.backgroundImage = origBgImg;
-    _suppressOverlay = false;
-    bgObjs.forEach(o => o.set('visible', true));
-    canvas2d.renderAll();
+    ctx.drawImage(hiResImg, cx_px - r_px, cy_px - r_px, sd, sd, 0, 0, sd, sd);
     return tmp.toDataURL('image/png');
   }
 
