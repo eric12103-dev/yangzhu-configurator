@@ -141,7 +141,7 @@ const PRODUCTS = {
     badgeColor: '#1a4a8a',
     description: '快速打樣',
     noPrice: true,
-    size: { w: 3242, h: 1779, unit: '' },
+    size: { w: 3603, h: 1976, unit: '' },
     displaySize: '印刷範圍 待確認',
     labelArea: { xRatio: 0.05, yRatio: 0.05, wRatio: 0.90, hRatio: 0.90 },
     textLayout: { title: { yRatio: 0.42, sizeRatio: 0.11 }, subtitle: { yRatio: 0.62, sizeRatio: 0.08 } },
