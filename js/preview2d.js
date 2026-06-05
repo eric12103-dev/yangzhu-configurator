@@ -217,8 +217,12 @@ function init2DCanvas(productId) {
       _showLabelBorder = true;
     }
     // 圓形皮革：圖片跨越兩圓中線時自動切換 clipPath，不限制邊界
+    // 御守皮革：圖片可自由移動，clip path 處理可見範圍，不限制邊界
     const _isLRoundImg = typeof STATE !== 'undefined'
       && STATE.productId === 'biz_leather_round'
+      && obj.type === 'image';
+    const _isOmamoriImg = typeof STATE !== 'undefined'
+      && STATE.productId === 'biz_leather_omamori'
       && obj.type === 'image';
     if (_isLRoundImg) {
       const _W = canvas2d.getWidth(), _H = canvas2d.getHeight();
@@ -238,6 +242,8 @@ function init2DCanvas(productId) {
         });
         obj.name = _newName;
       }
+    } else if (_isOmamoriImg) {
+      // 御守圖片：不限制邊界，clip path 處理可見範圍
     } else if (!isThermos) {
       const w = canvas2d.getWidth();
       const h = canvas2d.getHeight();
@@ -509,6 +515,7 @@ function uploadImage2D(file) {
       const h = canvas2d.getHeight();
 
       const _isLeatherRound = typeof STATE !== 'undefined' && STATE.productId === 'biz_leather_round';
+      const _isLeatherOmamori = typeof STATE !== 'undefined' && STATE.productId === 'biz_leather_omamori';
       // 卡片上傳模式：圖片填滿虛線框，並裁切在框線範圍內
       const _isUploadOnly = typeof STATE !== 'undefined'
         && STATE.productId === 'biz_card' && (
@@ -551,6 +558,36 @@ function uploadImage2D(file) {
         const _d = document.getElementById('zoom-value-display');
         if (_s) _s.value = 100;
         if (_d) _d.textContent = '100%';
+      } else if (_isLeatherOmamori) {
+        // 御守版面（SVG viewBox 324.2×261.6）：左件印刷區 x=[14.8,147.9], y=[14.9,247.3]
+        const W_VB = 324.2, H_VB = 261.6;
+        const oCx = w * (81.35 / W_VB);  // 印刷區中心 x
+        const oCy = h * (131.1 / H_VB);  // 印刷區中心 y
+        const oPW = w * (133.1 / W_VB);  // 印刷區寬
+        const oPH = h * (232.4 / H_VB);  // 印刷區高
+        const OMAMORI_PATH = 'M34.8,247.3c-10.3,0-20-9.4-20-19.2V69.7c0-10,3.5-17.9,9.5-21.7c3.1-2,7.5-3.8,11.6-5.5c3.3-1.4,6.5-2.7,8.4-3.9c2.7-1.6,6.4-6.3,9-9.6c1.3-1.6,2.4-3.1,3.3-4c2.9-3.1,9.7-10.1,24.7-10.1S103,22,105.9,25c0.9,1,2.1,2.4,3.4,4.1c2.7,3.4,6.3,8,9.1,9.6c1.9,1.2,5.1,2.5,8.4,3.9c4.2,1.7,8.5,3.5,11.6,5.5c6.1,3.8,9.5,11.7,9.5,21.7v158.4c0,9.9-9.7,19.2-20,19.2L34.8,247.3L34.8,247.3z';
+        const existingDesign = canvas2d.getObjects().find(o => o.name === 'omamori-design');
+        if (existingDesign) canvas2d.remove(existingDesign);
+        const scale = Math.max(oPW / img.width, oPH / img.height);
+        img._omamoriBaseScale = scale;
+        _uploadBaseScale = scale;
+        img.set({
+          left: oCx, top: oCy,
+          originX: 'center', originY: 'center',
+          scaleX: scale, scaleY: scale,
+          name: 'omamori-design'
+        });
+        img.clipPath = new fabric.Path(OMAMORI_PATH, {
+          scaleX: w / W_VB,
+          scaleY: h / H_VB,
+          left: 0, top: 0,
+          originX: 'left', originY: 'top',
+          absolutePositioned: true
+        });
+        const _s2 = document.getElementById('zoom-slider');
+        const _d2 = document.getElementById('zoom-value-display');
+        if (_s2) _s2.value = 100;
+        if (_d2) _d2.textContent = '100%';
       } else if (_isUploadOnly) {
         // 黑色虛線框範圍：依方向選對應 SVG viewBox 尺寸
         const _portrait = typeof STATE !== 'undefined' && STATE.orientationId === 'portrait';
@@ -619,17 +656,14 @@ function _updateTextOpacity() {
   const laTop    = h * la.yRatio;
   const laRight  = laLeft + w * la.wRatio;
   const laBottom = laTop  + h * la.hRatio;
-  // 底部/右側加大容差，補足簽名體等字型 descender 視覺溢出與選取框的落差
-  const bufferBottom = h * 0.06;
-  const bufferRight  = w * 0.03;
   canvas2d.getObjects().forEach(obj => {
     if (!obj.selectable) return;
     obj.setCoords();
     const br = obj.getBoundingRect(true, true);
     const outside = br.left < laLeft - 1 ||
                     br.top  < laTop  - 1 ||
-                    (br.left + br.width)  > laRight  + bufferRight ||
-                    (br.top  + br.height) > laBottom + bufferBottom;
+                    (br.left + br.width)  > laRight  + 1 ||
+                    (br.top  + br.height) > laBottom + 1;
     obj.opacity = outside ? 0.35 : 1.0;
   });
 }
@@ -640,6 +674,8 @@ let _cachedCardFrameImg = null;
 let _cachedCardPortraitFrameImg = null;
 let _cachedLeatherRoundEasycardFrameImg = null;
 let _cachedLeatherRoundIpassFrameImg = null;
+let _cachedLeatherOmamoriEasycardFrameImg = null;
+let _cachedLeatherOmamoriIpassFrameImg = null;
 var _lastUploadedDataURL = null;
 
 // 卡片橫式上傳模式：回傳向量 SVG（照片為 <image>，紅框+虛線為獨立向量路徑）
