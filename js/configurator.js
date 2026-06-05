@@ -773,7 +773,7 @@ async function submitDesign() {
     ));
     if (_isUploadOnly) {
       if (STATE.productId === 'biz_leather_round' && typeof getUploadOnlyRoundSVG === 'function') {
-        svg = getUploadOnlyRoundSVG();
+        svg = await getUploadOnlyRoundSVG();
       } else if (typeof getUploadOnlySVG === 'function') {
         svg = getUploadOnlySVG();
       }

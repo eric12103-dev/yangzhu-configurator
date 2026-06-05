@@ -688,24 +688,21 @@ function getUploadOnlySVG() {
 </svg>`;
 }
 
-// 圓形皮革上傳模式：左右圓各自裁切成圓形透明 PNG，分開圖層 + 框線向量圖層
-// viewBox 324.2×177.9，左圓 cx=81.3 右圓 cx=242.6，半徑 66.6
-function getUploadOnlyRoundSVG() {
+// 圓形皮革上傳模式：左右圓各自裁切為純圖片圖層，框線+票卡 logo 單獨圖層（從材質 SVG 內嵌）
+async function getUploadOnlyRoundSVG() {
   if (!canvas2d) return null;
   const W_VB = 324.2, H_VB = 177.9, R_VB = 66.6;
   const logW = canvas2d.getWidth(), logH = canvas2d.getHeight();
 
-  // 從 lowerCanvasEl 裁切圓形區域，回傳透明背景 PNG dataURL
-  // withOverlay=false → 壓制 SVG 覆蓋（左圓，只有用戶圖片）
-  // withOverlay=true  → 保留 SVG 覆蓋（右圓，含票卡 logo）
-  function _cropCircle(cx_vb, cy_vb, withOverlay) {
+  // 裁切圓形區域，始終壓制覆蓋→圖片只含用戶照片
+  function _cropCircle(cx_vb, cy_vb) {
     const cx_log = logW * (cx_vb / W_VB);
     const cy_log = logH * (cy_vb / H_VB);
     const r_log  = logW * (R_VB  / W_VB);
     const bgObjs = canvas2d.getObjects().filter(o => !o.selectable && o.name !== 'bottle-bg');
     bgObjs.forEach(o => o.set('visible', false));
-    canvas2d.discardActiveObject();  // 避免 Fabric.js 選取框線混入 lowerCanvasEl
-    _suppressOverlay = !withOverlay;
+    canvas2d.discardActiveObject();
+    _suppressOverlay = true;
     const origBg    = canvas2d.backgroundColor;
     const origBgImg = canvas2d.backgroundImage || null;
     canvas2d.backgroundColor = 'rgba(0,0,0,0)';
@@ -731,17 +728,30 @@ function getUploadOnlyRoundSVG() {
     return tmp.toDataURL('image/png');
   }
 
-  const leftURL  = _cropCircle(81.3,  97.2, false);  // 左圓：只含用戶圖片
-  const rightURL = _cropCircle(242.6, 97.1, true);   // 右圓：含票卡 logo
-  const lx = 81.3  - R_VB, ly = 97.2 - R_VB;  // 14.7, 30.6
-  const rx = 242.6 - R_VB, ry = 97.1 - R_VB;  // 176.0, 30.5
-  const d  = R_VB * 2;                          // 133.2
+  const leftURL  = _cropCircle(81.3,  97.2);
+  const rightURL = _cropCircle(242.6, 97.1);
+  const lx = 81.3  - R_VB, ly = 97.2 - R_VB;
+  const rx = 242.6 - R_VB, ry = 97.1 - R_VB;
+  const d  = R_VB * 2;
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 ${W_VB} ${H_VB}" width="114.4mm" height="62.8mm">
-<style>.fr0{fill:none;stroke:#000;stroke-miterlimit:10;}.fr1{fill:none;stroke:#000;stroke-width:.8;stroke-miterlimit:10;stroke-dasharray:3;}.fr2{fill:none;stroke:#E71F19;stroke-miterlimit:10;stroke-dasharray:4.809,4.8095;}</style>
-<g id="left-circle"><image xlink:href="${leftURL}"  x="${lx}" y="${ly}" width="${d}" height="${d}"/></g>
-<g id="right-circle"><image xlink:href="${rightURL}" x="${rx}" y="${ry}" width="${d}" height="${d}"/></g>
-<g id="frame">
+  // 非同步載入材質框線 SVG，含票卡 logo 向量，作為獨立 frame 圖層
+  const matId = typeof STATE !== 'undefined' ? STATE.materialId : 'easycard';
+  const frameSrc = matId === 'ipass'
+    ? 'assets/leather_round_ipass_frame.svg'
+    : 'assets/leather_round_easycard_frame.svg';
+  let frameInner = '';
+  try {
+    const resp = await fetch(frameSrc);
+    if (resp.ok) {
+      const txt = await resp.text();
+      const m = txt.match(/<svg[^>]*>([\s\S]*)<\/svg>/i);
+      if (m) frameInner = m[1];
+    }
+  } catch(e) { console.warn('[getUploadOnlyRoundSVG] frame fetch failed', e); }
+
+  // Fallback：只有框線路徑（無票卡 logo）
+  if (!frameInner) {
+    frameInner = `<style>.fr0{fill:none;stroke:#000;stroke-miterlimit:10;}.fr1{fill:none;stroke:#000;stroke-width:.8;stroke-miterlimit:10;stroke-dasharray:3;}.fr2{fill:none;stroke:#E71F19;stroke-miterlimit:10;stroke-dasharray:4.809,4.8095;}</style>
 <path class="fr0" d="M81.3,33.4c3.3,0,6.5,.2,9.6,.7V14.8H71.6v19.3C74.8,33.7,78,33.4,81.3,33.4z"/>
 <path class="fr1" d="M139.4,97.2c0,32.1-26,58.1-58.1,58.1s-58.1-26-58.1-58.1s26-58.1,58.1-58.1S139.4,65.1,139.4,97.2z"/>
 <path class="fr0" d="M145.1,97.2c0,35.2-28.6,63.8-63.8,63.8s-63.8-28.6-63.8-63.8s28.6-63.8,63.8-63.8S145.1,62,145.1,97.2z"/>
@@ -749,8 +759,13 @@ function getUploadOnlyRoundSVG() {
 <path class="fr0" d="M242.6,33.3c3.3,0,6.5,.2,9.6,.7V14.8H233v19.3C236.1,33.6,239.3,33.3,242.6,33.3z"/>
 <path class="fr1" d="M300.7,97.1c0,32.1-26,58.1-58.1,58.1c-32.1,0-58.1-26-58.1-58.1c0-32.1,26-58.1,58.1-58.1C274.7,39,300.7,65,300.7,97.1z"/>
 <path class="fr0" d="M306.4,97.1c0,35.2-28.6,63.8-63.8,63.8c-35.2,0-63.8-28.6-63.8-63.8c0-35.2,28.6-63.8,63.8-63.8C277.8,33.3,306.4,61.9,306.4,97.1z"/>
-<circle class="fr2" cx="242.6" cy="97.1" r="66.6"/>
-</g>
+<circle class="fr2" cx="242.6" cy="97.1" r="66.6"/>`;
+  }
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 ${W_VB} ${H_VB}" width="114.4mm" height="62.8mm">
+<g id="left-circle"><image xlink:href="${leftURL}" x="${lx}" y="${ly}" width="${d}" height="${d}"/></g>
+<g id="right-circle"><image xlink:href="${rightURL}" x="${rx}" y="${ry}" width="${d}" height="${d}"/></g>
+<g id="frame">${frameInner}</g>
 </svg>`;
 }
 
