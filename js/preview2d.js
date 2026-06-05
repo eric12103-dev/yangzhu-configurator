@@ -216,7 +216,29 @@ function init2DCanvas(productId) {
       obj.set('hasBorders', true);
       _showLabelBorder = true;
     }
-    if (!isThermos) {
+    // 圓形皮革：圖片跨越兩圓中線時自動切換 clipPath，不限制邊界
+    const _isLRoundImg = typeof STATE !== 'undefined'
+      && STATE.productId === 'biz_leather_round'
+      && obj.type === 'image';
+    if (_isLRoundImg) {
+      const _W = canvas2d.getWidth(), _H = canvas2d.getHeight();
+      const _WVB = 324.2, _HVB = 177.9, _RVB = 66.6;
+      const _lCx = _W * (81.3  / _WVB), _lCy = _H * (97.2 / _HVB);
+      const _rCx = _W * (242.6 / _WVB), _rCy = _H * (97.1 / _HVB);
+      const _cr  = _W * (_RVB  / _WVB);
+      const _toLeft = obj.left < _W / 2;
+      const _newName = _toLeft ? 'round-left' : 'round-right';
+      if (obj.name !== _newName) {
+        obj.clipPath = new fabric.Circle({
+          radius: _cr,
+          left: _toLeft ? _lCx : _rCx,
+          top:  _toLeft ? _lCy : _rCy,
+          originX: 'center', originY: 'center',
+          absolutePositioned: true
+        });
+        obj.name = _newName;
+      }
+    } else if (!isThermos) {
       const w = canvas2d.getWidth();
       const h = canvas2d.getHeight();
       obj.setCoords();
