@@ -216,7 +216,8 @@ function init2DCanvas(productId) {
       obj.set('hasBorders', true);
       _showLabelBorder = true;
     }
-    // 圓形皮革／御守皮革：圖片跨越中線時自動切換 clipPath，不限制移動邊界
+    // 圓形皮革：圖片跨越兩圓中線時自動切換 clipPath，不限制邊界
+    // 御守皮革：圖片可自由移動，clip path 處理可見範圍，不限制邊界
     const _isLRoundImg = typeof STATE !== 'undefined'
       && STATE.productId === 'biz_leather_round'
       && obj.type === 'image';
@@ -242,23 +243,7 @@ function init2DCanvas(productId) {
         obj.name = _newName;
       }
     } else if (_isOmamoriImg) {
-      // 御守圖片：跨越中線時自動切換 clipPath（左／右御守形狀）
-      const _OW = canvas2d.getWidth(), _OH = canvas2d.getHeight();
-      const _OWVB = 324.2, _OHVB = 261.6;
-      const _toOLeft = obj.left < _OW / 2;
-      const _newOName = _toOLeft ? 'omamori-left' : 'omamori-right';
-      if (obj.name !== _newOName) {
-        const _OPATH_L = 'M34.8,247.3c-10.3,0-20-9.4-20-19.2V69.7c0-10,3.5-17.9,9.5-21.7c3.1-2,7.5-3.8,11.6-5.5c3.3-1.4,6.5-2.7,8.4-3.9c2.7-1.6,6.4-6.3,9-9.6c1.3-1.6,2.4-3.1,3.3-4c2.9-3.1,9.7-10.1,24.7-10.1S103,22,105.9,25c0.9,1,2.1,2.4,3.4,4.1c2.7,3.4,6.3,8,9.1,9.6c1.9,1.2,5.1,2.5,8.4,3.9c4.2,1.7,8.5,3.5,11.6,5.5c6.1,3.8,9.5,11.7,9.5,21.7v158.4c0,9.9-9.7,19.2-20,19.2L34.8,247.3L34.8,247.3z';
-        const _OPATH_R = 'M196.8,247.3c-10.3,0-20-9.4-20-19.2V69.7c0-10,3.5-17.9,9.5-21.7c3.1-2,7.5-3.8,11.6-5.5c3.3-1.4,6.5-2.7,8.4-3.9c2.7-1.6,6.4-6.3,9-9.6c1.3-1.6,2.4-3.1,3.3-4c2.9-3.1,9.7-10.1,24.7-10.1c15,0,21.7,7.1,24.6,10.1c0.9,1,2.1,2.4,3.4,4.1c2.7,3.4,6.3,8,9.1,9.6c1.9,1.2,5.1,2.5,8.4,3.9c4.2,1.7,8.5,3.5,11.6,5.5c6.1,3.8,9.5,11.7,9.5,21.7v158.4c0,9.9-9.7,19.2-20,19.2H196.8z';
-        obj.clipPath = new fabric.Path(_toOLeft ? _OPATH_L : _OPATH_R, {
-          scaleX: _OW / _OWVB,
-          scaleY: _OH / _OHVB,
-          left: 0, top: 0,
-          originX: 'left', originY: 'top',
-          absolutePositioned: true
-        });
-        obj.name = _newOName;
-      }
+      // 御守圖片：不限制邊界，clip path 處理可見範圍
     } else if (!isThermos) {
       const w = canvas2d.getWidth();
       const h = canvas2d.getHeight();
@@ -574,29 +559,25 @@ function uploadImage2D(file) {
         if (_s) _s.value = 100;
         if (_d) _d.textContent = '100%';
       } else if (_isLeatherOmamori) {
-        // 御守版面（SVG viewBox 324.2×261.6）：左右各一御守印刷區，第一張傳左、第二張傳右
+        // 御守版面（SVG viewBox 324.2×261.6）：左件印刷區 x=[14.8,147.9], y=[14.9,247.3]
         const W_VB = 324.2, H_VB = 261.6;
-        const oPW = w * (133.1 / W_VB);
-        const oPH = h * (232.4 / H_VB);
-        const OMAMORI_L_PATH = 'M34.8,247.3c-10.3,0-20-9.4-20-19.2V69.7c0-10,3.5-17.9,9.5-21.7c3.1-2,7.5-3.8,11.6-5.5c3.3-1.4,6.5-2.7,8.4-3.9c2.7-1.6,6.4-6.3,9-9.6c1.3-1.6,2.4-3.1,3.3-4c2.9-3.1,9.7-10.1,24.7-10.1S103,22,105.9,25c0.9,1,2.1,2.4,3.4,4.1c2.7,3.4,6.3,8,9.1,9.6c1.9,1.2,5.1,2.5,8.4,3.9c4.2,1.7,8.5,3.5,11.6,5.5c6.1,3.8,9.5,11.7,9.5,21.7v158.4c0,9.9-9.7,19.2-20,19.2L34.8,247.3L34.8,247.3z';
-        const OMAMORI_R_PATH = 'M196.8,247.3c-10.3,0-20-9.4-20-19.2V69.7c0-10,3.5-17.9,9.5-21.7c3.1-2,7.5-3.8,11.6-5.5c3.3-1.4,6.5-2.7,8.4-3.9c2.7-1.6,6.4-6.3,9-9.6c1.3-1.6,2.4-3.1,3.3-4c2.9-3.1,9.7-10.1,24.7-10.1c15,0,21.7,7.1,24.6,10.1c0.9,1,2.1,2.4,3.4,4.1c2.7,3.4,6.3,8,9.1,9.6c1.9,1.2,5.1,2.5,8.4,3.9c4.2,1.7,8.5,3.5,11.6,5.5c6.1,3.8,9.5,11.7,9.5,21.7v158.4c0,9.9-9.7,19.2-20,19.2H196.8z';
-        const existingLeft = canvas2d.getObjects().find(o => o.name === 'omamori-left');
-        const oSlot = existingLeft ? 'right' : 'left';
-        const oName = `omamori-${oSlot}`;
-        const existingSlot = canvas2d.getObjects().find(o => o.name === oName);
-        if (existingSlot) canvas2d.remove(existingSlot);
-        const oCx = oSlot === 'left' ? w * (81.35 / W_VB) : w * (243.35 / W_VB);
-        const oCy = h * (131.1 / H_VB);
+        const oCx = w * (81.35 / W_VB);  // 印刷區中心 x
+        const oCy = h * (131.1 / H_VB);  // 印刷區中心 y
+        const oPW = w * (133.1 / W_VB);  // 印刷區寬
+        const oPH = h * (232.4 / H_VB);  // 印刷區高
+        const OMAMORI_PATH = 'M34.8,247.3c-10.3,0-20-9.4-20-19.2V69.7c0-10,3.5-17.9,9.5-21.7c3.1-2,7.5-3.8,11.6-5.5c3.3-1.4,6.5-2.7,8.4-3.9c2.7-1.6,6.4-6.3,9-9.6c1.3-1.6,2.4-3.1,3.3-4c2.9-3.1,9.7-10.1,24.7-10.1S103,22,105.9,25c0.9,1,2.1,2.4,3.4,4.1c2.7,3.4,6.3,8,9.1,9.6c1.9,1.2,5.1,2.5,8.4,3.9c4.2,1.7,8.5,3.5,11.6,5.5c6.1,3.8,9.5,11.7,9.5,21.7v158.4c0,9.9-9.7,19.2-20,19.2L34.8,247.3L34.8,247.3z';
+        const existingDesign = canvas2d.getObjects().find(o => o.name === 'omamori-design');
+        if (existingDesign) canvas2d.remove(existingDesign);
         const scale = Math.max(oPW / img.width, oPH / img.height);
-        img._roundBaseScale = scale;
+        img._omamoriBaseScale = scale;
         _uploadBaseScale = scale;
         img.set({
           left: oCx, top: oCy,
           originX: 'center', originY: 'center',
           scaleX: scale, scaleY: scale,
-          name: oName
+          name: 'omamori-design'
         });
-        img.clipPath = new fabric.Path(oSlot === 'left' ? OMAMORI_L_PATH : OMAMORI_R_PATH, {
+        img.clipPath = new fabric.Path(OMAMORI_PATH, {
           scaleX: w / W_VB,
           scaleY: h / H_VB,
           left: 0, top: 0,
@@ -827,66 +808,6 @@ async function getUploadOnlyRoundSVG() {
 </svg>`;
 }
 
-// 御守皮革上傳模式：全畫布截圖，左右各以御守 clipPath 裁切，框線單獨圖層
-async function getUploadOnlyOmamoriSVG() {
-  if (!canvas2d) return null;
-  const W_VB = 324.2, H_VB = 261.6;
-
-  // 取全畫布透明 PNG（含兩張圖片，各自已有 fabric clipPath）
-  function _getDesignCanvas() {
-    const bgObjs = canvas2d.getObjects().filter(o => !o.selectable && o.name !== 'bottle-bg');
-    bgObjs.forEach(o => o.set('visible', false));
-    canvas2d.discardActiveObject();
-    _suppressOverlay = true;
-    const origBg    = canvas2d.backgroundColor;
-    const origBgImg = canvas2d.backgroundImage || null;
-    canvas2d.backgroundColor = 'rgba(0,0,0,0)';
-    canvas2d.backgroundImage = null;
-    canvas2d.renderAll();
-    const dataURL = canvas2d.toDataURL({ format: 'png' });
-    canvas2d.backgroundColor = origBg;
-    canvas2d.backgroundImage = origBgImg;
-    _suppressOverlay = false;
-    bgObjs.forEach(o => o.set('visible', true));
-    canvas2d.renderAll();
-    return dataURL;
-  }
-
-  const designURL = _getDesignCanvas();
-  const OMAMORI_L_PATH = 'M34.8,247.3c-10.3,0-20-9.4-20-19.2V69.7c0-10,3.5-17.9,9.5-21.7c3.1-2,7.5-3.8,11.6-5.5c3.3-1.4,6.5-2.7,8.4-3.9c2.7-1.6,6.4-6.3,9-9.6c1.3-1.6,2.4-3.1,3.3-4c2.9-3.1,9.7-10.1,24.7-10.1S103,22,105.9,25c0.9,1,2.1,2.4,3.4,4.1c2.7,3.4,6.3,8,9.1,9.6c1.9,1.2,5.1,2.5,8.4,3.9c4.2,1.7,8.5,3.5,11.6,5.5c6.1,3.8,9.5,11.7,9.5,21.7v158.4c0,9.9-9.7,19.2-20,19.2L34.8,247.3L34.8,247.3z';
-  const OMAMORI_R_PATH = 'M196.8,247.3c-10.3,0-20-9.4-20-19.2V69.7c0-10,3.5-17.9,9.5-21.7c3.1-2,7.5-3.8,11.6-5.5c3.3-1.4,6.5-2.7,8.4-3.9c2.7-1.6,6.4-6.3,9-9.6c1.3-1.6,2.4-3.1,3.3-4c2.9-3.1,9.7-10.1,24.7-10.1c15,0,21.7,7.1,24.6,10.1c0.9,1,2.1,2.4,3.4,4.1c2.7,3.4,6.3,8,9.1,9.6c1.9,1.2,5.1,2.5,8.4,3.9c4.2,1.7,8.5,3.5,11.6,5.5c6.1,3.8,9.5,11.7,9.5,21.7v158.4c0,9.9-9.7,19.2-20,19.2H196.8z';
-
-  const matId = typeof STATE !== 'undefined' ? STATE.materialId : 'easycard';
-  const frameSrc = matId === 'ipass'
-    ? 'assets/leather_omamori_ipass_frame.svg'
-    : 'assets/leather_omamori_easycard_frame.svg';
-  let frameInner = '';
-  try {
-    const resp = await fetch(frameSrc);
-    if (resp.ok) {
-      const txt = await resp.text();
-      const m = txt.match(/<svg[^>]*>([\s\S]*)<\/svg>/i);
-      if (m) frameInner = m[1];
-    }
-  } catch(e) { console.warn('[getUploadOnlyOmamoriSVG] frame fetch failed', e); }
-
-  if (!frameInner) {
-    frameInner = `<style>.fo0{fill:none;stroke:#231815;stroke-width:1.5;stroke-miterlimit:10;}.fo1{fill:none;stroke:#E60012;stroke-miterlimit:10;stroke-dasharray:8;}</style>
-<path class="fo1" d="${OMAMORI_L_PATH}"/>
-<path class="fo1" d="${OMAMORI_R_PATH}"/>`;
-  }
-
-  return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 ${W_VB} ${H_VB}">
-<defs>
-  <clipPath id="omamori-left-clip"><path d="${OMAMORI_L_PATH}"/></clipPath>
-  <clipPath id="omamori-right-clip"><path d="${OMAMORI_R_PATH}"/></clipPath>
-</defs>
-<g id="design-left"><image xlink:href="${designURL}" x="0" y="0" width="${W_VB}" height="${H_VB}" clip-path="url(#omamori-left-clip)"/></g>
-<g id="design-right"><image xlink:href="${designURL}" x="0" y="0" width="${W_VB}" height="${H_VB}" clip-path="url(#omamori-right-clip)"/></g>
-<g id="frame">${frameInner}</g>
-</svg>`;
-}
-
 function get2DDataURLWithFrame() {
   const base = get2DDataURL();
   if (!base) return Promise.resolve(null);
@@ -910,21 +831,14 @@ function get2DDataURLWithFrame() {
   };
 
   const _isLeatherRound = typeof STATE !== 'undefined' && STATE.productId === 'biz_leather_round';
-  const _isLeatherOmamori = typeof STATE !== 'undefined' && STATE.productId === 'biz_leather_omamori';
-  const _isPortraitFrame = !_isLeatherRound && !_isLeatherOmamori && typeof STATE !== 'undefined' && STATE.orientationId === 'portrait';
+  const _isPortraitFrame = !_isLeatherRound && typeof STATE !== 'undefined' && STATE.orientationId === 'portrait';
   const _lrMatId = _isLeatherRound && typeof STATE !== 'undefined' ? STATE.materialId : null;
-  const _omMatId = _isLeatherOmamori && typeof STATE !== 'undefined' ? STATE.materialId : null;
   let _frameSrc, _cachedFrame;
   if (_isLeatherRound) {
     _frameSrc = _lrMatId === 'ipass'
       ? 'assets/leather_round_ipass_frame.svg'
       : 'assets/leather_round_easycard_frame.svg';
     _cachedFrame = _lrMatId === 'ipass' ? _cachedLeatherRoundIpassFrameImg : _cachedLeatherRoundEasycardFrameImg;
-  } else if (_isLeatherOmamori) {
-    _frameSrc = _omMatId === 'ipass'
-      ? 'assets/leather_omamori_ipass_frame.svg'
-      : 'assets/leather_omamori_easycard_frame.svg';
-    _cachedFrame = _omMatId === 'ipass' ? _cachedLeatherOmamoriIpassFrameImg : _cachedLeatherOmamoriEasycardFrameImg;
   } else {
     _frameSrc = _isPortraitFrame ? 'assets/card_portrait_frame.svg' : 'assets/card_landscape_frame.svg';
     _cachedFrame = _isPortraitFrame ? _cachedCardPortraitFrameImg : _cachedCardFrameImg;
@@ -938,9 +852,6 @@ function get2DDataURLWithFrame() {
       if (_isLeatherRound) {
         if (_lrMatId === 'ipass') _cachedLeatherRoundIpassFrameImg = frameImg;
         else _cachedLeatherRoundEasycardFrameImg = frameImg;
-      } else if (_isLeatherOmamori) {
-        if (_omMatId === 'ipass') _cachedLeatherOmamoriIpassFrameImg = frameImg;
-        else _cachedLeatherOmamoriEasycardFrameImg = frameImg;
       } else if (_isPortraitFrame) _cachedCardPortraitFrameImg = frameImg;
       else _cachedCardFrameImg = frameImg;
       doComposite(frameImg).then(resolve);
