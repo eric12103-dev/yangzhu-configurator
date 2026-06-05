@@ -284,11 +284,13 @@ function init2DCanvas(productId) {
       if (obj.name !== _newOName) {
         const _OPATH_L = 'M34.8,247.3c-10.3,0-20-9.4-20-19.2V69.7c0-10,3.5-17.9,9.5-21.7c3.1-2,7.5-3.8,11.6-5.5c3.3-1.4,6.5-2.7,8.4-3.9c2.7-1.6,6.4-6.3,9-9.6c1.3-1.6,2.4-3.1,3.3-4c2.9-3.1,9.7-10.1,24.7-10.1S103,22,105.9,25c0.9,1,2.1,2.4,3.4,4.1c2.7,3.4,6.3,8,9.1,9.6c1.9,1.2,5.1,2.5,8.4,3.9c4.2,1.7,8.5,3.5,11.6,5.5c6.1,3.8,9.5,11.7,9.5,21.7v158.4c0,9.9-9.7,19.2-20,19.2L34.8,247.3L34.8,247.3z';
         const _OPATH_R = 'M196.8,247.3c-10.3,0-20-9.4-20-19.2V69.7c0-10,3.5-17.9,9.5-21.7c3.1-2,7.5-3.8,11.6-5.5c3.3-1.4,6.5-2.7,8.4-3.9c2.7-1.6,6.4-6.3,9-9.6c1.3-1.6,2.4-3.1,3.3-4c2.9-3.1,9.7-10.1,24.7-10.1c15,0,21.7,7.1,24.6,10.1c0.9,1,2.1,2.4,3.4,4.1c2.7,3.4,6.3,8,9.1,9.6c1.9,1.2,5.1,2.5,8.4,3.9c4.2,1.7,8.5,3.5,11.6,5.5c6.1,3.8,9.5,11.7,9.5,21.7v158.4c0,9.9-9.7,19.2-20,19.2H196.8z';
+        const _oCx = _toOLeft ? _OW * (81.35 / _OWVB) : _OW * (243.35 / _OWVB);
+        const _oCy = _OH * (131.1 / _OHVB);
         obj.clipPath = new fabric.Path(_toOLeft ? _OPATH_L : _OPATH_R, {
           scaleX: _OW / _OWVB,
           scaleY: _OH / _OHVB,
-          left: 0, top: 0,
-          originX: 'left', originY: 'top',
+          left: _oCx, top: _oCy,
+          originX: 'center', originY: 'center',
           absolutePositioned: true
         });
         obj.name = _newOName;
@@ -675,8 +677,8 @@ function uploadImage2D(file) {
         img.clipPath = new fabric.Path(oSlot === 'left' ? OMAMORI_L_PATH : OMAMORI_R_PATH, {
           scaleX: w / W_VB,
           scaleY: h / H_VB,
-          left: 0, top: 0,
-          originX: 'left', originY: 'top',
+          left: oCx, top: oCy,
+          originX: 'center', originY: 'center',
           absolutePositioned: true
         });
         const _s2 = document.getElementById('zoom-slider');
