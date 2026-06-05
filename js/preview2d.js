@@ -696,13 +696,16 @@ function getUploadOnlyRoundSVG() {
   const logW = canvas2d.getWidth(), logH = canvas2d.getHeight();
 
   // 從 lowerCanvasEl 裁切圓形區域，回傳透明背景 PNG dataURL
-  function _cropCircle(cx_vb, cy_vb) {
+  // withOverlay=false → 壓制 SVG 覆蓋（左圓，只有用戶圖片）
+  // withOverlay=true  → 保留 SVG 覆蓋（右圓，含票卡 logo）
+  function _cropCircle(cx_vb, cy_vb, withOverlay) {
     const cx_log = logW * (cx_vb / W_VB);
     const cy_log = logH * (cy_vb / H_VB);
     const r_log  = logW * (R_VB  / W_VB);
     const bgObjs = canvas2d.getObjects().filter(o => !o.selectable && o.name !== 'bottle-bg');
     bgObjs.forEach(o => o.set('visible', false));
-    _suppressOverlay = true;
+    canvas2d.discardActiveObject();  // 避免 Fabric.js 選取框線混入 lowerCanvasEl
+    _suppressOverlay = !withOverlay;
     const origBg    = canvas2d.backgroundColor;
     const origBgImg = canvas2d.backgroundImage || null;
     canvas2d.backgroundColor = 'rgba(0,0,0,0)';
@@ -728,8 +731,8 @@ function getUploadOnlyRoundSVG() {
     return tmp.toDataURL('image/png');
   }
 
-  const leftURL  = _cropCircle(81.3,  97.2);
-  const rightURL = _cropCircle(242.6, 97.1);
+  const leftURL  = _cropCircle(81.3,  97.2, false);  // 左圓：只含用戶圖片
+  const rightURL = _cropCircle(242.6, 97.1, true);   // 右圓：含票卡 logo
   const lx = 81.3  - R_VB, ly = 97.2 - R_VB;  // 14.7, 30.6
   const rx = 242.6 - R_VB, ry = 97.1 - R_VB;  // 176.0, 30.5
   const d  = R_VB * 2;                          // 133.2
