@@ -659,10 +659,10 @@ function mirrorLightboxImage() {
   const activeObj = canvas2d.getActiveObject();
   const srcImg = (activeObj && activeObj.type === 'image') ? activeObj : images[0];
 
-  // 以 clipPath 中心判斷來源側，比 left 位置更可靠
   const srcIsLeft = srcImg.clipPath
     ? srcImg.clipPath.left < w / 2
     : srcImg.left < w / 2;
+  const srcCX = srcIsLeft ? leftCX : rightCX;
   const targetCX = srcIsLeft ? rightCX : leftCX;
 
   // 移除目標側舊圖
@@ -674,27 +674,26 @@ function mirrorLightboxImage() {
     })
     .forEach(o => canvas2d.remove(o));
 
-  // 取 canvas 目前截圖（Fabric clipPath 已套用），2x 解析度
-  const canvasDataURL = get2DDataURL();
-  if (!canvasDataURL) return;
-
-  // 把截圖水平翻轉後放到目標圓圈：
-  // 截圖以 canvas 中心翻轉 → 左圓內容映射到右圓位置（反之亦然）
-  fabric.Image.fromURL(canvasDataURL, mirroredImg => {
-    mirroredImg.set({
-      left: w / 2, top: h / 2,
-      scaleX: 0.5, scaleY: 0.5,  // DataURL 是 2x，縮回 canvas 尺寸
-      flipX: true,
-      originX: 'center', originY: 'center'
+  // 直接 clone 原圖物件，鏡射位置並翻轉 flipX（不用整張 canvas 截圖）
+  srcImg.clone(cloned => {
+    const dx = srcImg.left - srcCX;
+    cloned.set({
+      left: targetCX - dx,
+      top: srcImg.top,
+      scaleX: srcImg.scaleX,
+      scaleY: srcImg.scaleY,
+      flipX: !srcImg.flipX,
+      flipY: srcImg.flipY,
+      originX: 'center',
+      originY: 'center'
     });
-    mirroredImg.clipPath = new fabric.Circle({
+    cloned.clipPath = new fabric.Circle({
       radius: r, left: targetCX, top: cy,
       originX: 'center', originY: 'center',
       absolutePositioned: true
     });
-    canvas2d.add(mirroredImg);
-    canvas2d.sendToBack(mirroredImg);
-    canvas2d.setActiveObject(mirroredImg);
+    canvas2d.add(cloned);
+    canvas2d.setActiveObject(cloned);
     canvas2d.renderAll();
     if (typeof _saveHistory === 'function') _saveHistory();
   });
@@ -729,28 +728,27 @@ function copyLightboxImage() {
     })
     .forEach(o => canvas2d.remove(o));
 
-  const canvasDataURL = get2DDataURL();
-  if (!canvasDataURL) return;
-
-  // 不翻轉：源圓圈內容直接映射到目標圓圈同一位置（不加 flipX）
-  const sourceCX = srcIsLeft ? leftCX : rightCX;
-  fabric.Image.fromURL(canvasDataURL, copiedImg => {
-    copiedImg.set({
-      left: targetCX - sourceCX + w / 2,
-      top: h / 2,
-      scaleX: 0.5,
-      scaleY: 0.5,
+  // 直接 clone 原圖物件，等距平移到目標圓圈（不用整張 canvas 截圖）
+  const srcCX = srcIsLeft ? leftCX : rightCX;
+  srcImg.clone(cloned => {
+    const dx = srcImg.left - srcCX;
+    cloned.set({
+      left: targetCX + dx,
+      top: srcImg.top,
+      scaleX: srcImg.scaleX,
+      scaleY: srcImg.scaleY,
+      flipX: srcImg.flipX,
+      flipY: srcImg.flipY,
       originX: 'center',
       originY: 'center'
     });
-    copiedImg.clipPath = new fabric.Circle({
+    cloned.clipPath = new fabric.Circle({
       radius: r, left: targetCX, top: cy,
       originX: 'center', originY: 'center',
       absolutePositioned: true
     });
-    canvas2d.add(copiedImg);
-    canvas2d.sendToBack(copiedImg);
-    canvas2d.setActiveObject(copiedImg);
+    canvas2d.add(cloned);
+    canvas2d.setActiveObject(cloned);
     canvas2d.renderAll();
     if (typeof _saveHistory === 'function') _saveHistory();
   });
