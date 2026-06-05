@@ -165,6 +165,36 @@ function init2DCanvas(productId) {
   canvas2d.on('object:modified', e => {
     if (typeof _updateFloatToolbar === 'function') _updateFloatToolbar();
     _updateTextOpacity();
+    // biz_lightbox：圖片移動／縮放後，依最終位置更新 clipPath
+    // 使用距離比較：只有明顯靠近另一圓圈（超過兩圓距離 20%）才切換，避免鏡射/複製圖片誤判
+    if (productId === 'biz_lightbox' && e.target && e.target.type === 'image') {
+      const _w = canvas2d.getWidth();
+      const _h = canvas2d.getHeight();
+      const _leftCX  = _w * (71.4  / 348.2);
+      const _rightCX = _w * (277.4 / 348.2);
+      const _cy = _h * (74.6 / 145.2);
+      const _r  = _w * (51 / 348.2);
+      const _switchThreshold = (_rightCX - _leftCX) * 0.2;
+      const _curClipCX = e.target.clipPath ? e.target.clipPath.left : null;
+      const _dLeft  = Math.abs(e.target.left - _leftCX);
+      const _dRight = Math.abs(e.target.left - _rightCX);
+      let _nearCX;
+      if (_curClipCX !== null) {
+        const _curDist   = _curClipCX < _w / 2 ? _dLeft  : _dRight;
+        const _otherDist = _curClipCX < _w / 2 ? _dRight : _dLeft;
+        // 只有明顯更靠近另一側才切換
+        _nearCX = (_otherDist < _curDist - _switchThreshold)
+          ? (_curClipCX < _w / 2 ? _rightCX : _leftCX)
+          : _curClipCX;
+      } else {
+        _nearCX = _dLeft <= _dRight ? _leftCX : _rightCX;
+      }
+      e.target.clipPath = new fabric.Circle({
+        radius: _r, left: _nearCX, top: _cy,
+        originX: 'center', originY: 'center',
+        absolutePositioned: true
+      });
+    }
     canvas2d.requestRenderAll();
     _saveHistory();
     if (typeof _saveDraft === 'function') _saveDraft();
@@ -217,12 +247,15 @@ function init2DCanvas(productId) {
       _showLabelBorder = true;
     }
     // 圓形皮革：圖片跨越兩圓中線時自動切換 clipPath，不限制邊界
-    // 御守皮革：圖片可自由移動，clip path 處理可見範圍，不限制邊界
+    // 御守皮革／圓形小燈箱：圖片可自由移動，clip path 處理可見範圍，不限制邊界
     const _isLRoundImg = typeof STATE !== 'undefined'
       && STATE.productId === 'biz_leather_round'
       && obj.type === 'image';
     const _isOmamoriImg = typeof STATE !== 'undefined'
       && STATE.productId === 'biz_leather_omamori'
+      && obj.type === 'image';
+    const _isLbImg = typeof STATE !== 'undefined'
+      && STATE.productId === 'biz_lightbox'
       && obj.type === 'image';
     if (_isLRoundImg) {
       const _W = canvas2d.getWidth(), _H = canvas2d.getHeight();
@@ -242,8 +275,8 @@ function init2DCanvas(productId) {
         });
         obj.name = _newName;
       }
-    } else if (_isOmamoriImg) {
-      // 御守圖片：不限制邊界，clip path 處理可見範圍
+    } else if (_isOmamoriImg || _isLbImg) {
+      // 不限制邊界，clip path 處理可見範圍
     } else if (!isThermos) {
       const w = canvas2d.getWidth();
       const h = canvas2d.getHeight();
@@ -395,14 +428,23 @@ function addDefaultElements() {
 // 允許負值 padding，使框線可內縮至實際字形範圍
 function _normPadding(font, fontSize, basePad, textSample) {
   try {
-    const ctx = document.createElement('canvas').getContext('2d');
-    ctx.font = `${fontSize}px "${font}"`;
+    // 優先使用 Fabric canvas context（字體已確保載入）
+    // 新建 <canvas> 不保證能存取 @font-face 自訂字體，會 fallback 成系統字體導致量測錯誤
+    let _ctx, _savedFont;
+    if (canvas2d && canvas2d.lowerCanvasEl) {
+      _ctx = canvas2d.lowerCanvasEl.getContext('2d');
+      _savedFont = _ctx.font;
+      _ctx.font = `${fontSize}px "${font}"`;
+    } else {
+      _ctx = document.createElement('canvas').getContext('2d');
+      _ctx.font = `${fontSize}px "${font}"`;
+    }
     const isEn = font.startsWith('(英)');
-    // 優先用實際文字做量測；無文字時用代表性預設樣本
     const sample = (textSample && textSample.trim())
       ? textSample
       : (isEn ? 'Happy Agpq' : '楊竹Ag');
-    const m = ctx.measureText(sample);
+    const m = _ctx.measureText(sample);
+    if (_savedFont !== undefined) _ctx.font = _savedFont; // 還原 Fabric canvas 字體
     const actAsc = m.actualBoundingBoxAscent;
     const actDes = m.actualBoundingBoxDescent;
     if (typeof actAsc === 'number' && actAsc > 0) {
@@ -516,6 +558,7 @@ function uploadImage2D(file) {
 
       const _isLeatherRound = typeof STATE !== 'undefined' && STATE.productId === 'biz_leather_round';
       const _isLeatherOmamori = typeof STATE !== 'undefined' && STATE.productId === 'biz_leather_omamori';
+      const _isLightbox = typeof STATE !== 'undefined' && STATE.productId === 'biz_lightbox';
       // 卡片上傳模式：圖片填滿虛線框，並裁切在框線範圍內
       const _isUploadOnly = typeof STATE !== 'undefined'
         && STATE.productId === 'biz_card' && (
@@ -558,13 +601,43 @@ function uploadImage2D(file) {
         const _d = document.getElementById('zoom-value-display');
         if (_s) _s.value = 100;
         if (_d) _d.textContent = '100%';
+      } else if (_isLightbox) {
+        // 圓形小燈箱：偵測左圓是否已有圖，有則放右圓，否則放左圓
+        const _leftCX  = w * (71.4  / 348.2);
+        const _rightCX = w * (277.4 / 348.2);
+        const _lbCy = h * (74.6 / 145.2);
+        const r = w * (51 / 348.2);
+        const _existingImgs = canvas2d.getObjects().filter(o => o.selectable && o.type === 'image');
+        const _hasLeft = _existingImgs.some(o => {
+          const ox = o.clipPath ? o.clipPath.left : o.left;
+          return ox < w / 2;
+        });
+        const cx = _hasLeft ? _rightCX : _leftCX;
+        const cy = _lbCy;
+        const scale = Math.max((r * 2) / img.width, (r * 2) / img.height);
+        _uploadBaseScale = scale;
+        img.set({
+          left: cx, top: cy,
+          originX: 'center', originY: 'center',
+          scaleX: scale, scaleY: scale
+        });
+        img.clipPath = new fabric.Circle({
+          radius: r,
+          left: cx, top: cy,
+          originX: 'center', originY: 'center',
+          absolutePositioned: true
+        });
+        const _s = document.getElementById('zoom-slider');
+        const _d = document.getElementById('zoom-value-display');
+        if (_s) _s.value = 100;
+        if (_d) _d.textContent = '100%';
       } else if (_isLeatherOmamori) {
         // 御守版面（SVG viewBox 324.2×261.6）：左件印刷區 x=[14.8,147.9], y=[14.9,247.3]
         const W_VB = 324.2, H_VB = 261.6;
-        const oCx = w * (81.35 / W_VB);  // 印刷區中心 x
-        const oCy = h * (131.1 / H_VB);  // 印刷區中心 y
-        const oPW = w * (133.1 / W_VB);  // 印刷區寬
-        const oPH = h * (232.4 / H_VB);  // 印刷區高
+        const oCx = w * (81.35 / W_VB);
+        const oCy = h * (131.1 / H_VB);
+        const oPW = w * (133.1 / W_VB);
+        const oPH = h * (232.4 / H_VB);
         const OMAMORI_PATH = 'M34.8,247.3c-10.3,0-20-9.4-20-19.2V69.7c0-10,3.5-17.9,9.5-21.7c3.1-2,7.5-3.8,11.6-5.5c3.3-1.4,6.5-2.7,8.4-3.9c2.7-1.6,6.4-6.3,9-9.6c1.3-1.6,2.4-3.1,3.3-4c2.9-3.1,9.7-10.1,24.7-10.1S103,22,105.9,25c0.9,1,2.1,2.4,3.4,4.1c2.7,3.4,6.3,8,9.1,9.6c1.9,1.2,5.1,2.5,8.4,3.9c4.2,1.7,8.5,3.5,11.6,5.5c6.1,3.8,9.5,11.7,9.5,21.7v158.4c0,9.9-9.7,19.2-20,19.2L34.8,247.3L34.8,247.3z';
         const existingDesign = canvas2d.getObjects().find(o => o.name === 'omamori-design');
         if (existingDesign) canvas2d.remove(existingDesign);
@@ -637,6 +710,118 @@ function uploadImage2D(file) {
   reader.readAsDataURL(file);
 }
 
+// ─── 圓形小燈箱：鏡射圖片到另一側 ──────────────────────────
+// 以 canvas 目前截圖（已套用 clip）做水平翻轉，讓紅圈內的內容鏡射到另一側
+function mirrorLightboxImage() {
+  if (!canvas2d) return;
+  const w = canvas2d.getWidth();
+  const h = canvas2d.getHeight();
+  const leftCX  = w * (71.4  / 348.2);
+  const rightCX = w * (277.4 / 348.2);
+  const cy = h * (74.6 / 145.2);
+  const r  = w * (51 / 348.2);
+
+  const images = canvas2d.getObjects().filter(o => o.selectable && o.type === 'image');
+  if (images.length === 0) return;
+
+  const activeObj = canvas2d.getActiveObject();
+  const srcImg = (activeObj && activeObj.type === 'image') ? activeObj : images[0];
+
+  const srcIsLeft = srcImg.clipPath
+    ? srcImg.clipPath.left < w / 2
+    : srcImg.left < w / 2;
+  const srcCX = srcIsLeft ? leftCX : rightCX;
+  const targetCX = srcIsLeft ? rightCX : leftCX;
+
+  // 移除目標側舊圖
+  images
+    .filter(o => o !== srcImg)
+    .filter(o => {
+      const oIsLeft = o.clipPath ? o.clipPath.left < w / 2 : o.left < w / 2;
+      return oIsLeft !== srcIsLeft;
+    })
+    .forEach(o => canvas2d.remove(o));
+
+  // 直接 clone 原圖物件，鏡射位置並翻轉 flipX（不用整張 canvas 截圖）
+  srcImg.clone(cloned => {
+    const dx = srcImg.left - srcCX;
+    cloned.set({
+      left: targetCX - dx,
+      top: srcImg.top,
+      scaleX: srcImg.scaleX,
+      scaleY: srcImg.scaleY,
+      flipX: !srcImg.flipX,
+      flipY: srcImg.flipY,
+      originX: 'center',
+      originY: 'center'
+    });
+    cloned.clipPath = new fabric.Circle({
+      radius: r, left: targetCX, top: cy,
+      originX: 'center', originY: 'center',
+      absolutePositioned: true
+    });
+    canvas2d.add(cloned);
+    canvas2d.setActiveObject(cloned);
+    canvas2d.renderAll();
+    if (typeof _saveHistory === 'function') _saveHistory();
+  });
+}
+
+// ─── 圓形小燈箱：複製圖片到另一側（不翻轉）──────────────────
+function copyLightboxImage() {
+  if (!canvas2d) return;
+  const w = canvas2d.getWidth();
+  const h = canvas2d.getHeight();
+  const leftCX  = w * (71.4  / 348.2);
+  const rightCX = w * (277.4 / 348.2);
+  const cy = h * (74.6 / 145.2);
+  const r  = w * (51 / 348.2);
+
+  const images = canvas2d.getObjects().filter(o => o.selectable && o.type === 'image');
+  if (images.length === 0) return;
+
+  const activeObj = canvas2d.getActiveObject();
+  const srcImg = (activeObj && activeObj.type === 'image') ? activeObj : images[0];
+  const srcIsLeft = srcImg.clipPath
+    ? srcImg.clipPath.left < w / 2
+    : srcImg.left < w / 2;
+  const targetCX = srcIsLeft ? rightCX : leftCX;
+
+  // 移除目標側舊圖
+  images
+    .filter(o => o !== srcImg)
+    .filter(o => {
+      const oIsLeft = o.clipPath ? o.clipPath.left < w / 2 : o.left < w / 2;
+      return oIsLeft !== srcIsLeft;
+    })
+    .forEach(o => canvas2d.remove(o));
+
+  // 直接 clone 原圖物件，等距平移到目標圓圈（不用整張 canvas 截圖）
+  const srcCX = srcIsLeft ? leftCX : rightCX;
+  srcImg.clone(cloned => {
+    const dx = srcImg.left - srcCX;
+    cloned.set({
+      left: targetCX + dx,
+      top: srcImg.top,
+      scaleX: srcImg.scaleX,
+      scaleY: srcImg.scaleY,
+      flipX: srcImg.flipX,
+      flipY: srcImg.flipY,
+      originX: 'center',
+      originY: 'center'
+    });
+    cloned.clipPath = new fabric.Circle({
+      radius: r, left: targetCX, top: cy,
+      originX: 'center', originY: 'center',
+      absolutePositioned: true
+    });
+    canvas2d.add(cloned);
+    canvas2d.setActiveObject(cloned);
+    canvas2d.renderAll();
+    if (typeof _saveHistory === 'function') _saveHistory();
+  });
+}
+
 // ─── 背景色 ──────────────────────────────────────────────
 function setBackground2D(color) {
   if (!canvas2d) return;
@@ -674,8 +859,8 @@ let _cachedCardFrameImg = null;
 let _cachedCardPortraitFrameImg = null;
 let _cachedLeatherRoundEasycardFrameImg = null;
 let _cachedLeatherRoundIpassFrameImg = null;
-let _cachedLeatherOmamoriEasycardFrameImg = null;
-let _cachedLeatherOmamoriIpassFrameImg = null;
+let _cachedLeatherOmamoriFrameImg = null;
+let _cachedLightboxFrameImg = null;
 var _lastUploadedDataURL = null;
 
 // 卡片橫式上傳模式：回傳向量 SVG（照片為 <image>，紅框+虛線為獨立向量路徑）
@@ -808,6 +993,68 @@ async function getUploadOnlyRoundSVG() {
 </svg>`;
 }
 
+// 御守皮革上傳模式：回傳向量 SVG（照片裁切至御守形狀 + 框線路徑）
+// viewBox 162.1×261.6，印刷區路徑（紅色虛線範圍）
+function getUploadOnlyOmamoriSVG() {
+  if (!_lastUploadedDataURL) return null;
+  const _canvasDataURL = (typeof get2DDataURL === 'function' && get2DDataURL()) || _lastUploadedDataURL;
+  return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 162.1 261.6">
+<style>.st0{fill:none;stroke:#000000;stroke-width:1.5;stroke-miterlimit:10;}.st1{fill:none;stroke:#E60012;stroke-miterlimit:10;stroke-dasharray:8;}</style>
+<defs><clipPath id="omamori-clip"><path d="M34.8,247.3c-10.3,0-20-9.4-20-19.2V69.7c0-10,3.5-17.9,9.5-21.7c3.1-2,7.5-3.8,11.6-5.5c3.3-1.4,6.5-2.7,8.4-3.9c2.7-1.6,6.4-6.3,9-9.6c1.3-1.6,2.4-3.1,3.3-4c2.9-3.1,9.7-10.1,24.7-10.1S103,22,105.9,25c0.9,1,2.1,2.4,3.4,4.1c2.7,3.4,6.3,8,9.1,9.6c1.9,1.2,5.1,2.5,8.4,3.9c4.2,1.7,8.5,3.5,11.6,5.5c6.1,3.8,9.5,11.7,9.5,21.7v158.4c0,9.9-9.7,19.2-20,19.2H34.8V247.3z"/></clipPath></defs>
+<image xlink:href="${_canvasDataURL}" x="0" y="0" width="162.1" height="261.6" preserveAspectRatio="none" clip-path="url(#omamori-clip)"/>
+<path class="st0" d="M137,50.4c-5.5-3.4-15.5-6.6-20-9.3S106.7,29.7,104,27c-2.6-2.7-8.8-9.3-22.6-9.3s-20,6.5-22.6,9.3c-2.6,2.7-8.4,11.4-13,14.1c-4.5,2.7-14.5,5.9-20,9.3c-5.5,3.4-8.2,10.8-8.2,19.3s0,150.3,0,158.4c0,8.1,8.1,16.4,17.2,16.4s35.5,0,46.6,0c11.2,0,37.5,0,46.6,0s17.2-8.3,17.2-16.4s0-149.8,0-158.4C145.2,61.2,142.4,53.8,137,50.4z M81.4,50.6c-3.9,0-7.1-3.2-7.1-7.1c0-3.9,3.2-7.1,7.1-7.1c3.9,0,7.1,3.2,7.1,7.1C88.5,47.4,85.3,50.6,81.4,50.6z"/>
+<path class="st1" d="M34.8,247.3c-10.3,0-20-9.4-20-19.2V69.7c0-10,3.5-17.9,9.5-21.7c3.1-2,7.5-3.8,11.6-5.5c3.3-1.4,6.5-2.7,8.4-3.9c2.7-1.6,6.4-6.3,9-9.6c1.3-1.6,2.4-3.1,3.3-4c2.9-3.1,9.7-10.1,24.7-10.1S103,22,105.9,25c0.9,1,2.1,2.4,3.4,4.1c2.7,3.4,6.3,8,9.1,9.6c1.9,1.2,5.1,2.5,8.4,3.9c4.2,1.7,8.5,3.5,11.6,5.5c6.1,3.8,9.5,11.7,9.5,21.7v158.4c0,9.9-9.7,19.2-20,19.2H34.8V247.3z"/>
+</svg>`;
+}
+
+// 圓形小燈箱上傳模式：回傳向量 SVG（照片裁切至雙圓 + 框線路徑）
+// viewBox 348.2×145.2，左圓心 71.4,74.6 右圓心 277.4,74.6 印刷半徑 51
+function getUploadOnlyLightboxSVG() {
+  if (!_lastUploadedDataURL) return null;
+  const _canvasDataURL = (typeof get2DDataURL === 'function' && get2DDataURL()) || _lastUploadedDataURL;
+  return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 348.2 145.2">
+<style>.st2{fill:#1F1E1D;stroke:#000000;stroke-width:0.75;}.st3{fill:url(#SVGID_5_);stroke:#B5B5B6;stroke-width:0.5;stroke-miterlimit:10;}.st4{fill:url(#SVGID_6_);stroke:#B5B5B6;stroke-width:0.5;stroke-miterlimit:10;}.st5{fill:url(#SVGID_7_);stroke:#B5B5B6;stroke-width:0.5;stroke-miterlimit:10;}.st6{opacity:0.5;fill:url(#SVGID_8_);enable-background:new;}.st7{opacity:0.5;fill:url(#SVGID_9_);enable-background:new;}.st8{fill:#F7F8F8;stroke:#B5B5B6;stroke-width:0.5;stroke-miterlimit:10;}.st9{fill:#FFFFFF;stroke:#B5B5B6;stroke-width:0.5;stroke-miterlimit:10;}.st10{fill:url(#SVGID_10_);stroke:#B5B5B6;stroke-width:0.5;stroke-miterlimit:10;}.st11{fill:url(#SVGID_11_);stroke:#B5B5B6;stroke-width:0.5;stroke-miterlimit:10;}.st12{fill:url(#SVGID_12_);stroke:#B5B5B6;stroke-width:0.5;stroke-miterlimit:10;}.st13{opacity:0.5;fill:url(#SVGID_13_);enable-background:new;}.st14{opacity:0.5;fill:url(#SVGID_14_);enable-background:new;}.st15{fill:none;stroke:#E60012;stroke-width:0.7105;}</style>
+<defs>
+<clipPath id="lb-left-clip"><circle cx="71.4" cy="74.6" r="51"/></clipPath>
+<clipPath id="lb-right-clip"><circle cx="277.4" cy="74.6" r="51"/></clipPath>
+<linearGradient id="SVGID_5_" gradientUnits="userSpaceOnUse" x1="176.0893" y1="330.6606" x2="176.0893" y2="427.3789" gradientTransform="matrix(-1 0 0 1 358.4922 -304.9051)"><stop offset="1.4e-07" style="stop-color:#DCDDDD"/><stop offset="0.0578" style="stop-color:#F4F4F4"/><stop offset="0.1833" style="stop-color:#F4F4F4"/><stop offset="0.9521" style="stop-color:#F4F4F4"/><stop offset="0.9592" style="stop-color:#F9F9F9"/><stop offset="0.9742" style="stop-color:#FEFEFE"/><stop offset="1" style="stop-color:#FFFFFF"/></linearGradient>
+<linearGradient id="SVGID_6_" gradientUnits="userSpaceOnUse" x1="147.3893" y1="398.4865" x2="147.3893" y2="409.9677" gradientTransform="matrix(-1 0 0 1 358.4922 -304.9051)"><stop offset="0" style="stop-color:#DCDDDD"/><stop offset="0.0415" style="stop-color:#E1E2E2"/><stop offset="0.2017" style="stop-color:#EFF0F0"/><stop offset="0.3854" style="stop-color:#F9F9F9"/><stop offset="0.6109" style="stop-color:#FEFEFE"/><stop offset="1" style="stop-color:#FFFFFF"/></linearGradient>
+<linearGradient id="SVGID_7_" gradientUnits="userSpaceOnUse" x1="147.3893" y1="346.5735" x2="147.3893" y2="358.0992" gradientTransform="matrix(-1 0 0 1 358.4922 -304.9051)"><stop offset="0" style="stop-color:#DCDDDD"/><stop offset="0.0415" style="stop-color:#E1E2E2"/><stop offset="0.2017" style="stop-color:#EFF0F0"/><stop offset="0.3854" style="stop-color:#F9F9F9"/><stop offset="0.6109" style="stop-color:#FEFEFE"/><stop offset="1" style="stop-color:#FFFFFF"/></linearGradient>
+<linearGradient id="SVGID_8_" gradientUnits="userSpaceOnUse" x1="128.3769" y1="405.0235" x2="146.3756" y2="405.0235" gradientTransform="matrix(-1 0 0 1 358.4922 -304.9051)"><stop offset="1.4e-07" style="stop-color:#C9CACA"/><stop offset="0.2387" style="stop-color:#CCCDCD;stop-opacity:0.7613"/><stop offset="0.463" style="stop-color:#D5D5D6;stop-opacity:0.537"/><stop offset="0.6814" style="stop-color:#E3E3E3;stop-opacity:0.3186"/><stop offset="0.8949" style="stop-color:#F5F5F6;stop-opacity:0.1051"/><stop offset="1" style="stop-color:#FFFFFF;stop-opacity:0"/></linearGradient>
+<linearGradient id="SVGID_9_" gradientUnits="userSpaceOnUse" x1="128.3769" y1="353.9734" x2="146.3756" y2="353.9734" gradientTransform="matrix(-1 0 0 1 358.4922 -304.9051)"><stop offset="1.4e-07" style="stop-color:#C9CACA"/><stop offset="0.2387" style="stop-color:#CCCDCD;stop-opacity:0.7613"/><stop offset="0.463" style="stop-color:#D5D5D6;stop-opacity:0.537"/><stop offset="0.6814" style="stop-color:#E3E3E3;stop-opacity:0.3186"/><stop offset="0.8949" style="stop-color:#F5F5F6;stop-opacity:0.1051"/><stop offset="1" style="stop-color:#FFFFFF;stop-opacity:0"/></linearGradient>
+<linearGradient id="SVGID_10_" gradientUnits="userSpaceOnUse" x1="251.4424" y1="330.6606" x2="251.4424" y2="427.3789" gradientTransform="matrix(1 0 0 1 -85.0395 -304.9051)"><stop offset="1.4e-07" style="stop-color:#DCDDDD"/><stop offset="0.0578" style="stop-color:#F4F4F4"/><stop offset="0.1833" style="stop-color:#F4F4F4"/><stop offset="0.9521" style="stop-color:#F4F4F4"/><stop offset="0.9592" style="stop-color:#F9F9F9"/><stop offset="0.9742" style="stop-color:#FEFEFE"/><stop offset="1" style="stop-color:#FFFFFF"/></linearGradient>
+<linearGradient id="SVGID_11_" gradientUnits="userSpaceOnUse" x1="222.7424" y1="398.4865" x2="222.7424" y2="409.9677" gradientTransform="matrix(1 0 0 1 -85.0395 -304.9051)"><stop offset="0" style="stop-color:#DCDDDD"/><stop offset="0.0415" style="stop-color:#E1E2E2"/><stop offset="0.2017" style="stop-color:#EFF0F0"/><stop offset="0.3854" style="stop-color:#F9F9F9"/><stop offset="0.6109" style="stop-color:#FEFEFE"/><stop offset="1" style="stop-color:#FFFFFF"/></linearGradient>
+<linearGradient id="SVGID_12_" gradientUnits="userSpaceOnUse" x1="222.7424" y1="346.5735" x2="222.7424" y2="358.0992" gradientTransform="matrix(1 0 0 1 -85.0395 -304.9051)"><stop offset="0" style="stop-color:#DCDDDD"/><stop offset="0.0415" style="stop-color:#E1E2E2"/><stop offset="0.2017" style="stop-color:#EFF0F0"/><stop offset="0.3854" style="stop-color:#F9F9F9"/><stop offset="0.6109" style="stop-color:#FEFEFE"/><stop offset="1" style="stop-color:#FFFFFF"/></linearGradient>
+<linearGradient id="SVGID_13_" gradientUnits="userSpaceOnUse" x1="203.67" y1="405.0235" x2="221.6686" y2="405.0235" gradientTransform="matrix(1 0 0 1 -85.0395 -304.9051)"><stop offset="1.4e-07" style="stop-color:#C9CACA"/><stop offset="0.2387" style="stop-color:#CCCDCD;stop-opacity:0.7613"/><stop offset="0.463" style="stop-color:#D5D5D6;stop-opacity:0.537"/><stop offset="0.6814" style="stop-color:#E3E3E3;stop-opacity:0.3186"/><stop offset="0.8949" style="stop-color:#F5F5F6;stop-opacity:0.1051"/><stop offset="1" style="stop-color:#FFFFFF;stop-opacity:0"/></linearGradient>
+<linearGradient id="SVGID_14_" gradientUnits="userSpaceOnUse" x1="203.67" y1="354.0235" x2="221.6686" y2="354.0235" gradientTransform="matrix(1 0 0 1 -85.0395 -304.9051)"><stop offset="1.4e-07" style="stop-color:#C9CACA"/><stop offset="0.2387" style="stop-color:#CCCDCD;stop-opacity:0.7613"/><stop offset="0.463" style="stop-color:#D5D5D6;stop-opacity:0.537"/><stop offset="0.6814" style="stop-color:#E3E3E3;stop-opacity:0.3186"/><stop offset="0.8949" style="stop-color:#F5F5F6;stop-opacity:0.1051"/><stop offset="1" style="stop-color:#FFFFFF;stop-opacity:0"/></linearGradient>
+</defs>
+<g>
+<rect x="273.2" y="15.1" class="st2" width="2.8" height="5.7"/>
+<polygon class="st3" points="178.2,25 186.7,25 186.7,124.2 178.2,124.2"/>
+<polygon class="st4" points="186.7,93 235.6,93 235.6,107.2 186.7,107.2"/>
+<polygon class="st5" points="186.7,42 235.6,42 235.6,56.1 186.7,56.1"/>
+<polygon class="st6" points="233.5,93 210.2,93 210.2,107.2 233.5,107.2"/>
+<polygon class="st7" points="233.5,42 210.2,42 210.2,56.1 233.5,56.1"/>
+<circle class="st8" cx="277.4" cy="74.6" r="56.7"/>
+<circle class="st9" cx="277.4" cy="74.6" r="53.9"/>
+</g>
+<g>
+<rect x="72.9" y="15" class="st2" width="2.8" height="5.7"/>
+<rect x="162.2" y="25" class="st10" width="8.5" height="99.2"/>
+<rect x="113.3" y="93" class="st11" width="48.9" height="14.2"/>
+<rect x="113.3" y="42" class="st12" width="48.9" height="14.2"/>
+<rect x="115.3" y="93" class="st13" width="23.4" height="14.2"/>
+<rect x="115.3" y="42" class="st14" width="23.4" height="14.2"/>
+<circle class="st8" cx="71.4" cy="74.6" r="56.7"/>
+<circle class="st9" cx="71.4" cy="74.6" r="53.9"/>
+</g>
+<image xlink:href="${_canvasDataURL}" x="0" y="0" width="348.2" height="145.2" preserveAspectRatio="none" clip-path="url(#lb-left-clip)"/>
+<image xlink:href="${_canvasDataURL}" x="0" y="0" width="348.2" height="145.2" preserveAspectRatio="none" clip-path="url(#lb-right-clip)"/>
+<circle class="st15" cx="71.4" cy="74.6" r="51"/>
+<circle class="st15" cx="277.4" cy="74.6" r="51"/>
+</svg>`;
+}
+
 function get2DDataURLWithFrame() {
   const base = get2DDataURL();
   if (!base) return Promise.resolve(null);
@@ -831,7 +1078,9 @@ function get2DDataURLWithFrame() {
   };
 
   const _isLeatherRound = typeof STATE !== 'undefined' && STATE.productId === 'biz_leather_round';
-  const _isPortraitFrame = !_isLeatherRound && typeof STATE !== 'undefined' && STATE.orientationId === 'portrait';
+  const _isLeatherOmamori = typeof STATE !== 'undefined' && STATE.productId === 'biz_leather_omamori';
+  const _isLightboxFrame = typeof STATE !== 'undefined' && STATE.productId === 'biz_lightbox';
+  const _isPortraitFrame = !_isLeatherRound && !_isLeatherOmamori && !_isLightboxFrame && typeof STATE !== 'undefined' && STATE.orientationId === 'portrait';
   const _lrMatId = _isLeatherRound && typeof STATE !== 'undefined' ? STATE.materialId : null;
   let _frameSrc, _cachedFrame;
   if (_isLeatherRound) {
@@ -839,6 +1088,12 @@ function get2DDataURLWithFrame() {
       ? 'assets/leather_round_ipass_frame.svg'
       : 'assets/leather_round_easycard_frame.svg';
     _cachedFrame = _lrMatId === 'ipass' ? _cachedLeatherRoundIpassFrameImg : _cachedLeatherRoundEasycardFrameImg;
+  } else if (_isLeatherOmamori) {
+    _frameSrc = 'assets/leather_omamori_frame.svg';
+    _cachedFrame = _cachedLeatherOmamoriFrameImg;
+  } else if (_isLightboxFrame) {
+    _frameSrc = 'assets/lightbox_frame.svg';
+    _cachedFrame = _cachedLightboxFrameImg;
   } else {
     _frameSrc = _isPortraitFrame ? 'assets/card_portrait_frame.svg' : 'assets/card_landscape_frame.svg';
     _cachedFrame = _isPortraitFrame ? _cachedCardPortraitFrameImg : _cachedCardFrameImg;
@@ -852,7 +1107,9 @@ function get2DDataURLWithFrame() {
       if (_isLeatherRound) {
         if (_lrMatId === 'ipass') _cachedLeatherRoundIpassFrameImg = frameImg;
         else _cachedLeatherRoundEasycardFrameImg = frameImg;
-      } else if (_isPortraitFrame) _cachedCardPortraitFrameImg = frameImg;
+      } else if (_isLeatherOmamori) _cachedLeatherOmamoriFrameImg = frameImg;
+      else if (_isLightboxFrame) _cachedLightboxFrameImg = frameImg;
+      else if (_isPortraitFrame) _cachedCardPortraitFrameImg = frameImg;
       else _cachedCardFrameImg = frameImg;
       doComposite(frameImg).then(resolve);
     };
