@@ -368,7 +368,9 @@ function initDesignStep() {
         ? 'assets/leather_round_ipass_frame.svg'
         : 'assets/leather_round_easycard_frame.svg';
     } else if (STATE.productId === 'biz_leather_omamori') {
-      _svgFrame.src = 'assets/leather_omamori_frame.svg';
+      _svgFrame.src = STATE.materialId === 'ipass'
+        ? 'assets/leather_omamori_ipass_frame.svg'
+        : 'assets/leather_omamori_easycard_frame.svg';
     } else if (STATE.productId === 'biz_lightbox') {
       _svgFrame.src = 'assets/lightbox_frame.svg';
     } else {
@@ -787,7 +789,7 @@ async function submitDesign() {
       if (STATE.productId === 'biz_leather_round' && typeof getUploadOnlyRoundSVG === 'function') {
         svg = await getUploadOnlyRoundSVG();
       } else if (STATE.productId === 'biz_leather_omamori' && typeof getUploadOnlyOmamoriSVG === 'function') {
-        svg = getUploadOnlyOmamoriSVG();
+        svg = await getUploadOnlyOmamoriSVG();
       } else if (STATE.productId === 'biz_lightbox' && typeof getUploadOnlyLightboxSVG === 'function') {
         svg = getUploadOnlyLightboxSVG();
       } else if (typeof getUploadOnlySVG === 'function') {
