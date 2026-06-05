@@ -892,8 +892,8 @@ function getUploadOnlySVG() {
   if (!_lastUploadedDataURL) return null;
   const isPortrait = typeof STATE !== 'undefined' && STATE.orientationId === 'portrait';
   if (isPortrait) {
-    // 直式：使用畫布渲染結果（含使用者縮放/裁切），避免原圖比例不符造成變形
-    const _canvasDataURL = (typeof get2DDataURL === 'function' && get2DDataURL()) || _lastUploadedDataURL;
+    // 直式：使用畫布渲染結果（含使用者縮放/裁切），multiplier 9 → ~1329 DPI
+    const _canvasDataURL = (typeof get2DDataURL === 'function' && get2DDataURL(9)) || _lastUploadedDataURL;
     // viewBox 170.1×259.7，裁切邊 x=2.8,y=2.8 → 167.2,256.8
     return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 170.1 259.7" width="60mm" height="91.6mm">
 <style>.st0{fill:none;stroke:#E60012;stroke-miterlimit:10;}.st1{fill:none;stroke:#3E3A39;stroke-width:0.25;stroke-miterlimit:10;}.st2{fill:none;stroke:#3E3A39;stroke-width:0.25;stroke-miterlimit:10;stroke-dasharray:5.0813,5.0813;}.st3{fill:none;stroke:#3E3A39;stroke-width:0.25;stroke-miterlimit:10;stroke-dasharray:5.1404,5.1404;}</style>
@@ -914,11 +914,12 @@ function getUploadOnlySVG() {
 </g>
 </svg>`;
   }
-  // 橫式：viewBox 259.7×170.1，裁切邊 x=2.8,y=2.8 → 256.8,167.2
+  // 橫式：viewBox 259.7×170.1，裁切邊 x=2.8,y=2.8 → 256.8,167.2；multiplier 9 → ~1282 DPI
+  const _landscapeDataURL = (typeof get2DDataURL === 'function' && get2DDataURL(9)) || _lastUploadedDataURL;
   return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 259.7 170.1" width="91.6mm" height="60mm">
 <style>.st0{fill:none;stroke:#E60012;stroke-miterlimit:10;}.st1{fill:none;stroke:#3E3A39;stroke-width:0.25;stroke-miterlimit:10;}.st2{fill:none;stroke:#3E3A39;stroke-width:0.25;stroke-miterlimit:10;stroke-dasharray:5.0813,5.0813;}.st3{fill:none;stroke:#3E3A39;stroke-width:0.25;stroke-miterlimit:10;stroke-dasharray:5.1404,5.1404;}</style>
 <defs><clipPath id="card-clip"><rect x="2.8" y="2.8" width="254" height="164.4"/></clipPath></defs>
-<image xlink:href="${_lastUploadedDataURL}" x="0" y="0" width="259.7" height="170.1" preserveAspectRatio="none" clip-path="url(#card-clip)"/>
+<image xlink:href="${_landscapeDataURL}" x="0" y="0" width="259.7" height="170.1" preserveAspectRatio="none" clip-path="url(#card-clip)"/>
 <g>
 <path class="st0" d="M251.1,152.2c0,5.2-4.2,9.3-9.3,9.3h-224c-5.2,0-9.3-4.2-9.3-9.3V17.8c0-5.2,4.2-9.3,9.3-9.3h224c5.2,0,9.3,4.2,9.3,9.3V152.2z"/>
 <g><g>
@@ -1242,14 +1243,15 @@ function get2DDataURLWithFrame() {
 }
 
 // ─── 取得 DataURL（排除輔助線與虛線框）──────────────────────
-function get2DDataURL() {
+function get2DDataURL(hiResMultiplier) {
   if (!canvas2d) return null;
+  const _m = hiResMultiplier || 2;
   // bottle-bg 保留在匯出圖中（隨行杯瓶身），只隱藏 hint 等輔助物件
   const bgObjs = canvas2d.getObjects().filter(o => !o.selectable && o.name !== 'bottle-bg');
   bgObjs.forEach(o => o.set('visible', false));
   _suppressOverlay = true;
   canvas2d.renderAll();
-  const dataURL = canvas2d.toDataURL({ format: 'png', multiplier: 2 });
+  const dataURL = canvas2d.toDataURL({ format: 'png', multiplier: _m });
   _suppressOverlay = false;
   bgObjs.forEach(o => o.set('visible', true));
   canvas2d.renderAll();
