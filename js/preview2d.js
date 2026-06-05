@@ -1075,16 +1075,57 @@ async function getUploadOnlyOmamoriSVG() {
 </svg>`;
 }
 
-// 圓形小燈箱上傳模式：回傳向量 SVG（照片裁切至雙圓 + 框線路徑）
+// 圓形小燈箱上傳模式：左右圓各自裁切為純圖片圖層，框線路徑單獨圖層
 // viewBox 348.2×145.2，左圓心 71.4,74.6 右圓心 277.4,74.6 印刷半徑 51
-function getUploadOnlyLightboxSVG() {
-  if (!_lastUploadedDataURL) return null;
-  const _canvasDataURL = (typeof get2DDataURL === 'function' && get2DDataURL()) || _lastUploadedDataURL;
+async function getUploadOnlyLightboxSVG() {
+  if (!canvas2d) return null;
+  const W_VB = 348.2, H_VB = 145.2, R_VB = 51;
+  const logW = canvas2d.getWidth(), logH = canvas2d.getHeight();
+
+  function _cropCircle(cx_vb, cy_vb) {
+    const cx_log = logW * (cx_vb / W_VB);
+    const cy_log = logH * (cy_vb / H_VB);
+    const r_log  = logW * (R_VB  / W_VB);
+    const bgObjs = canvas2d.getObjects().filter(o => !o.selectable && o.name !== 'bottle-bg');
+    bgObjs.forEach(o => o.set('visible', false));
+    canvas2d.discardActiveObject();
+    _suppressOverlay = true;
+    const origBg    = canvas2d.backgroundColor;
+    const origBgImg = canvas2d.backgroundImage || null;
+    canvas2d.backgroundColor = 'rgba(0,0,0,0)';
+    canvas2d.backgroundImage = null;
+    canvas2d.renderAll();
+    const lc      = canvas2d.lowerCanvasEl;
+    const pxScale = lc.width / logW;
+    const sx = Math.round((cx_log - r_log) * pxScale);
+    const sy = Math.round((cy_log - r_log) * pxScale);
+    const sd = Math.round(r_log * 2 * pxScale);
+    const tmp = document.createElement('canvas');
+    tmp.width  = sd; tmp.height = sd;
+    const ctx  = tmp.getContext('2d');
+    ctx.beginPath();
+    ctx.arc(sd / 2, sd / 2, sd / 2, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.drawImage(lc, sx, sy, sd, sd, 0, 0, sd, sd);
+    canvas2d.backgroundColor = origBg;
+    canvas2d.backgroundImage = origBgImg;
+    _suppressOverlay = false;
+    bgObjs.forEach(o => o.set('visible', true));
+    canvas2d.renderAll();
+    return tmp.toDataURL('image/png');
+  }
+
+  const leftURL  = _cropCircle(71.4, 74.6);
+  const rightURL = _cropCircle(277.4, 74.6);
+  const lx = (71.4  - R_VB).toFixed(1);
+  const ly = (74.6  - R_VB).toFixed(1);
+  const rx = (277.4 - R_VB).toFixed(1);
+  const ry = (74.6  - R_VB).toFixed(1);
+  const d  = (R_VB * 2).toFixed(1);
+
   return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 348.2 145.2">
 <style>.st2{fill:#1F1E1D;stroke:#000000;stroke-width:0.75;}.st3{fill:url(#SVGID_5_);stroke:#B5B5B6;stroke-width:0.5;stroke-miterlimit:10;}.st4{fill:url(#SVGID_6_);stroke:#B5B5B6;stroke-width:0.5;stroke-miterlimit:10;}.st5{fill:url(#SVGID_7_);stroke:#B5B5B6;stroke-width:0.5;stroke-miterlimit:10;}.st6{opacity:0.5;fill:url(#SVGID_8_);enable-background:new;}.st7{opacity:0.5;fill:url(#SVGID_9_);enable-background:new;}.st8{fill:#F7F8F8;stroke:#B5B5B6;stroke-width:0.5;stroke-miterlimit:10;}.st9{fill:#FFFFFF;stroke:#B5B5B6;stroke-width:0.5;stroke-miterlimit:10;}.st10{fill:url(#SVGID_10_);stroke:#B5B5B6;stroke-width:0.5;stroke-miterlimit:10;}.st11{fill:url(#SVGID_11_);stroke:#B5B5B6;stroke-width:0.5;stroke-miterlimit:10;}.st12{fill:url(#SVGID_12_);stroke:#B5B5B6;stroke-width:0.5;stroke-miterlimit:10;}.st13{opacity:0.5;fill:url(#SVGID_13_);enable-background:new;}.st14{opacity:0.5;fill:url(#SVGID_14_);enable-background:new;}.st15{fill:none;stroke:#E60012;stroke-width:0.7105;}</style>
 <defs>
-<clipPath id="lb-left-clip"><circle cx="71.4" cy="74.6" r="51"/></clipPath>
-<clipPath id="lb-right-clip"><circle cx="277.4" cy="74.6" r="51"/></clipPath>
 <linearGradient id="SVGID_5_" gradientUnits="userSpaceOnUse" x1="176.0893" y1="330.6606" x2="176.0893" y2="427.3789" gradientTransform="matrix(-1 0 0 1 358.4922 -304.9051)"><stop offset="1.4e-07" style="stop-color:#DCDDDD"/><stop offset="0.0578" style="stop-color:#F4F4F4"/><stop offset="0.1833" style="stop-color:#F4F4F4"/><stop offset="0.9521" style="stop-color:#F4F4F4"/><stop offset="0.9592" style="stop-color:#F9F9F9"/><stop offset="0.9742" style="stop-color:#FEFEFE"/><stop offset="1" style="stop-color:#FFFFFF"/></linearGradient>
 <linearGradient id="SVGID_6_" gradientUnits="userSpaceOnUse" x1="147.3893" y1="398.4865" x2="147.3893" y2="409.9677" gradientTransform="matrix(-1 0 0 1 358.4922 -304.9051)"><stop offset="0" style="stop-color:#DCDDDD"/><stop offset="0.0415" style="stop-color:#E1E2E2"/><stop offset="0.2017" style="stop-color:#EFF0F0"/><stop offset="0.3854" style="stop-color:#F9F9F9"/><stop offset="0.6109" style="stop-color:#FEFEFE"/><stop offset="1" style="stop-color:#FFFFFF"/></linearGradient>
 <linearGradient id="SVGID_7_" gradientUnits="userSpaceOnUse" x1="147.3893" y1="346.5735" x2="147.3893" y2="358.0992" gradientTransform="matrix(-1 0 0 1 358.4922 -304.9051)"><stop offset="0" style="stop-color:#DCDDDD"/><stop offset="0.0415" style="stop-color:#E1E2E2"/><stop offset="0.2017" style="stop-color:#EFF0F0"/><stop offset="0.3854" style="stop-color:#F9F9F9"/><stop offset="0.6109" style="stop-color:#FEFEFE"/><stop offset="1" style="stop-color:#FFFFFF"/></linearGradient>
@@ -1116,8 +1157,8 @@ function getUploadOnlyLightboxSVG() {
 <circle class="st8" cx="71.4" cy="74.6" r="56.7"/>
 <circle class="st9" cx="71.4" cy="74.6" r="53.9"/>
 </g>
-<image xlink:href="${_canvasDataURL}" x="0" y="0" width="348.2" height="145.2" preserveAspectRatio="none" clip-path="url(#lb-left-clip)"/>
-<image xlink:href="${_canvasDataURL}" x="0" y="0" width="348.2" height="145.2" preserveAspectRatio="none" clip-path="url(#lb-right-clip)"/>
+<image xlink:href="${leftURL}" x="${lx}" y="${ly}" width="${d}" height="${d}" preserveAspectRatio="none"/>
+<image xlink:href="${rightURL}" x="${rx}" y="${ry}" width="${d}" height="${d}" preserveAspectRatio="none"/>
 <circle class="st15" cx="71.4" cy="74.6" r="51"/>
 <circle class="st15" cx="277.4" cy="74.6" r="51"/>
 </svg>`;

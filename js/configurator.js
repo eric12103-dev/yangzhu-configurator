@@ -791,7 +791,7 @@ async function submitDesign() {
       } else if (STATE.productId === 'biz_leather_omamori' && typeof getUploadOnlyOmamoriSVG === 'function') {
         svg = await getUploadOnlyOmamoriSVG();
       } else if (STATE.productId === 'biz_lightbox' && typeof getUploadOnlyLightboxSVG === 'function') {
-        svg = getUploadOnlyLightboxSVG();
+        svg = await getUploadOnlyLightboxSVG();
       } else if (typeof getUploadOnlySVG === 'function') {
         svg = getUploadOnlySVG();
       }
