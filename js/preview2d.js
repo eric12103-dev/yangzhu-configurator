@@ -476,19 +476,32 @@ function uploadImage2D(file) {
         );
 
       if (_isLeatherRound) {
-        // 圓形皮革：圖片填滿並裁切到紅色出血圈（SVG viewBox 162.1×177.9，圓心 81.3,97.2 半徑 66.6）
-        const cx = w * (81.3 / 162.1);
-        const cy = h * (97.2 / 177.9);
-        const r  = w * (66.6 / 162.1);
-        const scale = Math.max((r * 2) / img.width, (r * 2) / img.height);
+        // 雙圓版面（SVG viewBox 324.2×177.9）：左圓 cx=81.3，右圓 cx=242.6，半徑 66.6
+        const W_VB = 324.2, H_VB = 177.9;
+        const leftCx  = w * (81.3  / W_VB);
+        const leftCy  = h * (97.2  / H_VB);
+        const rightCx = w * (242.6 / W_VB);
+        const rightCy = h * (97.1  / H_VB);
+        const circleR = w * (66.6  / W_VB);
+        // 自動判斷上傳到哪個圓：左圓空 → 左；左圓有了 → 右
+        const existingLeft = canvas2d.getObjects().find(o => o.name === 'round-left');
+        const slot = existingLeft ? 'right' : 'left';
+        const cx = slot === 'left' ? leftCx : rightCx;
+        const cy = slot === 'left' ? leftCy : rightCy;
+        // 移除同位置舊圖
+        const existingSlot = canvas2d.getObjects().find(o => o.name === 'round-' + slot);
+        if (existingSlot) canvas2d.remove(existingSlot);
+        const scale = Math.max((circleR * 2) / img.width, (circleR * 2) / img.height);
+        img._roundBaseScale = scale;
         _uploadBaseScale = scale;
         img.set({
           left: cx, top: cy,
           originX: 'center', originY: 'center',
-          scaleX: scale, scaleY: scale
+          scaleX: scale, scaleY: scale,
+          name: 'round-' + slot
         });
         img.clipPath = new fabric.Circle({
-          radius: r,
+          radius: circleR,
           left: cx, top: cy,
           originX: 'center', originY: 'center',
           absolutePositioned: true
@@ -581,7 +594,8 @@ function _updateTextOpacity() {
 // 注意：after:render 繪圖不會被 toDataURL 擷取，需手動合成
 let _cachedCardFrameImg = null;
 let _cachedCardPortraitFrameImg = null;
-let _cachedLeatherRoundFrameImg = null;
+let _cachedLeatherRoundEasycardFrameImg = null;
+let _cachedLeatherRoundIpassFrameImg = null;
 var _lastUploadedDataURL = null;
 
 // 卡片橫式上傳模式：回傳向量 SVG（照片為 <image>，紅框+虛線為獨立向量路徑）
@@ -633,21 +647,24 @@ function getUploadOnlySVG() {
 </svg>`;
 }
 
-// 圓形皮革上傳模式：回傳向量 SVG（照片裁切至圓形印刷區 + 框線路徑）
-// viewBox 162.1×177.9 pt，印刷圓 cx=81.3 cy=97.2 r=58.1
+// 圓形皮革上傳模式：回傳向量 SVG（雙圓版面，canvas 合圖 + 框線路徑）
+// viewBox 324.2×177.9，左圓 cx=81.3 右圓 cx=242.6，半徑 66.6
 function getUploadOnlyRoundSVG() {
-  if (!_lastUploadedDataURL) return null;
-  const _canvasDataURL = (typeof get2DDataURL === 'function' && get2DDataURL()) || _lastUploadedDataURL;
-  return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 162.1 177.9" width="57.2mm" height="62.8mm">
-<style>.st0{fill:none;stroke:#000000;stroke-miterlimit:10;}.st1{fill:none;stroke:#000000;stroke-width:0.8;stroke-miterlimit:10;stroke-dasharray:3;}.st2{fill:none;stroke:#E71F19;stroke-miterlimit:10;stroke-dasharray:4.809,4.8095;}</style>
-<defs><clipPath id="round-clip"><circle cx="81.3" cy="97.2" r="66.6"/></clipPath></defs>
-<image xlink:href="${_canvasDataURL}" x="0" y="0" width="162.1" height="177.9" preserveAspectRatio="none" clip-path="url(#round-clip)"/>
+  const _canvasDataURL = (typeof get2DDataURL === 'function') ? get2DDataURL() : null;
+  if (!_canvasDataURL) return null;
+  return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 324.2 177.9" width="114.4mm" height="62.8mm">
+<style>.fr0{fill:none;stroke:#000;stroke-miterlimit:10;}.fr1{fill:none;stroke:#000;stroke-width:.8;stroke-miterlimit:10;stroke-dasharray:3;}.fr2{fill:none;stroke:#E71F19;stroke-miterlimit:10;stroke-dasharray:4.809,4.8095;}</style>
+<image xlink:href="${_canvasDataURL}" x="0" y="0" width="324.2" height="177.9" preserveAspectRatio="none"/>
 <g>
-<path class="st0" d="M81.3,33.4c3.3,0,6.5,0.2,9.6,0.7V14.8H71.6v19.3C74.8,33.7,78,33.4,81.3,33.4z"/>
-<path class="st1" d="M139.4,97.2c0,32.1-26,58.1-58.1,58.1s-58.1-26-58.1-58.1s26-58.1,58.1-58.1S139.4,65.1,139.4,97.2z"/>
-<path class="st0" d="M145.1,97.2c0,35.2-28.6,63.8-63.8,63.8s-63.8-28.6-63.8-63.8s28.6-63.8,63.8-63.8S145.1,62,145.1,97.2z"/>
+<path class="fr0" d="M81.3,33.4c3.3,0,6.5,.2,9.6,.7V14.8H71.6v19.3C74.8,33.7,78,33.4,81.3,33.4z"/>
+<path class="fr1" d="M139.4,97.2c0,32.1-26,58.1-58.1,58.1s-58.1-26-58.1-58.1s26-58.1,58.1-58.1S139.4,65.1,139.4,97.2z"/>
+<path class="fr0" d="M145.1,97.2c0,35.2-28.6,63.8-63.8,63.8s-63.8-28.6-63.8-63.8s28.6-63.8,63.8-63.8S145.1,62,145.1,97.2z"/>
+<circle class="fr2" cx="81.3" cy="97.2" r="66.6"/>
+<path class="fr0" d="M242.6,33.3c3.3,0,6.5,.2,9.6,.7V14.8H233v19.3C236.1,33.6,239.3,33.3,242.6,33.3z"/>
+<path class="fr1" d="M300.7,97.1c0,32.1-26,58.1-58.1,58.1c-32.1,0-58.1-26-58.1-58.1c0-32.1,26-58.1,58.1-58.1C274.7,39,300.7,65,300.7,97.1z"/>
+<path class="fr0" d="M306.4,97.1c0,35.2-28.6,63.8-63.8,63.8c-35.2,0-63.8-28.6-63.8-63.8c0-35.2,28.6-63.8,63.8-63.8C277.8,33.3,306.4,61.9,306.4,97.1z"/>
+<circle class="fr2" cx="242.6" cy="97.1" r="66.6"/>
 </g>
-<circle class="st2" cx="81.3" cy="97.2" r="66.6"/>
 </svg>`;
 }
 
@@ -675,10 +692,13 @@ function get2DDataURLWithFrame() {
 
   const _isLeatherRound = typeof STATE !== 'undefined' && STATE.productId === 'biz_leather_round';
   const _isPortraitFrame = !_isLeatherRound && typeof STATE !== 'undefined' && STATE.orientationId === 'portrait';
+  const _lrMatId = _isLeatherRound && typeof STATE !== 'undefined' ? STATE.materialId : null;
   let _frameSrc, _cachedFrame;
   if (_isLeatherRound) {
-    _frameSrc = 'assets/leather_round_frame.svg';
-    _cachedFrame = _cachedLeatherRoundFrameImg;
+    _frameSrc = _lrMatId === 'ipass'
+      ? 'assets/leather_round_ipass_frame.svg'
+      : 'assets/leather_round_easycard_frame.svg';
+    _cachedFrame = _lrMatId === 'ipass' ? _cachedLeatherRoundIpassFrameImg : _cachedLeatherRoundEasycardFrameImg;
   } else {
     _frameSrc = _isPortraitFrame ? 'assets/card_portrait_frame.svg' : 'assets/card_landscape_frame.svg';
     _cachedFrame = _isPortraitFrame ? _cachedCardPortraitFrameImg : _cachedCardFrameImg;
@@ -689,8 +709,10 @@ function get2DDataURLWithFrame() {
   return new Promise(resolve => {
     const frameImg = new Image();
     frameImg.onload = () => {
-      if (_isLeatherRound) _cachedLeatherRoundFrameImg = frameImg;
-      else if (_isPortraitFrame) _cachedCardPortraitFrameImg = frameImg;
+      if (_isLeatherRound) {
+        if (_lrMatId === 'ipass') _cachedLeatherRoundIpassFrameImg = frameImg;
+        else _cachedLeatherRoundEasycardFrameImg = frameImg;
+      } else if (_isPortraitFrame) _cachedCardPortraitFrameImg = frameImg;
       else _cachedCardFrameImg = frameImg;
       doComposite(frameImg).then(resolve);
     };
@@ -999,9 +1021,14 @@ function onZoomSlider(value) {
   const dispEl = document.getElementById('zoom-value-display');
   if (dispEl) dispEl.textContent = Math.round(ratio * 100) + '%';
   if (!canvas2d) return;
-  const img = canvas2d.getObjects().find(o => o.type === 'image' && o.selectable !== false);
+  // 優先用選取中的圖片，否則找第一張
+  let img = canvas2d.getActiveObject();
+  if (!img || img.type !== 'image') {
+    img = canvas2d.getObjects().find(o => o.type === 'image' && o.selectable !== false);
+  }
   if (!img) return;
-  img.set({ scaleX: _uploadBaseScale * ratio, scaleY: _uploadBaseScale * ratio });
+  const baseScale = img._roundBaseScale || _uploadBaseScale;
+  img.set({ scaleX: baseScale * ratio, scaleY: baseScale * ratio });
   img.setCoords();
   canvas2d.renderAll();
 }

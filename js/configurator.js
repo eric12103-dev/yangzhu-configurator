@@ -364,7 +364,9 @@ function initDesignStep() {
       canvas2d.renderAll();
     };
     if (STATE.productId === 'biz_leather_round') {
-      _svgFrame.src = 'assets/leather_round_frame.svg';
+      _svgFrame.src = STATE.materialId === 'ipass'
+        ? 'assets/leather_round_ipass_frame.svg'
+        : 'assets/leather_round_easycard_frame.svg';
     } else {
       _svgFrame.src = STATE.orientationId === 'portrait'
         ? 'assets/card_portrait_frame.svg'
