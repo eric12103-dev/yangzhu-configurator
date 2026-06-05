@@ -808,6 +808,69 @@ async function getUploadOnlyRoundSVG() {
 </svg>`;
 }
 
+// 御守皮革上傳模式：裁切左件設計區，框線+票卡 logo 單獨圖層（從材質 SVG 內嵌）
+async function getUploadOnlyOmamoriSVG() {
+  if (!canvas2d) return null;
+  const W_VB = 324.2, H_VB = 261.6;
+  const logW = canvas2d.getWidth(), logH = canvas2d.getHeight();
+
+  // 裁切左件區域（x=0 到 162.1/324.2，全高），含使用者縮放/裁切
+  function _cropLeftPiece() {
+    const bgObjs = canvas2d.getObjects().filter(o => !o.selectable && o.name !== 'bottle-bg');
+    bgObjs.forEach(o => o.set('visible', false));
+    canvas2d.discardActiveObject();
+    _suppressOverlay = true;
+    const origBg    = canvas2d.backgroundColor;
+    const origBgImg = canvas2d.backgroundImage || null;
+    canvas2d.backgroundColor = 'rgba(0,0,0,0)';
+    canvas2d.backgroundImage = null;
+    canvas2d.renderAll();
+    const lc      = canvas2d.lowerCanvasEl;
+    const pxScale = lc.width / logW;
+    const sw = Math.round(logW * (162.1 / W_VB) * pxScale);
+    const sh = Math.round(logH * pxScale);
+    const tmp = document.createElement('canvas');
+    tmp.width  = sw; tmp.height = sh;
+    tmp.getContext('2d').drawImage(lc, 0, 0, sw, sh, 0, 0, sw, sh);
+    canvas2d.backgroundColor = origBg;
+    canvas2d.backgroundImage = origBgImg;
+    _suppressOverlay = false;
+    bgObjs.forEach(o => o.set('visible', true));
+    canvas2d.renderAll();
+    return tmp.toDataURL('image/png');
+  }
+
+  const designURL = _cropLeftPiece();
+  const OMAMORI_PRINT_PATH = 'M34.8,247.3c-10.3,0-20-9.4-20-19.2V69.7c0-10,3.5-17.9,9.5-21.7c3.1-2,7.5-3.8,11.6-5.5c3.3-1.4,6.5-2.7,8.4-3.9c2.7-1.6,6.4-6.3,9-9.6c1.3-1.6,2.4-3.1,3.3-4c2.9-3.1,9.7-10.1,24.7-10.1S103,22,105.9,25c0.9,1,2.1,2.4,3.4,4.1c2.7,3.4,6.3,8,9.1,9.6c1.9,1.2,5.1,2.5,8.4,3.9c4.2,1.7,8.5,3.5,11.6,5.5c6.1,3.8,9.5,11.7,9.5,21.7v158.4c0,9.9-9.7,19.2-20,19.2L34.8,247.3L34.8,247.3z';
+
+  // 非同步載入材質框線 SVG（含票卡 logo 向量）
+  const matId = typeof STATE !== 'undefined' ? STATE.materialId : 'easycard';
+  const frameSrc = matId === 'ipass'
+    ? 'assets/leather_omamori_ipass_frame.svg'
+    : 'assets/leather_omamori_easycard_frame.svg';
+  let frameInner = '';
+  try {
+    const resp = await fetch(frameSrc);
+    if (resp.ok) {
+      const txt = await resp.text();
+      const m = txt.match(/<svg[^>]*>([\s\S]*)<\/svg>/i);
+      if (m) frameInner = m[1];
+    }
+  } catch(e) { console.warn('[getUploadOnlyOmamoriSVG] frame fetch failed', e); }
+
+  if (!frameInner) {
+    frameInner = `<style>.fo0{fill:none;stroke:#231815;stroke-width:1.5;stroke-miterlimit:10;}.fo1{fill:none;stroke:#E60012;stroke-miterlimit:10;stroke-dasharray:8;}</style>
+<path class="fo0" d="M137,50.4c-5.5-3.4-15.5-6.6-20-9.3S106.7,29.7,104,27c-2.6-2.7-8.8-9.3-22.6-9.3s-20,6.5-22.6,9.3c-2.6,2.7-8.4,11.4-13,14.1c-4.5,2.7-14.5,5.9-20,9.3c-5.5,3.4-8.2,10.8-8.2,19.3s0,150.3,0,158.4c0,8.1,8.1,16.4,17.2,16.4s35.5,0,46.6,0c11.2,0,37.5,0,46.6,0s17.2-8.3,17.2-16.4s0-149.8,0-158.4C145.2,61.2,142.4,53.8,137,50.4z M81.4,50.6c-3.9,0-7.1-3.2-7.1-7.1s3.2-7.1,7.1-7.1s7.1,3.2,7.1,7.1S85.3,50.6,81.4,50.6z"/>
+<path class="fo1" d="${OMAMORI_PRINT_PATH}"/>`;
+  }
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 ${W_VB} ${H_VB}">
+<defs><clipPath id="omamori-clip"><path d="${OMAMORI_PRINT_PATH}"/></clipPath></defs>
+<g id="design"><image xlink:href="${designURL}" x="0" y="0" width="162.1" height="${H_VB}" clip-path="url(#omamori-clip)"/></g>
+<g id="frame">${frameInner}</g>
+</svg>`;
+}
+
 function get2DDataURLWithFrame() {
   const base = get2DDataURL();
   if (!base) return Promise.resolve(null);
@@ -831,14 +894,21 @@ function get2DDataURLWithFrame() {
   };
 
   const _isLeatherRound = typeof STATE !== 'undefined' && STATE.productId === 'biz_leather_round';
-  const _isPortraitFrame = !_isLeatherRound && typeof STATE !== 'undefined' && STATE.orientationId === 'portrait';
+  const _isLeatherOmamori = typeof STATE !== 'undefined' && STATE.productId === 'biz_leather_omamori';
+  const _isPortraitFrame = !_isLeatherRound && !_isLeatherOmamori && typeof STATE !== 'undefined' && STATE.orientationId === 'portrait';
   const _lrMatId = _isLeatherRound && typeof STATE !== 'undefined' ? STATE.materialId : null;
+  const _omMatId = _isLeatherOmamori && typeof STATE !== 'undefined' ? STATE.materialId : null;
   let _frameSrc, _cachedFrame;
   if (_isLeatherRound) {
     _frameSrc = _lrMatId === 'ipass'
       ? 'assets/leather_round_ipass_frame.svg'
       : 'assets/leather_round_easycard_frame.svg';
     _cachedFrame = _lrMatId === 'ipass' ? _cachedLeatherRoundIpassFrameImg : _cachedLeatherRoundEasycardFrameImg;
+  } else if (_isLeatherOmamori) {
+    _frameSrc = _omMatId === 'ipass'
+      ? 'assets/leather_omamori_ipass_frame.svg'
+      : 'assets/leather_omamori_easycard_frame.svg';
+    _cachedFrame = _omMatId === 'ipass' ? _cachedLeatherOmamoriIpassFrameImg : _cachedLeatherOmamoriEasycardFrameImg;
   } else {
     _frameSrc = _isPortraitFrame ? 'assets/card_portrait_frame.svg' : 'assets/card_landscape_frame.svg';
     _cachedFrame = _isPortraitFrame ? _cachedCardPortraitFrameImg : _cachedCardFrameImg;
@@ -852,6 +922,9 @@ function get2DDataURLWithFrame() {
       if (_isLeatherRound) {
         if (_lrMatId === 'ipass') _cachedLeatherRoundIpassFrameImg = frameImg;
         else _cachedLeatherRoundEasycardFrameImg = frameImg;
+      } else if (_isLeatherOmamori) {
+        if (_omMatId === 'ipass') _cachedLeatherOmamoriIpassFrameImg = frameImg;
+        else _cachedLeatherOmamoriEasycardFrameImg = frameImg;
       } else if (_isPortraitFrame) _cachedCardPortraitFrameImg = frameImg;
       else _cachedCardFrameImg = frameImg;
       doComposite(frameImg).then(resolve);
