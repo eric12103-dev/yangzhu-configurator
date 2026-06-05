@@ -216,8 +216,7 @@ function init2DCanvas(productId) {
       obj.set('hasBorders', true);
       _showLabelBorder = true;
     }
-    // 圓形皮革：圖片跨越兩圓中線時自動切換 clipPath，不限制邊界
-    // 御守皮革：圖片可自由移動，clip path 處理可見範圍，不限制邊界
+    // 圓形皮革／御守皮革：圖片跨越中線時自動切換 clipPath，不限制移動邊界
     const _isLRoundImg = typeof STATE !== 'undefined'
       && STATE.productId === 'biz_leather_round'
       && obj.type === 'image';
@@ -243,7 +242,23 @@ function init2DCanvas(productId) {
         obj.name = _newName;
       }
     } else if (_isOmamoriImg) {
-      // 御守圖片：不限制邊界，clip path 處理可見範圍
+      // 御守圖片：跨越中線時自動切換 clipPath（左／右御守形狀）
+      const _OW = canvas2d.getWidth(), _OH = canvas2d.getHeight();
+      const _OWVB = 324.2, _OHVB = 261.6;
+      const _toOLeft = obj.left < _OW / 2;
+      const _newOName = _toOLeft ? 'omamori-left' : 'omamori-right';
+      if (obj.name !== _newOName) {
+        const _OPATH_L = 'M34.8,247.3c-10.3,0-20-9.4-20-19.2V69.7c0-10,3.5-17.9,9.5-21.7c3.1-2,7.5-3.8,11.6-5.5c3.3-1.4,6.5-2.7,8.4-3.9c2.7-1.6,6.4-6.3,9-9.6c1.3-1.6,2.4-3.1,3.3-4c2.9-3.1,9.7-10.1,24.7-10.1S103,22,105.9,25c0.9,1,2.1,2.4,3.4,4.1c2.7,3.4,6.3,8,9.1,9.6c1.9,1.2,5.1,2.5,8.4,3.9c4.2,1.7,8.5,3.5,11.6,5.5c6.1,3.8,9.5,11.7,9.5,21.7v158.4c0,9.9-9.7,19.2-20,19.2L34.8,247.3L34.8,247.3z';
+        const _OPATH_R = 'M196.8,247.3c-10.3,0-20-9.4-20-19.2V69.7c0-10,3.5-17.9,9.5-21.7c3.1-2,7.5-3.8,11.6-5.5c3.3-1.4,6.5-2.7,8.4-3.9c2.7-1.6,6.4-6.3,9-9.6c1.3-1.6,2.4-3.1,3.3-4c2.9-3.1,9.7-10.1,24.7-10.1c15,0,21.7,7.1,24.6,10.1c0.9,1,2.1,2.4,3.4,4.1c2.7,3.4,6.3,8,9.1,9.6c1.9,1.2,5.1,2.5,8.4,3.9c4.2,1.7,8.5,3.5,11.6,5.5c6.1,3.8,9.5,11.7,9.5,21.7v158.4c0,9.9-9.7,19.2-20,19.2H196.8z';
+        obj.clipPath = new fabric.Path(_toOLeft ? _OPATH_L : _OPATH_R, {
+          scaleX: _OW / _OWVB,
+          scaleY: _OH / _OHVB,
+          left: 0, top: 0,
+          originX: 'left', originY: 'top',
+          absolutePositioned: true
+        });
+        obj.name = _newOName;
+      }
     } else if (!isThermos) {
       const w = canvas2d.getWidth();
       const h = canvas2d.getHeight();
@@ -559,25 +574,29 @@ function uploadImage2D(file) {
         if (_s) _s.value = 100;
         if (_d) _d.textContent = '100%';
       } else if (_isLeatherOmamori) {
-        // 御守版面（SVG viewBox 324.2×261.6）：左件印刷區 x=[14.8,147.9], y=[14.9,247.3]
+        // 御守版面（SVG viewBox 324.2×261.6）：左右各一御守印刷區，第一張傳左、第二張傳右
         const W_VB = 324.2, H_VB = 261.6;
-        const oCx = w * (81.35 / W_VB);  // 印刷區中心 x
-        const oCy = h * (131.1 / H_VB);  // 印刷區中心 y
-        const oPW = w * (133.1 / W_VB);  // 印刷區寬
-        const oPH = h * (232.4 / H_VB);  // 印刷區高
-        const OMAMORI_PATH = 'M34.8,247.3c-10.3,0-20-9.4-20-19.2V69.7c0-10,3.5-17.9,9.5-21.7c3.1-2,7.5-3.8,11.6-5.5c3.3-1.4,6.5-2.7,8.4-3.9c2.7-1.6,6.4-6.3,9-9.6c1.3-1.6,2.4-3.1,3.3-4c2.9-3.1,9.7-10.1,24.7-10.1S103,22,105.9,25c0.9,1,2.1,2.4,3.4,4.1c2.7,3.4,6.3,8,9.1,9.6c1.9,1.2,5.1,2.5,8.4,3.9c4.2,1.7,8.5,3.5,11.6,5.5c6.1,3.8,9.5,11.7,9.5,21.7v158.4c0,9.9-9.7,19.2-20,19.2L34.8,247.3L34.8,247.3z';
-        const existingDesign = canvas2d.getObjects().find(o => o.name === 'omamori-design');
-        if (existingDesign) canvas2d.remove(existingDesign);
+        const oPW = w * (133.1 / W_VB);
+        const oPH = h * (232.4 / H_VB);
+        const OMAMORI_L_PATH = 'M34.8,247.3c-10.3,0-20-9.4-20-19.2V69.7c0-10,3.5-17.9,9.5-21.7c3.1-2,7.5-3.8,11.6-5.5c3.3-1.4,6.5-2.7,8.4-3.9c2.7-1.6,6.4-6.3,9-9.6c1.3-1.6,2.4-3.1,3.3-4c2.9-3.1,9.7-10.1,24.7-10.1S103,22,105.9,25c0.9,1,2.1,2.4,3.4,4.1c2.7,3.4,6.3,8,9.1,9.6c1.9,1.2,5.1,2.5,8.4,3.9c4.2,1.7,8.5,3.5,11.6,5.5c6.1,3.8,9.5,11.7,9.5,21.7v158.4c0,9.9-9.7,19.2-20,19.2L34.8,247.3L34.8,247.3z';
+        const OMAMORI_R_PATH = 'M196.8,247.3c-10.3,0-20-9.4-20-19.2V69.7c0-10,3.5-17.9,9.5-21.7c3.1-2,7.5-3.8,11.6-5.5c3.3-1.4,6.5-2.7,8.4-3.9c2.7-1.6,6.4-6.3,9-9.6c1.3-1.6,2.4-3.1,3.3-4c2.9-3.1,9.7-10.1,24.7-10.1c15,0,21.7,7.1,24.6,10.1c0.9,1,2.1,2.4,3.4,4.1c2.7,3.4,6.3,8,9.1,9.6c1.9,1.2,5.1,2.5,8.4,3.9c4.2,1.7,8.5,3.5,11.6,5.5c6.1,3.8,9.5,11.7,9.5,21.7v158.4c0,9.9-9.7,19.2-20,19.2H196.8z';
+        const existingLeft = canvas2d.getObjects().find(o => o.name === 'omamori-left');
+        const oSlot = existingLeft ? 'right' : 'left';
+        const oName = `omamori-${oSlot}`;
+        const existingSlot = canvas2d.getObjects().find(o => o.name === oName);
+        if (existingSlot) canvas2d.remove(existingSlot);
+        const oCx = oSlot === 'left' ? w * (81.35 / W_VB) : w * (243.35 / W_VB);
+        const oCy = h * (131.1 / H_VB);
         const scale = Math.max(oPW / img.width, oPH / img.height);
-        img._omamoriBaseScale = scale;
+        img._roundBaseScale = scale;
         _uploadBaseScale = scale;
         img.set({
           left: oCx, top: oCy,
           originX: 'center', originY: 'center',
           scaleX: scale, scaleY: scale,
-          name: 'omamori-design'
+          name: oName
         });
-        img.clipPath = new fabric.Path(OMAMORI_PATH, {
+        img.clipPath = new fabric.Path(oSlot === 'left' ? OMAMORI_L_PATH : OMAMORI_R_PATH, {
           scaleX: w / W_VB,
           scaleY: h / H_VB,
           left: 0, top: 0,
@@ -808,14 +827,13 @@ async function getUploadOnlyRoundSVG() {
 </svg>`;
 }
 
-// 御守皮革上傳模式：裁切左件設計區，框線+票卡 logo 單獨圖層（從材質 SVG 內嵌）
+// 御守皮革上傳模式：全畫布截圖，左右各以御守 clipPath 裁切，框線單獨圖層
 async function getUploadOnlyOmamoriSVG() {
   if (!canvas2d) return null;
   const W_VB = 324.2, H_VB = 261.6;
-  const logW = canvas2d.getWidth(), logH = canvas2d.getHeight();
 
-  // 裁切左件區域（x=0 到 162.1/324.2，全高），含使用者縮放/裁切
-  function _cropLeftPiece() {
+  // 取全畫布透明 PNG（含兩張圖片，各自已有 fabric clipPath）
+  function _getDesignCanvas() {
     const bgObjs = canvas2d.getObjects().filter(o => !o.selectable && o.name !== 'bottle-bg');
     bgObjs.forEach(o => o.set('visible', false));
     canvas2d.discardActiveObject();
@@ -825,25 +843,19 @@ async function getUploadOnlyOmamoriSVG() {
     canvas2d.backgroundColor = 'rgba(0,0,0,0)';
     canvas2d.backgroundImage = null;
     canvas2d.renderAll();
-    const lc      = canvas2d.lowerCanvasEl;
-    const pxScale = lc.width / logW;
-    const sw = Math.round(logW * (162.1 / W_VB) * pxScale);
-    const sh = Math.round(logH * pxScale);
-    const tmp = document.createElement('canvas');
-    tmp.width  = sw; tmp.height = sh;
-    tmp.getContext('2d').drawImage(lc, 0, 0, sw, sh, 0, 0, sw, sh);
+    const dataURL = canvas2d.toDataURL({ format: 'png' });
     canvas2d.backgroundColor = origBg;
     canvas2d.backgroundImage = origBgImg;
     _suppressOverlay = false;
     bgObjs.forEach(o => o.set('visible', true));
     canvas2d.renderAll();
-    return tmp.toDataURL('image/png');
+    return dataURL;
   }
 
-  const designURL = _cropLeftPiece();
-  const OMAMORI_PRINT_PATH = 'M34.8,247.3c-10.3,0-20-9.4-20-19.2V69.7c0-10,3.5-17.9,9.5-21.7c3.1-2,7.5-3.8,11.6-5.5c3.3-1.4,6.5-2.7,8.4-3.9c2.7-1.6,6.4-6.3,9-9.6c1.3-1.6,2.4-3.1,3.3-4c2.9-3.1,9.7-10.1,24.7-10.1S103,22,105.9,25c0.9,1,2.1,2.4,3.4,4.1c2.7,3.4,6.3,8,9.1,9.6c1.9,1.2,5.1,2.5,8.4,3.9c4.2,1.7,8.5,3.5,11.6,5.5c6.1,3.8,9.5,11.7,9.5,21.7v158.4c0,9.9-9.7,19.2-20,19.2L34.8,247.3L34.8,247.3z';
+  const designURL = _getDesignCanvas();
+  const OMAMORI_L_PATH = 'M34.8,247.3c-10.3,0-20-9.4-20-19.2V69.7c0-10,3.5-17.9,9.5-21.7c3.1-2,7.5-3.8,11.6-5.5c3.3-1.4,6.5-2.7,8.4-3.9c2.7-1.6,6.4-6.3,9-9.6c1.3-1.6,2.4-3.1,3.3-4c2.9-3.1,9.7-10.1,24.7-10.1S103,22,105.9,25c0.9,1,2.1,2.4,3.4,4.1c2.7,3.4,6.3,8,9.1,9.6c1.9,1.2,5.1,2.5,8.4,3.9c4.2,1.7,8.5,3.5,11.6,5.5c6.1,3.8,9.5,11.7,9.5,21.7v158.4c0,9.9-9.7,19.2-20,19.2L34.8,247.3L34.8,247.3z';
+  const OMAMORI_R_PATH = 'M196.8,247.3c-10.3,0-20-9.4-20-19.2V69.7c0-10,3.5-17.9,9.5-21.7c3.1-2,7.5-3.8,11.6-5.5c3.3-1.4,6.5-2.7,8.4-3.9c2.7-1.6,6.4-6.3,9-9.6c1.3-1.6,2.4-3.1,3.3-4c2.9-3.1,9.7-10.1,24.7-10.1c15,0,21.7,7.1,24.6,10.1c0.9,1,2.1,2.4,3.4,4.1c2.7,3.4,6.3,8,9.1,9.6c1.9,1.2,5.1,2.5,8.4,3.9c4.2,1.7,8.5,3.5,11.6,5.5c6.1,3.8,9.5,11.7,9.5,21.7v158.4c0,9.9-9.7,19.2-20,19.2H196.8z';
 
-  // 非同步載入材質框線 SVG（含票卡 logo 向量）
   const matId = typeof STATE !== 'undefined' ? STATE.materialId : 'easycard';
   const frameSrc = matId === 'ipass'
     ? 'assets/leather_omamori_ipass_frame.svg'
@@ -860,13 +872,17 @@ async function getUploadOnlyOmamoriSVG() {
 
   if (!frameInner) {
     frameInner = `<style>.fo0{fill:none;stroke:#231815;stroke-width:1.5;stroke-miterlimit:10;}.fo1{fill:none;stroke:#E60012;stroke-miterlimit:10;stroke-dasharray:8;}</style>
-<path class="fo0" d="M137,50.4c-5.5-3.4-15.5-6.6-20-9.3S106.7,29.7,104,27c-2.6-2.7-8.8-9.3-22.6-9.3s-20,6.5-22.6,9.3c-2.6,2.7-8.4,11.4-13,14.1c-4.5,2.7-14.5,5.9-20,9.3c-5.5,3.4-8.2,10.8-8.2,19.3s0,150.3,0,158.4c0,8.1,8.1,16.4,17.2,16.4s35.5,0,46.6,0c11.2,0,37.5,0,46.6,0s17.2-8.3,17.2-16.4s0-149.8,0-158.4C145.2,61.2,142.4,53.8,137,50.4z M81.4,50.6c-3.9,0-7.1-3.2-7.1-7.1s3.2-7.1,7.1-7.1s7.1,3.2,7.1,7.1S85.3,50.6,81.4,50.6z"/>
-<path class="fo1" d="${OMAMORI_PRINT_PATH}"/>`;
+<path class="fo1" d="${OMAMORI_L_PATH}"/>
+<path class="fo1" d="${OMAMORI_R_PATH}"/>`;
   }
 
   return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 ${W_VB} ${H_VB}">
-<defs><clipPath id="omamori-clip"><path d="${OMAMORI_PRINT_PATH}"/></clipPath></defs>
-<g id="design"><image xlink:href="${designURL}" x="0" y="0" width="162.1" height="${H_VB}" clip-path="url(#omamori-clip)"/></g>
+<defs>
+  <clipPath id="omamori-left-clip"><path d="${OMAMORI_L_PATH}"/></clipPath>
+  <clipPath id="omamori-right-clip"><path d="${OMAMORI_R_PATH}"/></clipPath>
+</defs>
+<g id="design-left"><image xlink:href="${designURL}" x="0" y="0" width="${W_VB}" height="${H_VB}" clip-path="url(#omamori-left-clip)"/></g>
+<g id="design-right"><image xlink:href="${designURL}" x="0" y="0" width="${W_VB}" height="${H_VB}" clip-path="url(#omamori-right-clip)"/></g>
 <g id="frame">${frameInner}</g>
 </svg>`;
 }
