@@ -1085,7 +1085,7 @@ async function getUploadOnlyLightboxSVG() {
   // 以 4x 高解析度渲染後裁切圓形，提升印刷品質
   function _cropCircle(cx_vb, cy_vb) {
     return new Promise(resolve => {
-      const SCALE  = 4;
+      const SCALE  = 9;
       const cx_log = logW * (cx_vb / W_VB);
       const cy_log = logH * (cy_vb / H_VB);
       const r_log  = logW * (R_VB  / W_VB);
