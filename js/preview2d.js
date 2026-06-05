@@ -619,14 +619,17 @@ function _updateTextOpacity() {
   const laTop    = h * la.yRatio;
   const laRight  = laLeft + w * la.wRatio;
   const laBottom = laTop  + h * la.hRatio;
+  // 底部/右側加大容差，補足簽名體等字型 descender 視覺溢出與選取框的落差
+  const bufferBottom = h * 0.06;
+  const bufferRight  = w * 0.03;
   canvas2d.getObjects().forEach(obj => {
     if (!obj.selectable) return;
     obj.setCoords();
     const br = obj.getBoundingRect(true, true);
     const outside = br.left < laLeft - 1 ||
                     br.top  < laTop  - 1 ||
-                    (br.left + br.width)  > laRight  + 1 ||
-                    (br.top  + br.height) > laBottom + 1;
+                    (br.left + br.width)  > laRight  + bufferRight ||
+                    (br.top  + br.height) > laBottom + bufferBottom;
     obj.opacity = outside ? 0.35 : 1.0;
   });
 }
