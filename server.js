@@ -262,6 +262,23 @@ app.post('/api/cartoon-image', async (req, res) => {
   }
 });
 
+// ─── API：本機去背（代理到 rembg Python 伺服器 port 5001）──────
+app.post('/api/remove-bg', express.json({ limit: '25mb' }), async (req, res) => {
+  const { imageDataURL } = req.body;
+  if (!imageDataURL) return res.status(400).json({ error: '請提供圖片' });
+  try {
+    const resp = await fetch('http://127.0.0.1:5001/remove-bg', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ imageDataURL })
+    });
+    const data = await resp.json();
+    res.json(data);
+  } catch {
+    res.status(503).json({ error: '去背服務未啟動，請先執行 rembg_server.py' });
+  }
+});
+
 // ─── 健康檢查 ──────────────────────────────
 app.get('/api/health', (req, res) => {
   res.json({

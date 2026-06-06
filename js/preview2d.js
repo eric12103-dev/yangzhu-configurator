@@ -1683,3 +1683,61 @@ function alignCenter2D(axis) {
   obj.setCoords();
   canvas2d.requestRenderAll();
 }
+
+// 厚切票證去背（本機 rembg_server.py 才有效）
+async function removeBgThick() {
+  if (!canvas2d) return;
+  const obj = canvas2d.getActiveObject();
+  if (!obj || obj.type !== 'image') {
+    alert('請先點選要去背的圖片');
+    return;
+  }
+
+  const btn = document.getElementById('btn-rmbg');
+  const status = document.getElementById('rmbg-status');
+  if (btn) btn.disabled = true;
+  if (status) status.textContent = '去背中…';
+
+  try {
+    // 取得圖片 dataURL（原始上傳解析度）
+    const el = obj.getElement();
+    const tmp = document.createElement('canvas');
+    tmp.width = el.naturalWidth || el.width;
+    tmp.height = el.naturalHeight || el.height;
+    tmp.getContext('2d').drawImage(el, 0, 0);
+    const dataURL = tmp.toDataURL('image/png');
+
+    const resp = await fetch('/api/remove-bg', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ imageDataURL: dataURL })
+    });
+    const data = await resp.json();
+
+    if (!data.success) throw new Error(data.error || '去背失敗');
+
+    // 將去背結果換回 canvas 物件
+    fabric.Image.fromURL(data.imageDataURL, (newImg) => {
+      const scaleX = obj.scaleX * (obj.width / newImg.width);
+      const scaleY = obj.scaleY * (obj.height / newImg.height);
+      newImg.set({
+        left: obj.left, top: obj.top,
+        scaleX, scaleY,
+        originX: obj.originX, originY: obj.originY,
+        clipPath: obj.clipPath
+      });
+      canvas2d.remove(obj);
+      canvas2d.add(newImg);
+      canvas2d.setActiveObject(newImg);
+      canvas2d.requestRenderAll();
+      if (status) status.textContent = '去背完成！';
+      setTimeout(() => { if (status) status.textContent = ''; }, 3000);
+    }, { crossOrigin: 'anonymous' });
+
+  } catch (err) {
+    if (status) status.textContent = `失敗：${err.message}`;
+    console.error('[removeBgThick]', err);
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}

@@ -404,6 +404,10 @@ function initDesignStep() {
   if (addPanel)   addPanel.style.display   = isUploadOnly ? 'none' : '';
   if (propsPanel) propsPanel.style.display = isUploadOnly ? 'none' : 'none'; // 預設隱藏，由 _syncTextPropsPanel 控制
 
+  // 去背按鈕（僅 biz_thick 顯示）
+  const rmbgSection = document.getElementById('rmbg-section');
+  if (rmbgSection) rmbgSection.style.display = STATE.productId === 'biz_thick' ? '' : 'none';
+
   // 鏡射／複製按鈕（僅 biz_lightbox 顯示）
   const mirrorBtn = document.getElementById('btn-mirror-lightbox');
   if (mirrorBtn) mirrorBtn.style.display = STATE.productId === 'biz_lightbox' ? '' : 'none';

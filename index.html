@@ -173,6 +173,15 @@
             </label>
           </div>
 
+          <!-- 厚切票證去背（本機 rembg 才有效） -->
+          <div class="tool-section" id="rmbg-section" style="display:none;">
+            <h4>AI 去背</h4>
+            <button id="btn-rmbg" class="btn btn-secondary btn-sm" style="width:100%;" onclick="removeBgThick()">
+              ✂ 自動去除背景
+            </button>
+            <p id="rmbg-status" style="font-size:12px;color:var(--gray-400);margin-top:6px;"></p>
+          </div>
+
           <!-- 背景底色（隨行杯隱藏） -->
           <div class="tool-section" id="bg-color-section">
             <h4>背景底色</h4>
