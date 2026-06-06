@@ -1,4 +1,4 @@
-// 楊竹科技配置器 — Express 後端
+// 圖文編輯 — Express 後端
 require('dotenv').config();
 
 const express = require('express');
@@ -291,7 +291,7 @@ app.get('/api/health', (req, res) => {
 
 // ─── 啟動 ──────────────────────────────────
 app.listen(port, () => {
-  console.log('\n楊竹科技配置器已啟動');
+  console.log('\n圖文編輯已啟動');
   console.log(`→ 瀏覽器開啟：http://localhost:${port}`);
   console.log(`→ 訂單資料夾：${ORDER_DIR}`);
   console.log(`→ API Key 狀態：${process.env.OPENAI_API_KEY ? '已設定' : '❌ 未設定（請建立 .env）'}\n`);

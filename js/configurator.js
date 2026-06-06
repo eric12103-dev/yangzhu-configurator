@@ -1,4 +1,4 @@
-// 楊竹科技 — 步驟式配置器主邏輯
+// 步驟式圖文編輯主邏輯
 
 function _debounce(fn, ms) {
   let t;
@@ -858,18 +858,15 @@ function sendInquiry() {
   const cap = p.capacities ? (p.capacities.find(c => c.id === STATE.capacityId) || p.capacities[0]) : null;
   const q   = calcQuote(STATE.productId, STATE.materialId, STATE.finishId, STATE.qty, STATE.capacityId);
 
-  const subject = encodeURIComponent(`[楊竹科技詢價] ${p.name} × ${STATE.qty} 個`);
+  const subject = encodeURIComponent(`[客製詢價] ${p.name} × ${STATE.qty} 個`);
   const body = encodeURIComponent(
-`楊竹科技線上詢價單
+`客製化詢價
 ==================
 產品：${p.name}
 ${p.materialLabel || '材質'}：${mat.name}
 工藝：${fin.name}${cap ? `\n容量：${cap.name}` : ''}
 數量：${STATE.qty.toLocaleString()} 個
 預估總計：${p.noPrice ? '請洽詢報價' : `NT$ ${q ? q.total.toLocaleString() : '--'}（未稅，含製版費）`}
-
---
-此詢價單由楊竹科技線上圖文編輯自動產生
 `);
   window.location.href = `mailto:sales@yangzhu.com.tw?subject=${subject}&body=${body}`;
 }
