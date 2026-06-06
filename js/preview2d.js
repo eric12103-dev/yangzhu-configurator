@@ -1229,6 +1229,55 @@ async function getUploadOnlyLightboxSVG() {
 </svg>`;
 }
 
+// 厚切電子票證：自動去背（@imgly/background-removal，瀏覽器本地執行）
+async function removeBgThick() {
+  if (!canvas2d || !_lastUploadedDataURL) { alert('請先上傳圖片'); return; }
+  const btn     = document.getElementById('btn-rmbg');
+  const statusEl = document.getElementById('rmbg-status');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ 處理中...'; }
+  if (statusEl) statusEl.textContent = '首次使用需載入模型（約 10 秒）...';
+  try {
+    const { removeBackground } = await import(
+      'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/dist/browser/index.js'
+    );
+    if (statusEl) statusEl.textContent = '去背處理中...';
+    const resp = await fetch(_lastUploadedDataURL);
+    const blob = await resp.blob();
+    const resultBlob = await removeBackground(blob, {
+      publicPath: 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/dist/browser/'
+    });
+    // 更新原始 dataURL（供 SVG 匯出用）
+    _lastUploadedDataURL = await new Promise(res => {
+      const r = new FileReader(); r.onload = e => res(e.target.result); r.readAsDataURL(resultBlob);
+    });
+    // 移除 canvas 上現有圖片，重新放入去背結果
+    canvas2d.getObjects().filter(o => o.type === 'image' && o.selectable !== false)
+      .forEach(o => canvas2d.remove(o));
+    const objectURL = URL.createObjectURL(resultBlob);
+    fabric.Image.fromURL(objectURL, img => {
+      const w = canvas2d.getWidth(), h = canvas2d.getHeight();
+      const _tx = w * (2.8 / 158.7), _ty = h * (2.8 / 248.3);
+      const _tw = w * (153.1 / 158.7), _th = h * (242.7 / 248.3);
+      const scale = Math.max(_tw / img.width, _th / img.height);
+      _uploadBaseScale = scale;
+      img.set({ left: w / 2, top: h / 2, originX: 'center', originY: 'center', scaleX: scale, scaleY: scale });
+      img.clipPath = new fabric.Rect({ left: _tx, top: _ty, width: _tw, height: _th, absolutePositioned: true });
+      const _s = document.getElementById('zoom-slider'), _d = document.getElementById('zoom-value-display');
+      if (_s) _s.value = 100; if (_d) _d.textContent = '100%';
+      canvas2d.add(img); canvas2d.sendToBack(img); canvas2d.setActiveObject(img); canvas2d.renderAll();
+      uploadedImage = img;
+      URL.revokeObjectURL(objectURL);
+    });
+    if (statusEl) statusEl.textContent = '✅ 去背完成！';
+    setTimeout(() => { if (statusEl) statusEl.textContent = ''; }, 3000);
+  } catch(e) {
+    console.error('[removeBg]', e);
+    if (statusEl) statusEl.textContent = '⚠️ 去背失敗，請重試';
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '✂️ 自動去背'; }
+  }
+}
+
 // 厚切電子票證上傳模式：高解析 canvas 截圖裁切到圓角框，疊加晶片圓與紅框
 // viewBox 158.7×248.3 pt = 54×85.6mm（直式）
 function getUploadOnlyThickSVG() {
