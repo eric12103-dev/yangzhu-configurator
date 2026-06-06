@@ -1041,7 +1041,8 @@ async function getUploadOnlyOmamoriSVG() {
     canvas2d.backgroundColor = 'rgba(0,0,0,0)';
     canvas2d.backgroundImage = null;
     canvas2d.renderAll();
-    const dataURL = canvas2d.toDataURL({ format: 'png' });
+    // 1200 DPI：viewBox 單位為 pt（Illustrator 預設），324.2pt=114.4mm=4.504"，目前 canvas 720DPI，multiplier 5/3 → 1200DPI
+    const dataURL = canvas2d.toDataURL({ format: 'png', multiplier: 5 / 3 });
     canvas2d.backgroundColor = origBg;
     canvas2d.backgroundImage = origBgImg;
     _suppressOverlay = false;
@@ -1093,7 +1094,7 @@ async function getUploadOnlyOmamoriSVG() {
     : fallbackVisual;
 
   return `<?xml version="1.0" encoding="utf-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 ${W_VB} ${H_VB}">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 ${W_VB} ${H_VB}" width="114.4mm" height="92.3mm">
 ${frameStyles}
 <defs>
   <clipPath id="omamori-left-clip"><path d="${OMAMORI_L_PATH}"/></clipPath>
