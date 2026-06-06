@@ -869,7 +869,7 @@ ${p.materialLabel || '材質'}：${mat.name}
 預估總計：${p.noPrice ? '請洽詢報價' : `NT$ ${q ? q.total.toLocaleString() : '--'}（未稅，含製版費）`}
 
 --
-此詢價單由楊竹科技線上配置器自動產生
+此詢價單由楊竹科技線上圖文編輯自動產生
 `);
   window.location.href = `mailto:sales@yangzhu.com.tw?subject=${subject}&body=${body}`;
 }
