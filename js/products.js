@@ -294,12 +294,15 @@ const PRODUCTS = {
     badgeColor: '#1a4a8a',
     description: '快速打樣',
     noPrice: true,
-    size: { w: 600, h: 600, unit: '' },
-    displaySize: '印刷範圍 待確認',
-    labelArea: { xRatio: 0.05, yRatio: 0.05, wRatio: 0.90, hRatio: 0.90 },
+    size: { w: 1587, h: 2483, unit: '' }, // viewBox 158.7×248.3（54×85.6mm 直式）
+    displaySize: '印刷範圍 54 × 85.6 mm',
+    labelArea: { xRatio: 0.018, yRatio: 0.011, wRatio: 0.965, hRatio: 0.978 },
     textLayout: { title: { yRatio: 0.42, sizeRatio: 0.11 }, subtitle: { yRatio: 0.62, sizeRatio: 0.08 } },
     materialLabel: '規格',
-    materials: [{ id: 'standard', name: '標準款', priceBase: 0, image: 'assets/photos/easycard.png' }],
+    materials: [
+      { id: 'easycard', name: '悠遊卡', priceBase: 0, image: 'assets/photos/biz_thick.png' },
+      { id: 'ipass',    name: '一卡通', priceBase: 0, image: 'assets/photos/biz_thick.png' }
+    ],
     finishes: [{ id: 'uv_print', name: 'UV彩色噴印', price: 0 }],
     qtyBreaks: [{ min: 50, max: 9999, price: 0 }],
     minQty: 50, leadDays: 14, color: '#1a4a8a', textOnly: true

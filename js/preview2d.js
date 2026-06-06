@@ -94,8 +94,9 @@ function init2DCanvas(productId) {
     ch = Math.round(cw * _aspect);
   } else {
     const ratio = currentProduct.size.h / currentProduct.size.w;
-    const _isPortraitCard = currentProduct.id === 'biz_card'
-      && typeof STATE !== 'undefined' && STATE.orientationId === 'portrait';
+    const _isPortraitCard = (currentProduct.id === 'biz_card'
+      && typeof STATE !== 'undefined' && STATE.orientationId === 'portrait')
+      || currentProduct.id === 'biz_thick';
     if (_isPortraitCard) {
       // 直式卡：以高度為基準（與橫式 canvas 長邊相同）
       ch = Math.min(containerW - 40, 480);
@@ -579,6 +580,7 @@ function uploadImage2D(file) {
       const _isLeatherRound = typeof STATE !== 'undefined' && STATE.productId === 'biz_leather_round';
       const _isLeatherOmamori = typeof STATE !== 'undefined' && STATE.productId === 'biz_leather_omamori';
       const _isLightbox = typeof STATE !== 'undefined' && STATE.productId === 'biz_lightbox';
+      const _isThick = typeof STATE !== 'undefined' && STATE.productId === 'biz_thick';
       // 卡片上傳模式：圖片填滿虛線框，並裁切在框線範圍內
       const _isUploadOnly = typeof STATE !== 'undefined'
         && STATE.productId === 'biz_card' && (
@@ -685,6 +687,28 @@ function uploadImage2D(file) {
         const _d2 = document.getElementById('zoom-value-display');
         if (_s2) _s2.value = 100;
         if (_d2) _d2.textContent = '100%';
+      } else if (_isThick) {
+        // 厚切電子票證：裁切到圓角框範圍（viewBox 158.7×248.3，框邊 x=2.8,y=2.8）
+        const _tx  = w * (2.8 / 158.7);
+        const _ty  = h * (2.8 / 248.3);
+        const _tw  = w * (153.1 / 158.7);
+        const _th  = h * (242.7 / 248.3);
+        const scale = Math.max(_tw / img.width, _th / img.height);
+        _uploadBaseScale = scale;
+        img.set({
+          left: w / 2, top: h / 2,
+          originX: 'center', originY: 'center',
+          scaleX: scale, scaleY: scale
+        });
+        img.clipPath = new fabric.Rect({
+          left: _tx, top: _ty,
+          width: _tw, height: _th,
+          absolutePositioned: true
+        });
+        const _s = document.getElementById('zoom-slider');
+        const _d = document.getElementById('zoom-value-display');
+        if (_s) _s.value = 100;
+        if (_d) _d.textContent = '100%';
       } else if (_isUploadOnly) {
         // 黑色虛線框範圍：依方向選對應 SVG viewBox 尺寸
         const _portrait = typeof STATE !== 'undefined' && STATE.orientationId === 'portrait';
@@ -886,6 +910,7 @@ let _cachedLeatherRoundIpassFrameImg = null;
 let _cachedLeatherOmamoriEasycardFrameImg = null;
 let _cachedLeatherOmamoriIpassFrameImg = null;
 let _cachedLightboxFrameImg = null;
+let _cachedThickFrameImg = null;
 var _lastUploadedDataURL = null;
 
 // 卡片橫式上傳模式：回傳向量 SVG（照片為 <image>，紅框+虛線為獨立向量路徑）
@@ -1204,6 +1229,22 @@ async function getUploadOnlyLightboxSVG() {
 </svg>`;
 }
 
+// 厚切電子票證上傳模式：高解析 canvas 截圖裁切到圓角框，疊加晶片圓與紅框
+// viewBox 158.7×248.3 pt = 54×85.6mm（直式）
+function getUploadOnlyThickSVG() {
+  if (!canvas2d) return null;
+  const _canvasDataURL = get2DDataURL(9) || _lastUploadedDataURL;
+  if (!_canvasDataURL) return null;
+  return `<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 158.7 248.3" width="54mm" height="85.6mm">
+<style type="text/css">.st0{fill:#BC918F;}.st1{fill:none;stroke:#E60012;stroke-miterlimit:10;}</style>
+<defs><clipPath id="thick-clip"><path d="M12.1,245.5c-5.2,0-9.3-4.2-9.3-9.3v-224c0-5.2,4.2-9.3,9.3-9.3h134.5c5.2,0,9.3,4.2,9.3,9.3v224c0,5.2-4.2,9.3-9.3,9.3H12.1z"/></clipPath></defs>
+<image xlink:href="${_canvasDataURL}" x="0" y="0" width="158.7" height="248.3" preserveAspectRatio="none" clip-path="url(#thick-clip)"/>
+<circle class="st0" cx="79.3" cy="124.1" r="49.6"/>
+<path class="st1" d="M12.1,245.5c-5.2,0-9.3-4.2-9.3-9.3v-224c0-5.2,4.2-9.3,9.3-9.3h134.5c5.2,0,9.3,4.2,9.3,9.3v224c0,5.2-4.2,9.3-9.3,9.3H12.1z"/>
+</svg>`;
+}
+
 function get2DDataURLWithFrame() {
   const base = get2DDataURL();
   if (!base) return Promise.resolve(null);
@@ -1229,7 +1270,8 @@ function get2DDataURLWithFrame() {
   const _isLeatherRound = typeof STATE !== 'undefined' && STATE.productId === 'biz_leather_round';
   const _isLeatherOmamori = typeof STATE !== 'undefined' && STATE.productId === 'biz_leather_omamori';
   const _isLightboxFrame = typeof STATE !== 'undefined' && STATE.productId === 'biz_lightbox';
-  const _isPortraitFrame = !_isLeatherRound && !_isLeatherOmamori && !_isLightboxFrame && typeof STATE !== 'undefined' && STATE.orientationId === 'portrait';
+  const _isThickFrame = typeof STATE !== 'undefined' && STATE.productId === 'biz_thick';
+  const _isPortraitFrame = !_isLeatherRound && !_isLeatherOmamori && !_isLightboxFrame && !_isThickFrame && typeof STATE !== 'undefined' && STATE.orientationId === 'portrait';
   const _lrMatId = _isLeatherRound && typeof STATE !== 'undefined' ? STATE.materialId : null;
   let _frameSrc, _cachedFrame;
   if (_isLeatherRound) {
@@ -1246,6 +1288,9 @@ function get2DDataURLWithFrame() {
   } else if (_isLightboxFrame) {
     _frameSrc = 'assets/lightbox_frame.svg';
     _cachedFrame = _cachedLightboxFrameImg;
+  } else if (_isThickFrame) {
+    _frameSrc = 'assets/thick_frame.svg';
+    _cachedFrame = _cachedThickFrameImg;
   } else {
     _frameSrc = _isPortraitFrame ? 'assets/card_portrait_frame.svg' : 'assets/card_landscape_frame.svg';
     _cachedFrame = _isPortraitFrame ? _cachedCardPortraitFrameImg : _cachedCardFrameImg;
@@ -1264,6 +1309,7 @@ function get2DDataURLWithFrame() {
         if (_omMatId === 'ipass') _cachedLeatherOmamoriIpassFrameImg = frameImg;
         else _cachedLeatherOmamoriEasycardFrameImg = frameImg;
       } else if (_isLightboxFrame) _cachedLightboxFrameImg = frameImg;
+      else if (_isThickFrame) _cachedThickFrameImg = frameImg;
       else if (_isPortraitFrame) _cachedCardPortraitFrameImg = frameImg;
       else _cachedCardFrameImg = frameImg;
       doComposite(frameImg).then(resolve);
