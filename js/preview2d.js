@@ -1068,20 +1068,41 @@ async function getUploadOnlyOmamoriSVG() {
     }
   } catch(e) { console.warn('[getUploadOnlyOmamoriSVG] frame fetch failed', e); }
 
+  // fallback：抽出 style 塊，視覺路徑保留
+  let fallbackStyle = '';
+  let fallbackVisual = '';
   if (!frameInner) {
-    frameInner = `<style>.fo0{fill:none;stroke:#231815;stroke-width:1.5;stroke-miterlimit:10;}.fo1{fill:none;stroke:#E60012;stroke-miterlimit:10;stroke-dasharray:8;}</style>
-<path class="fo1" d="${OMAMORI_L_PATH}"/>
-<path class="fo1" d="${OMAMORI_R_PATH}"/>`;
+    fallbackStyle = '<style>.fo0{fill:none;stroke:#231815;stroke-width:1.5;stroke-miterlimit:10;}.fo1{fill:none;stroke:#E60012;stroke-miterlimit:10;stroke-dasharray:8;}</style>';
+    fallbackVisual = `<path class="fo1" d="${OMAMORI_L_PATH}"/><path class="fo1" d="${OMAMORI_R_PATH}"/>`;
   }
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 ${W_VB} ${H_VB}">
+  // 從 frameInner 提取 <style> 與 <defs> 提升到 SVG 根層級
+  // Illustrator 嚴格要求 <style>/<defs> 不能在 <g> 內
+  const frameStyles = frameInner
+    ? (frameInner.match(/<style[^>]*>[\s\S]*?<\/style>/gi) || []).join('')
+    : fallbackStyle;
+  const frameDefs = frameInner
+    ? (frameInner.match(/<defs[^>]*>([\s\S]*?)<\/defs>/gi) || [])
+        .map(d => d.replace(/<\/?defs[^>]*>/gi, '')).join('')
+    : '';
+  const frameContent = frameInner
+    ? frameInner
+        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+        .replace(/<defs[^>]*>[\s\S]*?<\/defs>/gi, '')
+        .trim()
+    : fallbackVisual;
+
+  return `<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 ${W_VB} ${H_VB}">
+${frameStyles}
 <defs>
   <clipPath id="omamori-left-clip"><path d="${OMAMORI_L_PATH}"/></clipPath>
   <clipPath id="omamori-right-clip"><path d="${OMAMORI_R_PATH}"/></clipPath>
+  ${frameDefs}
 </defs>
 <g id="design-left"><image xlink:href="${designURL}" x="0" y="0" width="${W_VB}" height="${H_VB}" clip-path="url(#omamori-left-clip)"/></g>
 <g id="design-right"><image xlink:href="${designURL}" x="0" y="0" width="${W_VB}" height="${H_VB}" clip-path="url(#omamori-right-clip)"/></g>
-<g id="frame">${frameInner}</g>
+<g id="frame">${frameContent}</g>
 </svg>`;
 }
 
