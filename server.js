@@ -262,26 +262,6 @@ app.post('/api/cartoon-image', async (req, res) => {
   }
 });
 
-// ─── API：去背（@imgly/background-removal-node）────────────
-app.post('/api/remove-bg', express.json({ limit: '25mb' }), async (req, res) => {
-  const { imageDataURL } = req.body;
-  if (!imageDataURL || !imageDataURL.startsWith('data:image/')) {
-    return res.status(400).json({ error: '請提供圖片' });
-  }
-  try {
-    const { removeBackground } = require('@imgly/background-removal-node');
-    const base64 = imageDataURL.replace(/^data:image\/\w+;base64,/, '');
-    const inputBuf = Buffer.from(base64, 'base64');
-    const inputBlob = new Blob([inputBuf]);
-    const resultBlob = await removeBackground(inputBlob);
-    const resultBuf = Buffer.from(await resultBlob.arrayBuffer());
-    res.json({ success: true, imageDataURL: `data:image/png;base64,${resultBuf.toString('base64')}` });
-  } catch (err) {
-    console.error('[remove-bg]', err.message);
-    res.status(500).json({ error: '去背處理失敗' });
-  }
-});
-
 // ─── 健康檢查 ──────────────────────────────
 app.get('/api/health', (req, res) => {
   res.json({

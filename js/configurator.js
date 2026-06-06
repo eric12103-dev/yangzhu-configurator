@@ -410,9 +410,6 @@ function initDesignStep() {
   const copyBtn = document.getElementById('btn-copy-lightbox');
   if (copyBtn) copyBtn.style.display = STATE.productId === 'biz_lightbox' ? '' : 'none';
 
-  // 去背按鈕（僅 biz_thick 顯示）
-  const rmbgSection = document.getElementById('rmbg-section');
-  if (rmbgSection) rmbgSection.style.display = STATE.productId === 'biz_thick' ? '' : 'none';
 
   // 縮放滑桿（upload-only 才顯示）
   const zoomSection = document.getElementById('zoom-slider-section');
