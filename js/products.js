@@ -1,4 +1,4 @@
-// 楊竹科技 — 產品資料庫與定價邏輯
+// 頌禮 — 產品資料庫
 
 const PRODUCTS = {
   thermos: {
@@ -179,48 +179,6 @@ const PRODUCTS = {
     minQty: 50, leadDays: 14, color: '#1a4a8a', textOnly: true
   },
 
-  biz_taoxi: {
-    id: 'biz_taoxi',
-    parentId: 'bizzone',
-    name: '陶喜杯',
-    icon: '🏺',
-    image: 'assets/photos/easycard.png',
-    badge: 'RAY專屬',
-    badgeColor: '#1a4a8a',
-    description: '快速打樣',
-    noPrice: true,
-    size: { w: 600, h: 600, unit: '' },
-    displaySize: '印刷範圍 待確認',
-    labelArea: { xRatio: 0.05, yRatio: 0.05, wRatio: 0.90, hRatio: 0.90 },
-    textLayout: { title: { yRatio: 0.42, sizeRatio: 0.11 }, subtitle: { yRatio: 0.62, sizeRatio: 0.08 } },
-    materialLabel: '規格',
-    materials: [{ id: 'standard', name: '標準款', priceBase: 0, image: 'assets/photos/easycard.png' }],
-    finishes: [{ id: 'uv_print', name: 'UV彩色噴印', price: 0 }],
-    qtyBreaks: [{ min: 50, max: 9999, price: 0 }],
-    minQty: 50, leadDays: 14, color: '#1a4a8a', textOnly: true
-  },
-
-  biz_camping: {
-    id: 'biz_camping',
-    parentId: 'bizzone',
-    name: '露營杯',
-    icon: '⛺',
-    image: 'assets/photos/easycard.png',
-    badge: 'RAY專屬',
-    badgeColor: '#1a4a8a',
-    description: '快速打樣',
-    noPrice: true,
-    size: { w: 600, h: 600, unit: '' },
-    displaySize: '印刷範圍 待確認',
-    labelArea: { xRatio: 0.05, yRatio: 0.05, wRatio: 0.90, hRatio: 0.90 },
-    textLayout: { title: { yRatio: 0.42, sizeRatio: 0.11 }, subtitle: { yRatio: 0.62, sizeRatio: 0.08 } },
-    materialLabel: '規格',
-    materials: [{ id: 'standard', name: '標準款', priceBase: 0, image: 'assets/photos/easycard.png' }],
-    finishes: [{ id: 'uv_print', name: 'UV彩色噴印', price: 0 }],
-    qtyBreaks: [{ min: 50, max: 9999, price: 0 }],
-    minQty: 50, leadDays: 14, color: '#1a4a8a', textOnly: true
-  },
-
   biz_lightbox: {
     id: 'biz_lightbox',
     parentId: 'bizzone',
@@ -237,48 +195,6 @@ const PRODUCTS = {
     textLayout: { title: { yRatio: 0.42, sizeRatio: 0.11 }, subtitle: { yRatio: 0.62, sizeRatio: 0.08 } },
     materialLabel: '規格',
     materials: [{ id: 'standard', name: '雙面', priceBase: 0, image: 'assets/photos/biz_lightbox_double.png' }],
-    finishes: [{ id: 'uv_print', name: 'UV彩色噴印', price: 0 }],
-    qtyBreaks: [{ min: 50, max: 9999, price: 0 }],
-    minQty: 50, leadDays: 14, color: '#1a4a8a', textOnly: true
-  },
-
-  biz_piggybank: {
-    id: 'biz_piggybank',
-    parentId: 'bizzone',
-    name: '存錢筒',
-    icon: '🐷',
-    image: 'assets/photos/easycard.png',
-    badge: 'RAY專屬',
-    badgeColor: '#1a4a8a',
-    description: '快速打樣',
-    noPrice: true,
-    size: { w: 600, h: 600, unit: '' },
-    displaySize: '印刷範圍 待確認',
-    labelArea: { xRatio: 0.05, yRatio: 0.05, wRatio: 0.90, hRatio: 0.90 },
-    textLayout: { title: { yRatio: 0.42, sizeRatio: 0.11 }, subtitle: { yRatio: 0.62, sizeRatio: 0.08 } },
-    materialLabel: '規格',
-    materials: [{ id: 'standard', name: '標準款', priceBase: 0, image: 'assets/photos/easycard.png' }],
-    finishes: [{ id: 'uv_print', name: 'UV彩色噴印', price: 0 }],
-    qtyBreaks: [{ min: 50, max: 9999, price: 0 }],
-    minQty: 50, leadDays: 14, color: '#1a4a8a', textOnly: true
-  },
-
-  biz_plate: {
-    id: 'biz_plate',
-    parentId: 'bizzone',
-    name: '車牌電子票證',
-    icon: '🚗',
-    image: 'assets/photos/easycard.png',
-    badge: 'RAY專屬',
-    badgeColor: '#1a4a8a',
-    description: '快速打樣',
-    noPrice: true,
-    size: { w: 600, h: 600, unit: '' },
-    displaySize: '印刷範圍 待確認',
-    labelArea: { xRatio: 0.05, yRatio: 0.05, wRatio: 0.90, hRatio: 0.90 },
-    textLayout: { title: { yRatio: 0.42, sizeRatio: 0.11 }, subtitle: { yRatio: 0.62, sizeRatio: 0.08 } },
-    materialLabel: '規格',
-    materials: [{ id: 'standard', name: '標準款', priceBase: 0, image: 'assets/photos/easycard.png' }],
     finishes: [{ id: 'uv_print', name: 'UV彩色噴印', price: 0 }],
     qtyBreaks: [{ min: 50, max: 9999, price: 0 }],
     minQty: 50, leadDays: 14, color: '#1a4a8a', textOnly: true
@@ -358,30 +274,3 @@ const PRODUCTS = {
   }
 };
 
-// 報價計算函式
-function calcQuote(productId, materialId, finishId, qty) {
-  const p = PRODUCTS[productId];
-  if (!p) return null;
-
-  const material = p.materials.find(m => m.id === materialId) || p.materials[0];
-  const finish   = p.finishes.find(f => f.id === finishId)     || p.finishes[0];
-
-  let unitPrice = material.priceBase + finish.price;
-
-  // 數量折扣
-  const qb = p.qtyBreaks.slice().reverse().find(b => qty >= b.min);
-  if (qb) unitPrice += qb.price;
-
-  const subtotal = unitPrice * qty;
-  const setupFee = 800; // 製版費
-  const total = subtotal + setupFee;
-
-  return {
-    unitPrice: Math.max(unitPrice, 1),
-    subtotal,
-    setupFee,
-    total,
-    leadDays: p.leadDays,
-    qty
-  };
-}

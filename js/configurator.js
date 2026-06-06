@@ -192,7 +192,6 @@ function renderSpecStep() {
       STATE.materialId = input.value;
       matContainer.querySelectorAll('label').forEach(l => l.classList.remove('selected'));
       input.closest('label').classList.add('selected');
-      updateLiveQuote();
       _updateColorPreview(p);
     });
   });
@@ -215,7 +214,6 @@ function renderSpecStep() {
       STATE.finishId = input.value;
       finContainer.querySelectorAll('label').forEach(l => l.classList.remove('selected'));
       input.closest('label').classList.add('selected');
-      updateLiveQuote();
     });
   });
 
@@ -244,43 +242,6 @@ function renderSpecStep() {
     }
   }
 
-  // 數量滑桿
-  const qtyInput = document.getElementById('spec-qty');
-  const qtyDisplay = document.getElementById('spec-qty-display');
-  qtyInput.min   = p.minQty;
-  qtyInput.value = Math.max(STATE.qty, p.minQty);
-  qtyDisplay.textContent = qtyInput.value;
-  STATE.qty = parseInt(qtyInput.value);
-
-  qtyInput.addEventListener('input', () => {
-    STATE.qty = parseInt(qtyInput.value);
-    qtyDisplay.textContent = STATE.qty;
-    updateLiveQuote();
-  });
-
-  updateLiveQuote();
-}
-
-function updateLiveQuote() {
-  const el = document.getElementById('live-quote');
-  if (!el) return;
-
-  const p = PRODUCTS[STATE.productId];
-  if (p && p.noPrice) {
-    el.innerHTML = `<div class="quote-row total"><span>定價</span><strong>請洽詢報價</strong></div>`;
-    return;
-  }
-
-  const q = calcQuote(STATE.productId, STATE.materialId, STATE.finishId, STATE.qty);
-  if (!q) return;
-
-  el.innerHTML = `
-    <div class="quote-row"><span>單價</span><strong>NT$ ${q.unitPrice.toLocaleString()}</strong></div>
-    <div class="quote-row"><span>數量 × ${q.qty.toLocaleString()}</span><strong>NT$ ${q.subtotal.toLocaleString()}</strong></div>
-    <div class="quote-row"><span>製版費</span><strong>NT$ ${q.setupFee.toLocaleString()}</strong></div>
-    <div class="quote-row total"><span>預估總計</span><strong>NT$ ${q.total.toLocaleString()}</strong></div>
-    <div class="quote-note">預計交期：下單後 ${q.leadDays} 個工作天</div>
-  `;
 }
 
 // ─── Step 3：設計 ──────────────────────────────────────────
@@ -559,37 +520,6 @@ function _hideFloatToolbar() {
   if (t) t.style.display = 'none';
 }
 
-// ─── 草稿自動儲存（localStorage）─────────────────────────────
-function _draftKey() {
-  return `yangzhu_draft_${STATE.productId}_${STATE.materialId || ''}`;
-}
-function _saveDraft() {}
-function _loadDraft()  { _clearDraft(); }
-function _clearDraft() {
-  try {
-    Object.keys(localStorage)
-      .filter(k => k.startsWith('yangzhu_draft_'))
-      .forEach(k => localStorage.removeItem(k));
-  } catch(e) {}
-}
-
-async function _refreshLiveMockup() {
-  const mc = document.getElementById('live-mockup-canvas');
-  const ml = document.getElementById('live-mockup-loading');
-  if (!mc) return;
-  const dataURL = get2DDataURLTransparent() || get2DDataURL();
-  if (!dataURL) return;
-  if (ml) ml.style.display = '';
-  mc.style.display = 'none';
-  const colorId = STATE.materialId || 'oat_tea';
-  const result = await renderMockup(colorId, dataURL);
-  if (!result) return;
-  mc.width  = result.width;
-  mc.height = result.height;
-  mc.getContext('2d').drawImage(result, 0, 0);
-  if (ml) ml.style.display = 'none';
-  mc.style.display = '';
-}
 
 // 背景預設色套用
 function applyBgPreset(color) {
@@ -667,46 +597,6 @@ function initPreviewStep() {
   }
 }
 
-async function _buildMockup(designDataURL) {
-  STATE._mockupReady = false;
-  const colorId = STATE.materialId || 'oat_tea';
-  // 使用透明底版本，讓設計直接融入瓶身
-  const transparentDataURL = get2DDataURLTransparent() || designDataURL;
-  try {
-    const mc = document.getElementById('mockup-canvas');
-    const ml = document.getElementById('mockup-loading');
-    if (ml) ml.style.display = '';
-    if (mc) mc.style.display = 'none';
-
-    const result = await renderMockup(colorId, transparentDataURL);
-    if (!result) return;
-
-    if (mc) {
-      mc.width  = result.width;
-      mc.height = result.height;
-      mc.getContext('2d').drawImage(result, 0, 0);
-      mc.style.width  = Math.round(result.width  * 0.33) + 'px';
-      mc.style.height = Math.round(result.height * 0.33) + 'px';
-      mc.style.display = '';
-      STATE._mockupReady = true;
-      STATE._mockupCanvas = result;
-    }
-    if (ml) ml.style.display = 'none';
-    const btnMockup = document.getElementById('btn-download-mockup');
-    if (btnMockup) btnMockup.style.display = '';
-  } catch(e) {
-    console.warn('[mockup]', e);
-  }
-}
-
-function downloadMockup() {
-  const c = STATE._mockupCanvas;
-  if (!c) { alert('效果圖尚未合成完成'); return; }
-  const a = document.createElement('a');
-  a.href = c.toDataURL('image/png');
-  a.download = `楊竹效果圖-${STATE.materialId || 'thermos'}.png`;
-  a.click();
-}
 
 
 // Google Apps Script 網頁應用程式 URL（部署後填入）
@@ -746,8 +636,8 @@ async function submitDesign() {
     String(now.getDate()).padStart(2, '0');
 
   // 序號：每日從 001 重新計，跨產品全域計數
-  const SEQ_KEY  = 'yangzhu_submit_seq';
-  const DATE_KEY = 'yangzhu_submit_date';
+  const SEQ_KEY  = 'songli_submit_seq';
+  const DATE_KEY = 'songli_submit_date';
   const savedDate = localStorage.getItem(DATE_KEY);
   const seq = (savedDate === dateStr) ? parseInt(localStorage.getItem(SEQ_KEY) || '0') + 1 : 1;
   localStorage.setItem(DATE_KEY, dateStr);
@@ -822,25 +712,6 @@ async function submitDesign() {
   window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
 }
 
-function sendInquiry() {
-  const p   = PRODUCTS[STATE.productId];
-  if (!p) return;
-  const mat = p.materials.find(m => m.id === STATE.materialId) || p.materials[0];
-  const fin = p.finishes.find(f => f.id === STATE.finishId)     || p.finishes[0];
-  const q   = calcQuote(STATE.productId, STATE.materialId, STATE.finishId, STATE.qty);
-
-  const subject = encodeURIComponent(`[客製詢價] ${p.name} × ${STATE.qty} 個`);
-  const body = encodeURIComponent(
-`客製化詢價
-==================
-產品：${p.name}
-${p.materialLabel || '材質'}：${mat.name}
-工藝：${fin.name}
-數量：${STATE.qty.toLocaleString()} 個
-預估總計：${p.noPrice ? '請洽詢報價' : `NT$ ${q ? q.total.toLocaleString() : '--'}（未稅，含製版費）`}
-`);
-  window.location.href = `mailto:sales@yangzhu.com.tw?subject=${subject}&body=${body}`;
-}
 
 // ─── 初始化 ───────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
@@ -886,5 +757,3 @@ function _updateColorPreview(p) {
   }
 }
 
-// Step 2 切入時需重新渲染
-const _origGoStep = goStep;

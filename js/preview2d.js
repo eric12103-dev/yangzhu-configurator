@@ -1,4 +1,4 @@
-// 楊竹科技 — 2D Canvas 設計預覽模組（Fabric.js）
+// 頌禮 — 2D Canvas 設計預覽模組（Fabric.js）
 
 let canvas2d = null;
 let uploadedImage = null;
@@ -64,13 +64,13 @@ document.addEventListener('keydown', e => {
 
 // 可用字體清單
 const FONTS = [
-  { id: '(中英)標準體',   label: '(中英)標準體',   preview: '楊竹Aa'  },
-  { id: '(中)草寫體',    label: '(中)草寫體',    preview: '楊竹Aa'  },
-  { id: '(中)童趣手寫體', label: '(中)童趣手寫體', preview: '楊竹Aa'  },
-  { id: '(中)簡約手寫體', label: '(中)簡約手寫體', preview: '楊竹Aa'  },
-  { id: '(英)書法體',    label: '(英)書法體',    preview: 'YangZhu' },
-  { id: '(英)流線體',    label: '(英)流線體',    preview: 'YangZhu' },
-  { id: '(英)簽名體',    label: '(英)簽名體',    preview: 'YangZhu' },
+  { id: '(中英)標準體',   label: '(中英)標準體',   preview: '頌禮Aa'  },
+  { id: '(中)草寫體',    label: '(中)草寫體',    preview: '頌禮Aa'  },
+  { id: '(中)童趣手寫體', label: '(中)童趣手寫體', preview: '頌禮Aa'  },
+  { id: '(中)簡約手寫體', label: '(中)簡約手寫體', preview: '頌禮Aa'  },
+  { id: '(英)書法體',    label: '(英)書法體',    preview: 'Songli' },
+  { id: '(英)流線體',    label: '(英)流線體',    preview: 'Songli' },
+  { id: '(英)簽名體',    label: '(英)簽名體',    preview: 'Songli' },
 ];
 
 function init2DCanvas(productId) {
@@ -487,7 +487,7 @@ function _normPadding(font, fontSize, basePad, textSample) {
     const isEn = font.startsWith('(英)');
     const sample = (textSample && textSample.trim())
       ? textSample
-      : (isEn ? 'Happy Agpq' : '楊竹Ag');
+      : (isEn ? 'Happy Agpq' : '頌禮Ag');
     const m = _ctx.measureText(sample);
     if (_savedFont !== undefined) _ctx.font = _savedFont; // 還原 Fabric canvas 字體
     const actAsc = m.actualBoundingBoxAscent;
