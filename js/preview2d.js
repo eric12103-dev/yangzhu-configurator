@@ -386,6 +386,30 @@ function init2DCanvas(productId) {
       ctx.stroke();
     }
     ctx.restore();
+
+    // 厚切票證：刀模輪廓（紅色虛線，跟隨圖片位置）
+    if (_thickDieCutContour && typeof STATE !== 'undefined' && STATE.productId === 'biz_thick') {
+      const imgObj = canvas2d.getObjects().find(o => o.type === 'image' && o.selectable !== false);
+      if (imgObj) {
+        const iW = imgObj.getScaledWidth();
+        const iH = imgObj.getScaledHeight();
+        const oX = imgObj.originX === 'center' ? imgObj.left - iW / 2 : imgObj.left;
+        const oY = imgObj.originY === 'center' ? imgObj.top  - iH / 2 : imgObj.top;
+        ctx.save();
+        ctx.strokeStyle = '#ff2222';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([8, 5]);
+        ctx.beginPath();
+        _thickDieCutContour.forEach((pt, i) => {
+          const px = oX + pt[0] * iW;
+          const py = oY + pt[1] * iH;
+          if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        });
+        ctx.closePath();
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
   });
 
   if (isThermos && _mdata) {
@@ -911,6 +935,7 @@ let _cachedLeatherOmamoriEasycardFrameImg = null;
 let _cachedLeatherOmamoriIpassFrameImg = null;
 let _cachedLightboxFrameImg = null;
 let _cachedThickFrameImg = null;
+let _thickDieCutContour = null;  // 刀模正規化輪廓 [[nx,ny],...]
 var _lastUploadedDataURL = null;
 
 // 卡片橫式上傳模式：回傳向量 SVG（照片為 <image>，紅框+虛線為獨立向量路徑）
@@ -1642,6 +1667,7 @@ function deleteSelected2D() {
 // ─── 清空 ─────────────────────────────────────────────────
 function clear2D() {
   if (!canvas2d) return;
+  _thickDieCutContour = null;
   _historyStack = []; _redoStack = []; _updateUndoRedoBtns();
   if (typeof _clearDraft === 'function') _clearDraft();
   canvas2d.getObjects().slice().forEach(o => canvas2d.remove(o));
@@ -1684,22 +1710,24 @@ function alignCenter2D(axis) {
   canvas2d.requestRenderAll();
 }
 
-// 厚切票證去背（本機 rembg_server.py 才有效）
+// 厚切票證去背 + 刀模生成（本機 rembg_server.py 才有效）
 async function removeBgThick() {
   if (!canvas2d) return;
-  const obj = canvas2d.getActiveObject();
+  const obj = canvas2d.getActiveObject() || canvas2d.getObjects().find(o => o.type === 'image' && o.selectable !== false);
   if (!obj || obj.type !== 'image') {
-    alert('請先點選要去背的圖片');
+    alert('請先上傳並點選圖片');
     return;
   }
 
   const btn = document.getElementById('btn-rmbg');
   const status = document.getElementById('rmbg-status');
+  const marginInput = document.getElementById('rmbg-margin');
+  const marginPx = marginInput ? parseInt(marginInput.value) : 15;
+
   if (btn) btn.disabled = true;
-  if (status) status.textContent = '去背中…';
+  if (status) status.textContent = '去背中，請稍候…';
 
   try {
-    // 取得圖片 dataURL（原始上傳解析度）
     const el = obj.getElement();
     const tmp = document.createElement('canvas');
     tmp.width = el.naturalWidth || el.width;
@@ -1707,16 +1735,14 @@ async function removeBgThick() {
     tmp.getContext('2d').drawImage(el, 0, 0);
     const dataURL = tmp.toDataURL('image/png');
 
-    const resp = await fetch('http://localhost:5001/remove-bg', {
+    const resp = await fetch('http://localhost:5001/remove-bg-with-contour', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ imageDataURL: dataURL })
+      body: JSON.stringify({ imageDataURL: dataURL, marginPx })
     });
     const data = await resp.json();
-
     if (!data.success) throw new Error(data.error || '去背失敗');
 
-    // 將去背結果換回 canvas 物件
     fabric.Image.fromURL(data.imageDataURL, (newImg) => {
       const scaleX = obj.scaleX * (obj.width / newImg.width);
       const scaleY = obj.scaleY * (obj.height / newImg.height);
@@ -1724,14 +1750,18 @@ async function removeBgThick() {
         left: obj.left, top: obj.top,
         scaleX, scaleY,
         originX: obj.originX, originY: obj.originY,
-        clipPath: obj.clipPath
+        clipPath: obj.clipPath,
+        selectable: true
       });
       canvas2d.remove(obj);
       canvas2d.add(newImg);
       canvas2d.setActiveObject(newImg);
+
+      _thickDieCutContour = data.contour || null;
+
       canvas2d.requestRenderAll();
-      if (status) status.textContent = '去背完成！';
-      setTimeout(() => { if (status) status.textContent = ''; }, 3000);
+      if (status) status.textContent = data.contour ? '完成！紅色虛線為刀模輪廓' : '去背完成（無輪廓）';
+      setTimeout(() => { if (status) status.textContent = ''; }, 5000);
     }, { crossOrigin: 'anonymous' });
 
   } catch (err) {
