@@ -1707,7 +1707,7 @@ async function removeBgThick() {
     tmp.getContext('2d').drawImage(el, 0, 0);
     const dataURL = tmp.toDataURL('image/png');
 
-    const resp = await fetch('/api/remove-bg', {
+    const resp = await fetch('http://localhost:5001/remove-bg', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ imageDataURL: dataURL })
@@ -1735,7 +1735,7 @@ async function removeBgThick() {
     }, { crossOrigin: 'anonymous' });
 
   } catch (err) {
-    if (status) status.textContent = `失敗：${err.message}`;
+    if (status) status.textContent = err.message.includes('fetch') ? '請先執行 rembg_server.py' : `失敗：${err.message}`;
     console.error('[removeBgThick]', err);
   } finally {
     if (btn) btn.disabled = false;

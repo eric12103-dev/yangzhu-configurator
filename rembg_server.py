@@ -9,7 +9,7 @@ from rembg import remove
 import base64
 
 app = Flask(__name__)
-CORS(app, origins=['http://localhost:3000', 'http://127.0.0.1:3000'])
+CORS(app)  # 允許所有來源（本機私人使用）
 
 @app.route('/remove-bg', methods=['POST'])
 def remove_bg():
