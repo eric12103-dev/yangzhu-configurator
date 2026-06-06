@@ -359,15 +359,14 @@ const PRODUCTS = {
 };
 
 // 報價計算函式
-function calcQuote(productId, materialId, finishId, qty, capacityId = null) {
+function calcQuote(productId, materialId, finishId, qty) {
   const p = PRODUCTS[productId];
   if (!p) return null;
 
   const material = p.materials.find(m => m.id === materialId) || p.materials[0];
   const finish   = p.finishes.find(f => f.id === finishId)     || p.finishes[0];
-  const capacity = p.capacities ? (p.capacities.find(c => c.id === capacityId) || p.capacities[0]) : null;
 
-  let unitPrice = material.priceBase + finish.price + (capacity ? capacity.price : 0);
+  let unitPrice = material.priceBase + finish.price;
 
   // 數量折扣
   const qb = p.qtyBreaks.slice().reverse().find(b => qty >= b.min);

@@ -35,9 +35,7 @@ if (process.env.OPENAI_API_KEY && !process.env.OPENAI_API_KEY.startsWith('sk-xxx
 // ─── 產品中文名對照 ────────────────────────
 const PRODUCT_NAMES = {
   easycard: '客製化悠遊卡',
-  ipass:    '客製化一卡通',
-  usb_bar:  'USB 隨身碟',
-  usb_card: '名片型隨身碟'
+  ipass:    '客製化一卡通'
 };
 
 // ─── API：儲存訂單 ─────────────────────────

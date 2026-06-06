@@ -10,7 +10,6 @@ const STATE = {
   productId: null,
   materialId: null,
   finishId: null,
-  capacityId: null,
   orientationId: null,
   qty: 100,
   bgColor: '#ffffff',
@@ -156,7 +155,6 @@ function selectProduct(productId) {
   STATE.productId  = productId;
   STATE.materialId = null;
   STATE.finishId   = null;
-  STATE.capacityId = null;
   STATE.canvasJSON = null; // 切換商品時清除上一個商品的設計內容
 
   document.querySelectorAll('.product-card').forEach(el => {
@@ -167,7 +165,6 @@ function selectProduct(productId) {
   const p = PRODUCTS[productId];
   STATE.materialId = p.materials[0].id;
   STATE.finishId   = p.finishes[0].id;
-  if (p.capacities)    STATE.capacityId    = p.capacities[0].id;
   if (p.orientations)  STATE.orientationId = p.orientations[0].id;
 
   nextStep();
@@ -222,31 +219,6 @@ function renderSpecStep() {
     });
   });
 
-  // 容量（USB 類才有）
-  const capSection = document.getElementById('spec-capacity-section');
-  if (p.capacities) {
-    capSection.classList.remove('hidden');
-    const capContainer = document.getElementById('spec-capacities');
-    capContainer.innerHTML = p.capacities.map(c => `
-      <label class="spec-option ${c.id === STATE.capacityId ? 'selected' : ''}">
-        <input type="radio" name="capacity" value="${c.id}" ${c.id === STATE.capacityId ? 'checked' : ''}>
-        <span class="spec-label">${c.name}</span>
-        <span class="spec-price">${c.price > 0 ? `+NT$${c.price}` : '標準'}</span>
-      </label>
-    `).join('');
-
-    capContainer.querySelectorAll('input').forEach(input => {
-      input.addEventListener('change', () => {
-        STATE.capacityId = input.value;
-        capContainer.querySelectorAll('label').forEach(l => l.classList.remove('selected'));
-        input.closest('label').classList.add('selected');
-        updateLiveQuote();
-      });
-    });
-  } else {
-    capSection.classList.add('hidden');
-  }
-
   // 方向（壓克力吊飾等才有）
   const oriSection = document.getElementById('spec-orientation-section');
   if (oriSection) {
@@ -299,7 +271,7 @@ function updateLiveQuote() {
     return;
   }
 
-  const q = calcQuote(STATE.productId, STATE.materialId, STATE.finishId, STATE.qty, STATE.capacityId);
+  const q = calcQuote(STATE.productId, STATE.materialId, STATE.finishId, STATE.qty);
   if (!q) return;
 
   el.innerHTML = `
@@ -855,8 +827,7 @@ function sendInquiry() {
   if (!p) return;
   const mat = p.materials.find(m => m.id === STATE.materialId) || p.materials[0];
   const fin = p.finishes.find(f => f.id === STATE.finishId)     || p.finishes[0];
-  const cap = p.capacities ? (p.capacities.find(c => c.id === STATE.capacityId) || p.capacities[0]) : null;
-  const q   = calcQuote(STATE.productId, STATE.materialId, STATE.finishId, STATE.qty, STATE.capacityId);
+  const q   = calcQuote(STATE.productId, STATE.materialId, STATE.finishId, STATE.qty);
 
   const subject = encodeURIComponent(`[客製詢價] ${p.name} × ${STATE.qty} 個`);
   const body = encodeURIComponent(
@@ -864,7 +835,7 @@ function sendInquiry() {
 ==================
 產品：${p.name}
 ${p.materialLabel || '材質'}：${mat.name}
-工藝：${fin.name}${cap ? `\n容量：${cap.name}` : ''}
+工藝：${fin.name}
 數量：${STATE.qty.toLocaleString()} 個
 預估總計：${p.noPrice ? '請洽詢報價' : `NT$ ${q ? q.total.toLocaleString() : '--'}（未稅，含製版費）`}
 `);
