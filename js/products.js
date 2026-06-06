@@ -289,7 +289,7 @@ const PRODUCTS = {
     parentId: 'bizzone',
     name: '厚切電子票證',
     icon: '🃏',
-    image: 'assets/photos/easycard.png',
+    image: 'assets/photos/biz_thick.png',
     badge: 'RAY專屬',
     badgeColor: '#1a4a8a',
     description: '快速打樣',
