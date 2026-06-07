@@ -43,28 +43,8 @@
     <p>選商品 → 選規格 → 編輯 → 確認送出</p>
   </div>
 
-  <!-- 步驟進度條 -->
-  <div class="step-indicator">
-    <div class="step" data-step="1">
-      <div class="step-dot" onclick="goStep(1)">1</div>
-      <div class="step-label">選商品</div>
-    </div>
-    <div class="step-line"></div>
-    <div class="step" data-step="2">
-      <div class="step-dot" onclick="goStep(2)">2</div>
-      <div class="step-label">選規格</div>
-    </div>
-    <div class="step-line"></div>
-    <div class="step" data-step="3">
-      <div class="step-dot" onclick="goStep(3)">3</div>
-      <div class="step-label">編輯</div>
-    </div>
-    <div class="step-line"></div>
-    <div class="step" data-step="4">
-      <div class="step-dot" onclick="goStep(4)">4</div>
-      <div class="step-label">確認送出</div>
-    </div>
-  </div>
+  <!-- 步驟進度條（由 JS 動態產生） -->
+  <div class="step-indicator"></div>
 
   <!-- ══════════════════════════════════════ -->
   <!-- Step 1 — 選商品                        -->
@@ -250,7 +230,50 @@
 
       <div class="step-nav">
         <button class="btn btn-secondary" onclick="prevStep()">← 上一步</button>
-        <button class="btn btn-primary btn-lg" onclick="nextStep()">前往確認 →</button>
+        <button id="btn-step3-next" class="btn btn-primary btn-lg" onclick="nextStep()">前往確認 →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════ -->
+  <!-- Step 4 (biz_thick only) — 生產刀模     -->
+  <!-- ══════════════════════════════════════ -->
+  <div id="panel-diecut" class="step-panel hidden">
+    <div class="card">
+      <h2 style="font-size:18px;margin-bottom:8px;">生產刀模</h2>
+      <p style="font-size:13px;color:var(--gray-400);margin-bottom:20px;">確認刀模輪廓，可調整邊距後重新計算</p>
+
+      <div style="display:flex;gap:24px;flex-wrap:wrap;justify-content:center;">
+        <!-- 控制區 -->
+        <div style="flex:0 0 260px;">
+          <div class="tool-section">
+            <h4>刀模邊距</h4>
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
+              <input type="range" id="diecut-margin" min="0" max="40" step="1" value="15"
+                     style="flex:1;accent-color:var(--green);"
+                     oninput="document.getElementById('diecut-margin-val').textContent=this.value+'px'">
+              <span id="diecut-margin-val" style="font-size:12px;color:var(--gray-400);min-width:28px;">15px</span>
+            </div>
+            <button id="btn-regen-diecut" class="btn btn-secondary btn-sm" style="width:100%;" onclick="regenDieCut()">
+              ↻ 重新計算刀模
+            </button>
+            <p id="diecut-status" style="font-size:12px;color:var(--gray-400);margin-top:8px;min-height:16px;"></p>
+            <div style="margin-top:8px;padding:10px;background:var(--gray-100);border-radius:8px;font-size:11px;color:var(--gray-400);">
+              💡 紅色虛線為刀模輪廓，調整邊距後點「重新計算」更新
+            </div>
+          </div>
+        </div>
+
+        <!-- 預覽圖 -->
+        <div style="flex:1;min-width:280px;text-align:center;">
+          <img id="diecut-preview-img" style="max-width:320px;max-height:480px;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.12);">
+          <p id="diecut-no-preview" style="font-size:13px;color:var(--gray-400);margin-top:16px;display:none;">請先在步驟三上傳圖片並執行去背</p>
+        </div>
+      </div>
+
+      <div class="step-nav">
+        <button class="btn btn-secondary" onclick="prevStep()">← 返回去背編輯</button>
+        <button class="btn btn-primary btn-lg" onclick="nextStep()">確認刀模，前往送出 →</button>
       </div>
     </div>
   </div>

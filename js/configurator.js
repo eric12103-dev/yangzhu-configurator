@@ -22,16 +22,35 @@ const STATE = {
   submittedFilename: ''
 };
 
-const TOTAL_STEPS = 4;
-
 // ─── 步驟導覽 ──────────────────────────────────────────────
+function getTotalSteps() {
+  return STATE.productId === 'biz_thick' ? 5 : 4;
+}
+
+function renderStepIndicator() {
+  const isThick = STATE.productId === 'biz_thick';
+  const labels = isThick
+    ? ['選商品', '選規格', '去背編輯', '生產刀模', '確認送出']
+    : ['選商品', '選規格', '編輯', '確認送出'];
+  const el = document.querySelector('.step-indicator');
+  if (!el) return;
+  el.innerHTML = labels.map((label, i) => {
+    const n = i + 1;
+    const cls = n === STATE.step ? ' active' : n < STATE.step ? ' done' : '';
+    return (i > 0 ? '<div class="step-line"></div>' : '') +
+      `<div class="step${cls}" data-step="${n}">` +
+      `<div class="step-dot" onclick="goStep(${n})">${n}</div>` +
+      `<div class="step-label">${label}</div></div>`;
+  }).join('');
+}
+
 function goStep(n) {
-  if (n < 1 || n > TOTAL_STEPS) return;
+  if (n < 1 || n > getTotalSteps()) return;
   if (n > 1 && !STATE.productId) { alert('請先選擇產品'); return; }
   if (n > 2 && !STATE.materialId) { alert('請先完成規格選擇'); return; }
 
-  // 離開設計步驟前，先快照 2D 設計圖
-  if (STATE.step === 3) {
+  // 離開設計步驟前快照
+  if (STATE.step === 3 || (STATE.productId === 'biz_thick' && STATE.step === 4)) {
     STATE.designDataURL = (typeof get2DDataURL === 'function') ? get2DDataURL() : null;
   }
 
@@ -43,22 +62,120 @@ function nextStep() { goStep(STATE.step + 1); }
 function prevStep() { goStep(STATE.step - 1); }
 
 function renderStep() {
-  // 更新進度條
-  document.querySelectorAll('.step-indicator .step').forEach((el, i) => {
-    el.classList.toggle('active',   i + 1 === STATE.step);
-    el.classList.toggle('done',     i + 1 <  STATE.step);
-  });
+  renderStepIndicator();
+
+  const isThick = STATE.productId === 'biz_thick';
+  const diecutPanel = document.getElementById('panel-diecut');
 
   // 顯示對應面板
   document.querySelectorAll('.step-panel').forEach(el => {
-    el.classList.toggle('hidden', el.dataset.step != STATE.step);
+    if (isThick && STATE.step === 4) {
+      el.classList.add('hidden');                              // 刀模步驟：隱藏所有 step-panel
+    } else if (isThick && STATE.step === 5) {
+      el.classList.toggle('hidden', el.dataset.step !== '4'); // biz_thick 步驟5 = data-step=4 的 preview panel
+    } else {
+      el.classList.toggle('hidden', el.dataset.step != STATE.step);
+    }
   });
 
-  // 各步驟初始化（Step 3 = 設計，Step 4 = 報價單）
-  if (STATE.step === 3) { initDesignStep(); }
-  if (STATE.step === 4) initPreviewStep();
+  if (diecutPanel) diecutPanel.classList.toggle('hidden', !(isThick && STATE.step === 4));
+
+  // 初始化各步驟
+  if (STATE.step === 3) initDesignStep();
+  if (isThick && STATE.step === 4) initDieCutStep();
+  if ((!isThick && STATE.step === 4) || (isThick && STATE.step === 5)) initPreviewStep();
 
   window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ─── 生產刀模步驟（biz_thick step 4）─────────────────────────
+function initDieCutStep() {
+  // 同步邊距滑桿
+  const rmbgSlider = document.getElementById('rmbg-margin');
+  const dcSlider   = document.getElementById('diecut-margin');
+  const dcVal      = document.getElementById('diecut-margin-val');
+  if (rmbgSlider && dcSlider) {
+    dcSlider.value = rmbgSlider.value;
+    if (dcVal) dcVal.textContent = rmbgSlider.value + 'px';
+  }
+  // 截圖 canvas（含刀模 after:render 覆層）
+  _refreshDiecutPreview();
+}
+
+function _refreshDiecutPreview() {
+  const img = document.getElementById('diecut-preview-img');
+  const noPreview = document.getElementById('diecut-no-preview');
+  if (!img) return;
+  if (typeof canvas2d === 'undefined' || !canvas2d) return;
+  canvas2d.requestRenderAll();
+  setTimeout(() => {
+    const dataURL = canvas2d.lowerCanvasEl.toDataURL('image/png');
+    img.src = dataURL;
+    img.style.display = '';
+    if (noPreview) noPreview.style.display = 'none';
+  }, 120);
+}
+
+async function regenDieCut() {
+  const btn    = document.getElementById('btn-regen-diecut');
+  const status = document.getElementById('diecut-status');
+  const slider = document.getElementById('diecut-margin');
+  const marginPx = slider ? parseInt(slider.value) : 15;
+
+  // 同步回 rmbg-section 的滑桿
+  const rmbgSlider = document.getElementById('rmbg-margin');
+  const rmbgVal    = document.getElementById('rmbg-margin-val');
+  if (rmbgSlider) rmbgSlider.value = marginPx;
+  if (rmbgVal)    rmbgVal.textContent = marginPx + 'px';
+
+  if (typeof _lastUploadedDataURL === 'undefined' || !_lastUploadedDataURL) {
+    if (status) status.textContent = '請先在步驟三上傳圖片並執行去背';
+    return;
+  }
+
+  if (btn) btn.disabled = true;
+  if (status) status.textContent = '重新計算中…';
+
+  try {
+    const resp = await fetch('http://localhost:5001/remove-bg-with-contour', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ imageDataURL: _lastUploadedDataURL, marginPx })
+    });
+    const data = await resp.json();
+    if (!data.success) throw new Error(data.error);
+
+    _thickDieCutContour = data.contour || null;
+
+    // 更新 canvas 圖片物件
+    if (typeof canvas2d !== 'undefined' && canvas2d) {
+      const imgObj = canvas2d.getObjects().find(o => o.type === 'image' && o.selectable !== false);
+      if (imgObj) {
+        fabric.Image.fromURL(data.imageDataURL, newImg => {
+          newImg.set({
+            left: imgObj.left, top: imgObj.top,
+            scaleX: imgObj.scaleX * (imgObj.width / newImg.width),
+            scaleY: imgObj.scaleY * (imgObj.height / newImg.height),
+            originX: imgObj.originX, originY: imgObj.originY,
+            clipPath: imgObj.clipPath, selectable: true
+          });
+          canvas2d.remove(imgObj);
+          canvas2d.add(newImg);
+          canvas2d.sendToBack(newImg);
+          canvas2d.requestRenderAll();
+          setTimeout(() => {
+            _refreshDiecutPreview();
+            if (status) status.textContent = '刀模已更新！';
+            setTimeout(() => { if (status) status.textContent = ''; }, 3000);
+          }, 150);
+        }, { crossOrigin: 'anonymous' });
+      }
+    }
+  } catch (err) {
+    if (status) status.textContent = err.message.includes('fetch') ? '請先執行 rembg_server.py' : `失敗：${err.message}`;
+  } finally {
+    if (btn) btn.disabled = false;
+  }
 }
 
 // ─── 密碼保護彈窗 ──────────────────────────────────────────
@@ -253,6 +370,10 @@ const _TEXT_COLORS = [
 ];
 
 function initDesignStep() {
+  // 步驟3下一步按鈕文字（biz_thick 下一步是生產刀模）
+  const nextBtn = document.getElementById('btn-step3-next');
+  if (nextBtn) nextBtn.textContent = STATE.productId === 'biz_thick' ? '前往生產刀模 →' : '前往確認 →';
+
   const isThermos = STATE.productId === 'thermos';
 
   // 上傳框線模式：biz_card（橫式／直式）、biz_leather_round、biz_leather_omamori、biz_lightbox 或 biz_thick
