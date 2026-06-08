@@ -98,8 +98,23 @@ function initDieCutStep() {
     dcSlider.value = rmbgSlider.value;
     if (dcVal) dcVal.textContent = rmbgSlider.value + 'px';
   }
-  // 截圖 canvas（含刀模 after:render 覆層）
-  _refreshDiecutPreview();
+
+  const noPreview = document.getElementById('diecut-no-preview');
+  const img       = document.getElementById('diecut-preview-img');
+
+  if (typeof _thickDieCutContour !== 'undefined' && _thickDieCutContour) {
+    // 刀模已有：直接截圖顯示
+    if (noPreview) noPreview.style.display = 'none';
+    _refreshDiecutPreview();
+  } else if (typeof _lastUploadedDataURL !== 'undefined' && _lastUploadedDataURL) {
+    // 有上傳圖但沒跑過去背：自動觸發
+    if (noPreview) noPreview.style.display = 'none';
+    regenDieCut();
+  } else {
+    // 完全沒有圖片
+    if (img) img.style.display = 'none';
+    if (noPreview) noPreview.style.display = '';
+  }
 }
 
 function _refreshDiecutPreview() {
@@ -107,13 +122,10 @@ function _refreshDiecutPreview() {
   const noPreview = document.getElementById('diecut-no-preview');
   if (!img) return;
   if (typeof canvas2d === 'undefined' || !canvas2d) return;
-  canvas2d.requestRenderAll();
-  setTimeout(() => {
-    const dataURL = canvas2d.lowerCanvasEl.toDataURL('image/png');
-    img.src = dataURL;
-    img.style.display = '';
-    if (noPreview) noPreview.style.display = 'none';
-  }, 120);
+  canvas2d.renderAll();  // 同步渲染，確保 after:render 刀模已畫上
+  img.src = canvas2d.lowerCanvasEl.toDataURL('image/png');
+  img.style.display = '';
+  if (noPreview) noPreview.style.display = 'none';
 }
 
 async function regenDieCut() {
@@ -162,12 +174,9 @@ async function regenDieCut() {
           canvas2d.remove(imgObj);
           canvas2d.add(newImg);
           canvas2d.sendToBack(newImg);
-          canvas2d.requestRenderAll();
-          setTimeout(() => {
-            _refreshDiecutPreview();
-            if (status) status.textContent = '刀模已更新！';
-            setTimeout(() => { if (status) status.textContent = ''; }, 3000);
-          }, 150);
+          _refreshDiecutPreview();
+          if (status) status.textContent = '刀模已更新！';
+          setTimeout(() => { if (status) status.textContent = ''; }, 3000);
         }, { crossOrigin: 'anonymous' });
       }
     }
