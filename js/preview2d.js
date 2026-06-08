@@ -1271,7 +1271,7 @@ function _thickDiecutToSVGPath() {
     d += i === 0 ? `M${sx},${sy}` : `L${sx},${sy}`;
   });
   if (!d) return '';
-  return `<path fill="none" stroke="#ff2222" stroke-width="0.5" stroke-dasharray="2,1.5" d="${d}Z"/>`;
+  return `<path fill="none" stroke="#000000" stroke-width="0.5" d="${d}Z"/>`;
 }
 
 // 厚切電子票證上傳模式：高解析 canvas 截圖裁切到圓角框，疊加晶片圓、刀模線、紅框

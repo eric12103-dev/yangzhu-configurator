@@ -152,9 +152,9 @@ function _refreshDiecutPreview() {
       const oX = imgObj.originX === 'center' ? imgObj.left - iW / 2 : imgObj.left;
       const oY = imgObj.originY === 'center' ? imgObj.top  - iH / 2 : imgObj.top;
       ctx2.save();
-      ctx2.strokeStyle = '#ff2222';
+      ctx2.strokeStyle = '#000000';
       ctx2.lineWidth = 2;
-      ctx2.setLineDash([8, 5]);
+      ctx2.setLineDash([]);
       ctx2.beginPath();
       _thickDieCutContour.forEach((pt, i) => {
         const px = oX + pt[0] * iW;
@@ -197,9 +197,9 @@ async function _overlayThickDiecut(baseURL) {
       const oX = imgObj.originX === 'center' ? imgObj.left - iW / 2 : imgObj.left;
       const oY = imgObj.originY === 'center' ? imgObj.top  - iH / 2 : imgObj.top;
       ctx.save();
-      ctx.strokeStyle = '#ff2222';
+      ctx.strokeStyle = '#000000';
       ctx.lineWidth = 2;
-      ctx.setLineDash([8, 5]);
+      ctx.setLineDash([]);
       ctx.beginPath();
       _thickDieCutContour.forEach((pt, i) => {
         const px = oX + pt[0] * iW;
