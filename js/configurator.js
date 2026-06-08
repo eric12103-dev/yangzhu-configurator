@@ -122,6 +122,7 @@ function _refreshDiecutPreview() {
   const noPreview = document.getElementById('diecut-no-preview');
   if (!img) return;
   if (typeof canvas2d === 'undefined' || !canvas2d) return;
+  canvas2d.discardActiveObject(); // 截圖前取消選取，避免綠色控制點被捕捉
   canvas2d.renderAll();  // 同步渲染，確保 after:render 刀模已畫上
   img.src = canvas2d.lowerCanvasEl.toDataURL('image/png');
   img.style.display = '';
