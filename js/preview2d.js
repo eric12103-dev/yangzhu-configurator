@@ -1254,18 +1254,40 @@ async function getUploadOnlyLightboxSVG() {
 </svg>`;
 }
 
-// 厚切電子票證上傳模式：高解析 canvas 截圖裁切到圓角框，疊加晶片圓與紅框
+// 厚切電子票證：將刀模輪廓轉為 SVG path（viewBox 158.7×248.3）
+function _thickDiecutToSVGPath() {
+  if (!_thickDieCutContour || !canvas2d) return '';
+  const imgObj = canvas2d.getObjects().find(o => o.type === 'image' && o.selectable !== false);
+  if (!imgObj) return '';
+  const cW = canvas2d.getWidth(), cH = canvas2d.getHeight();
+  const vW = 158.7, vH = 248.3;
+  const iW = imgObj.getScaledWidth(), iH = imgObj.getScaledHeight();
+  const oX = imgObj.originX === 'center' ? imgObj.left - iW / 2 : imgObj.left;
+  const oY = imgObj.originY === 'center' ? imgObj.top  - iH / 2 : imgObj.top;
+  let d = '';
+  _thickDieCutContour.forEach((pt, i) => {
+    const sx = ((oX + pt[0] * iW) / cW * vW).toFixed(2);
+    const sy = ((oY + pt[1] * iH) / cH * vH).toFixed(2);
+    d += i === 0 ? `M${sx},${sy}` : `L${sx},${sy}`;
+  });
+  if (!d) return '';
+  return `<path fill="none" stroke="#ff2222" stroke-width="0.5" stroke-dasharray="2,1.5" d="${d}Z"/>`;
+}
+
+// 厚切電子票證上傳模式：高解析 canvas 截圖裁切到圓角框，疊加晶片圓、刀模線、紅框
 // viewBox 158.7×248.3 pt = 54×85.6mm（直式）
 function getUploadOnlyThickSVG() {
   if (!canvas2d) return null;
   const _canvasDataURL = get2DDataURL(9) || _lastUploadedDataURL;
   if (!_canvasDataURL) return null;
+  const _diecutPath = _thickDiecutToSVGPath();
   return `<?xml version="1.0" encoding="utf-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 158.7 248.3" width="54mm" height="85.6mm">
 <style type="text/css">.st0{fill:#BC918F;}.st1{fill:none;stroke:#E60012;stroke-miterlimit:10;}</style>
 <defs><clipPath id="thick-clip"><path d="M12.1,245.5c-5.2,0-9.3-4.2-9.3-9.3v-224c0-5.2,4.2-9.3,9.3-9.3h134.5c5.2,0,9.3,4.2,9.3,9.3v224c0,5.2-4.2,9.3-9.3,9.3H12.1z"/></clipPath></defs>
 <image xlink:href="${_canvasDataURL}" x="0" y="0" width="158.7" height="248.3" preserveAspectRatio="none" clip-path="url(#thick-clip)"/>
 <circle class="st0" cx="79.3" cy="124.1" r="49.6"/>
+${_diecutPath}
 <path class="st1" d="M12.1,245.5c-5.2,0-9.3-4.2-9.3-9.3v-224c0-5.2,4.2-9.3,9.3-9.3h134.5c5.2,0,9.3,4.2,9.3,9.3v224c0,5.2-4.2,9.3-9.3,9.3H12.1z"/>
 </svg>`;
 }

@@ -169,6 +169,46 @@ function _refreshDiecutPreview() {
   if (noPreview) noPreview.style.display = 'none';
 }
 
+// 將刀模輪廓疊加到已合成的 PNG 上（供步驟5確認預覽用）
+async function _overlayThickDiecut(baseURL) {
+  if (typeof _thickDieCutContour === 'undefined' || !_thickDieCutContour) return baseURL;
+  if (typeof canvas2d === 'undefined' || !canvas2d) return baseURL;
+  const imgObj = canvas2d.getObjects().find(o => o.type === 'image' && o.selectable !== false);
+  if (!imgObj) return baseURL;
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const tmp = document.createElement('canvas');
+      tmp.width  = img.width;
+      tmp.height = img.height;
+      const ctx  = tmp.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      const scale = img.width / canvas2d.getWidth();  // PNG 是 canvas CSS 寬的 2x
+      ctx.scale(scale, scale);
+      const iW = imgObj.getScaledWidth();
+      const iH = imgObj.getScaledHeight();
+      const oX = imgObj.originX === 'center' ? imgObj.left - iW / 2 : imgObj.left;
+      const oY = imgObj.originY === 'center' ? imgObj.top  - iH / 2 : imgObj.top;
+      ctx.save();
+      ctx.strokeStyle = '#ff2222';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([8, 5]);
+      ctx.beginPath();
+      _thickDieCutContour.forEach((pt, i) => {
+        const px = oX + pt[0] * iW;
+        const py = oY + pt[1] * iH;
+        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      });
+      ctx.closePath();
+      ctx.stroke();
+      ctx.restore();
+      resolve(tmp.toDataURL('image/png'));
+    };
+    img.onerror = () => resolve(baseURL);
+    img.src = baseURL;
+  });
+}
+
 async function regenDieCut() {
   const btn    = document.getElementById('btn-regen-diecut');
   const status = document.getElementById('diecut-status');
@@ -734,7 +774,11 @@ function initPreviewStep() {
     if (mockupDiv) mockupDiv.style.display = 'none';
     if (btnMockup) btnMockup.style.display = '';
     if (flatEl) flatEl.innerHTML = '<p style="color:var(--gray-400);">載入中...</p>';
-    get2DDataURLWithFrame().then(frameURL => {
+    get2DDataURLWithFrame().then(async (frameURL) => {
+      // 厚切票證：疊加刀模輪廓到確認預覽圖上
+      if (frameURL && STATE.productId === 'biz_thick') {
+        frameURL = await _overlayThickDiecut(frameURL);
+      }
       if (frameURL) STATE.designDataURL = frameURL;
       if (flatEl) {
         let _imgStyle;
