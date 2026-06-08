@@ -126,7 +126,9 @@ function _refreshDiecutPreview() {
   canvas2d.discardActiveObject();
   canvas2d.renderAll();
 
-  const lc = canvas2d.lowerCanvasEl;
+  const lc  = canvas2d.lowerCanvasEl;
+  // Fabric.js 內部以 CSS 像素為座標，但 lowerCanvasEl 是 CSS×DPR 的 buffer 尺寸
+  const dpr = lc.width / canvas2d.getWidth();
 
   // 手動疊加刀模輪廓（不依賴 after:render 時機）
   if (typeof _thickDieCutContour !== 'undefined' && _thickDieCutContour) {
@@ -136,7 +138,8 @@ function _refreshDiecutPreview() {
       tmp.width  = lc.width;
       tmp.height = lc.height;
       const ctx2 = tmp.getContext('2d');
-      ctx2.drawImage(lc, 0, 0);  // 複製 canvas 內容（同步）
+      ctx2.drawImage(lc, 0, 0);  // 1:1 複製 buffer（同步）
+      ctx2.scale(dpr, dpr);       // 後續座標切換為 Fabric.js 的 CSS 像素空間
       const iW = imgObj.getScaledWidth();
       const iH = imgObj.getScaledHeight();
       const oX = imgObj.originX === 'center' ? imgObj.left - iW / 2 : imgObj.left;
