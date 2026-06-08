@@ -1782,7 +1782,7 @@ async function removeBgThick() {
       _thickDieCutContour = data.contour || null;
 
       canvas2d.requestRenderAll();
-      if (status) status.textContent = data.contour ? '完成！紅色虛線為刀模輪廓' : '去背完成（無輪廓）';
+      if (status) status.textContent = data.contour ? '已完成去背！' : '去背完成（無輪廓）';
       setTimeout(() => { if (status) status.textContent = ''; }, 5000);
     }, { crossOrigin: 'anonymous' });
 
