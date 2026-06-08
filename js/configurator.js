@@ -81,6 +81,7 @@ function renderStep() {
   if (diecutPanel) diecutPanel.classList.toggle('hidden', !(isThick && STATE.step === 4));
 
   // 初始化各步驟
+  if (STATE.step === 2) renderSpecStep();
   if (STATE.step === 3) initDesignStep();
   if (isThick && STATE.step === 4) initDieCutStep();
   if ((!isThick && STATE.step === 4) || (isThick && STATE.step === 5)) initPreviewStep();
