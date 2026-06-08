@@ -625,6 +625,13 @@ function initDesignStep() {
   const copyBtn = document.getElementById('btn-copy-lightbox');
   if (copyBtn) copyBtn.style.display = STATE.productId === 'biz_lightbox' ? '' : 'none';
 
+  // 旋轉滑桿（僅 biz_lightbox 顯示）
+  const rotateSection = document.getElementById('rotate-slider-section');
+  if (rotateSection) rotateSection.style.display = STATE.productId === 'biz_lightbox' ? '' : 'none';
+  const rotateSlider = document.getElementById('rotate-slider');
+  const rotateDisplay = document.getElementById('rotate-value-display');
+  if (rotateSlider) rotateSlider.value = 0;
+  if (rotateDisplay) rotateDisplay.textContent = '0°';
 
   // 縮放滑桿（upload-only 才顯示）
   const zoomSection = document.getElementById('zoom-slider-section');

@@ -194,6 +194,17 @@
                    oninput="onZoomSlider(this.value)">
           </div>
 
+          <!-- 旋轉滑桿（僅 biz_lightbox 顯示） -->
+          <div id="rotate-slider-section" style="display:none;margin-bottom:8px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+              <span style="font-size:13px;color:var(--gray-700);font-weight:600;">旋轉</span>
+              <span id="rotate-value-display" style="font-size:12px;color:var(--gray-400);">0°</span>
+            </div>
+            <input type="range" id="rotate-slider" min="-180" max="180" step="1" value="0"
+                   style="width:100%;cursor:pointer;accent-color:var(--green);"
+                   oninput="onRotateSlider(this.value)">
+          </div>
+
           <div style="display:flex;gap:8px;">
             <button id="btn-undo" class="btn btn-secondary btn-sm" onclick="undo2D()" disabled title="復原 (Ctrl+Z)" style="flex:1;">↩ 復原</button>
             <button id="btn-redo" class="btn btn-secondary btn-sm" onclick="redo2D()" disabled title="取消復原 (Ctrl+Y)" style="flex:1;">↪ 取消復原</button>

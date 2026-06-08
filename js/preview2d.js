@@ -145,6 +145,7 @@ function init2DCanvas(productId) {
     _applyThermosTextControls(obj);
     if (typeof _syncTextPropsPanel === 'function') _syncTextPropsPanel(obj);
     if (typeof _updateFloatToolbar === 'function') _updateFloatToolbar();
+    _syncRotateSlider(obj);
   });
   canvas2d.on('selection:updated', e => {
     _showLabelBorder = !isThermos;
@@ -153,6 +154,7 @@ function init2DCanvas(productId) {
     _applyThermosTextControls(obj);
     if (typeof _syncTextPropsPanel === 'function') _syncTextPropsPanel(obj);
     if (typeof _updateFloatToolbar === 'function') _updateFloatToolbar();
+    _syncRotateSlider(obj);
   });
   canvas2d.on('selection:cleared', () => {
     _showLabelBorder = false; canvas2d.requestRenderAll();
@@ -1708,6 +1710,32 @@ function onZoomSlider(value) {
   img.set({ scaleX: baseScale * ratio, scaleY: baseScale * ratio });
   img.setCoords();
   canvas2d.renderAll();
+}
+
+// ─── 旋轉滑桿（biz_lightbox 專用）────────────────────────────
+function onRotateSlider(value) {
+  const angle = parseFloat(value);
+  const dispEl = document.getElementById('rotate-value-display');
+  if (dispEl) dispEl.textContent = Math.round(angle) + '°';
+  if (!canvas2d) return;
+  let img = canvas2d.getActiveObject();
+  if (!img || img.type !== 'image') {
+    img = canvas2d.getObjects().find(o => o.type === 'image' && o.selectable !== false);
+  }
+  if (!img) return;
+  img.rotate(angle);
+  img.setCoords();
+  canvas2d.renderAll();
+}
+
+function _syncRotateSlider(obj) {
+  if (typeof STATE === 'undefined' || STATE.productId !== 'biz_lightbox') return;
+  if (!obj || obj.type !== 'image') return;
+  const slider = document.getElementById('rotate-slider');
+  const dispEl = document.getElementById('rotate-value-display');
+  const angle = Math.round(obj.angle || 0);
+  if (slider) slider.value = angle;
+  if (dispEl) dispEl.textContent = angle + '°';
 }
 
 // ─── 刪除選取 ─────────────────────────────────────────────
