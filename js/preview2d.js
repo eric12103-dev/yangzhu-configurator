@@ -1261,13 +1261,16 @@ function _thickDiecutToSVGPath() {
   if (!imgObj) return '';
   const cW = canvas2d.getWidth(), cH = canvas2d.getHeight();
   const vW = 158.7, vH = 248.3;
-  const iW = imgObj.getScaledWidth(), iH = imgObj.getScaledHeight();
-  const oX = imgObj.originX === 'center' ? imgObj.left - iW / 2 : imgObj.left;
-  const oY = imgObj.originY === 'center' ? imgObj.top  - iH / 2 : imgObj.top;
-  const pts = _thickDieCutContour.map(pt => [
-    (oX + pt[0] * iW) / cW * vW,
-    (oY + pt[1] * iH) / cH * vH
-  ]);
+  // 用 transform matrix 轉換，正確處理旋轉
+  const tm = imgObj.calcTransformMatrix();
+  const w  = imgObj.width, h = imgObj.height;
+  const pts = _thickDieCutContour.map(pt => {
+    const lx = (pt[0] - 0.5) * w;
+    const ly = (pt[1] - 0.5) * h;
+    const cx = tm[0]*lx + tm[2]*ly + tm[4]; // canvas CSS px
+    const cy = tm[1]*lx + tm[3]*ly + tm[5];
+    return [cx / cW * vW, cy / cH * vH];    // SVG 座標
+  });
   if (pts.length < 3) return '';
   // Catmull-Rom → SVG cubic bezier，圓滑輪廓
   const n = pts.length;
@@ -1285,17 +1288,16 @@ function _thickDiecutToSVGPath() {
   }
   const contourPath = `<path fill="none" stroke="#000000" stroke-width="0.5" d="${d}Z"/>`;
 
-  // 吊飾孔（外徑8mm / 內徑3mm）
+  // 吊飾孔：從已轉換的 SVG pts 推算位置（正確處理旋轉）
   // vW/54 = 2.94 SVG units/mm；外半徑4mm、內半徑1.5mm
-  const mmSVG   = vW / 54;
-  const outerR  = (4   * mmSVG).toFixed(2); // 11.76
-  const innerR  = (1.5 * mmSVG).toFixed(2); // 4.41
-  const minNy   = Math.min(..._thickDieCutContour.map(pt => pt[1]));
-  const minNx   = Math.min(..._thickDieCutContour.map(pt => pt[0]));
-  const maxNx   = Math.max(..._thickDieCutContour.map(pt => pt[0]));
-  const topSVGy = ((oY + minNy * iH) / cH * vH).toFixed(2);
-  const cenSVGx = ((oX + (minNx + maxNx) / 2 * iW) / cW * vW).toFixed(2);
-  const holeCy  = ((oY + minNy * iH) / cH * vH - 4 * mmSVG).toFixed(2);
+  const mmSVG  = vW / 54;
+  const outerR = (4   * mmSVG).toFixed(2); // 11.76
+  const innerR = (1.5 * mmSVG).toFixed(2); // 4.41
+  const minSVGy = Math.min(...pts.map(p => p[1]));
+  const minSVGx = Math.min(...pts.map(p => p[0]));
+  const maxSVGx = Math.max(...pts.map(p => p[0]));
+  const cenSVGx = ((minSVGx + maxSVGx) / 2).toFixed(2);
+  const holeCy  = (minSVGy - 4 * mmSVG).toFixed(2);
   const holeCircles =
     `<circle cx="${cenSVGx}" cy="${holeCy}" r="${outerR}" fill="none" stroke="#000000" stroke-width="0.5"/>` +
     `<circle cx="${cenSVGx}" cy="${holeCy}" r="${innerR}" fill="none" stroke="#000000" stroke-width="0.5"/>`;

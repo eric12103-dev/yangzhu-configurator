@@ -136,19 +136,36 @@ function _drawSmooth(ctx, pts) {
   }
 }
 
+// 用 Fabric.js transform matrix 把正規化輪廓點轉換為 canvas CSS 像素座標
+// （正確處理旋轉、縮放、翻轉）
+function _contourToCanvasPts(imgObj) {
+  if (!_thickDieCutContour) return [];
+  const tm = imgObj.calcTransformMatrix(); // [a,b,c,d,tx,ty]
+  const w  = imgObj.width;   // 原始圖片像素寬（未縮放）
+  const h  = imgObj.height;  // 原始圖片像素高
+  return _thickDieCutContour.map(pt => {
+    const lx = (pt[0] - 0.5) * w; // Fabric 局部座標（中心為 0,0）
+    const ly = (pt[1] - 0.5) * h;
+    return [
+      tm[0] * lx + tm[2] * ly + tm[4], // canvas CSS x
+      tm[1] * lx + tm[3] * ly + tm[5]  // canvas CSS y
+    ];
+  });
+}
+
 // 計算吊飾孔位置（外徑8mm / 內徑3mm，置於輪廓頂部中央正上方）
 // 回傳 { cx, cy, outerR, innerR } 或 null
-function _getHolePos(oX, oY, iW, iH) {
-  if (!_thickDieCutContour || !canvas2d) return null;
-  const minNy = Math.min(..._thickDieCutContour.map(pt => pt[1]));
-  const minNx = Math.min(..._thickDieCutContour.map(pt => pt[0]));
-  const maxNx = Math.max(..._thickDieCutContour.map(pt => pt[0]));
-  const topCy    = oY + minNy * iH;
-  const centerCx = oX + (minNx + maxNx) / 2 * iW;
-  const mmToCSS  = canvas2d.getWidth() / 54; // 卡片寬 54mm
-  const outerR = 4   * mmToCSS; // 外徑 8mm → 半徑 4mm
-  const innerR = 1.5 * mmToCSS; // 內徑 3mm → 半徑 1.5mm
-  return { cx: centerCx, cy: topCy - outerR, outerR, innerR };
+function _getHolePos(imgObj) {
+  if (!_thickDieCutContour || !canvas2d || !imgObj) return null;
+  const canvasPts = _contourToCanvasPts(imgObj);
+  if (!canvasPts.length) return null;
+  const minY = Math.min(...canvasPts.map(p => p[1]));
+  const minX = Math.min(...canvasPts.map(p => p[0]));
+  const maxX = Math.max(...canvasPts.map(p => p[0]));
+  const mmToCSS = canvas2d.getWidth() / 54; // 卡片寬 54mm
+  const outerR  = 4   * mmToCSS; // 外徑 8mm → 半徑 4mm
+  const innerR  = 1.5 * mmToCSS; // 內徑 3mm → 半徑 1.5mm
+  return { cx: (minX + maxX) / 2, cy: minY - outerR, outerR, innerR };
 }
 
 function _refreshDiecutPreview() {
@@ -180,22 +197,19 @@ function _refreshDiecutPreview() {
       // 轉換到 CSS 像素空間（含 padding 偏移）
       ctx2.translate(extraPad, extraPad);
       ctx2.scale(dpr, dpr);
-      const iW = imgObj.getScaledWidth();
-      const iH = imgObj.getScaledHeight();
-      const oX = imgObj.originX === 'center' ? imgObj.left - iW / 2 : imgObj.left;
-      const oY = imgObj.originY === 'center' ? imgObj.top  - iH / 2 : imgObj.top;
+      // 用 transform matrix 轉換（正確處理旋轉）
+      const pts2  = _contourToCanvasPts(imgObj);
+      const hole2 = _getHolePos(imgObj);
       ctx2.save();
       ctx2.strokeStyle = '#000000';
       ctx2.lineWidth = 2;
       ctx2.setLineDash([]);
       // 主輪廓
-      const pts2 = _thickDieCutContour.map(pt => [oX + pt[0] * iW, oY + pt[1] * iH]);
       ctx2.beginPath();
       _drawSmooth(ctx2, pts2);
       ctx2.closePath();
       ctx2.stroke();
       // 吊飾孔（外徑8mm / 內徑3mm）
-      const hole2 = _getHolePos(oX, oY, iW, iH);
       if (hole2) {
         ctx2.beginPath();
         ctx2.arc(hole2.cx, hole2.cy, hole2.outerR, 0, Math.PI * 2);
@@ -233,22 +247,19 @@ async function _overlayThickDiecut(baseURL) {
       ctx.drawImage(img, 0, 0);
       const scale = img.width / canvas2d.getWidth();  // PNG 是 canvas CSS 寬的 2x
       ctx.scale(scale, scale);
-      const iW = imgObj.getScaledWidth();
-      const iH = imgObj.getScaledHeight();
-      const oX = imgObj.originX === 'center' ? imgObj.left - iW / 2 : imgObj.left;
-      const oY = imgObj.originY === 'center' ? imgObj.top  - iH / 2 : imgObj.top;
+      // 用 transform matrix 轉換（正確處理旋轉）
+      const ptsO  = _contourToCanvasPts(imgObj);
+      const holeO = _getHolePos(imgObj);
       ctx.save();
       ctx.strokeStyle = '#000000';
       ctx.lineWidth = 2;
       ctx.setLineDash([]);
       // 主輪廓
-      const ptsO = _thickDieCutContour.map(pt => [oX + pt[0] * iW, oY + pt[1] * iH]);
       ctx.beginPath();
       _drawSmooth(ctx, ptsO);
       ctx.closePath();
       ctx.stroke();
       // 吊飾孔（外徑8mm / 內徑3mm）
-      const holeO = _getHolePos(oX, oY, iW, iH);
       if (holeO) {
         ctx.beginPath();
         ctx.arc(holeO.cx, holeO.cy, holeO.outerR, 0, Math.PI * 2);
