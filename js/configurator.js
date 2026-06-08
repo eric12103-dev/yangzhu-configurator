@@ -118,6 +118,24 @@ function initDieCutStep() {
   }
 }
 
+// Catmull-Rom → cubic bezier，讓多邊形輪廓平滑繪製
+function _drawSmooth(ctx, pts) {
+  if (!pts || pts.length < 3) return;
+  const n = pts.length;
+  ctx.moveTo(pts[0][0], pts[0][1]);
+  for (let i = 0; i < n; i++) {
+    const p0 = pts[(i - 1 + n) % n];
+    const p1 = pts[i];
+    const p2 = pts[(i + 1) % n];
+    const p3 = pts[(i + 2) % n];
+    ctx.bezierCurveTo(
+      p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6,
+      p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6,
+      p2[0], p2[1]
+    );
+  }
+}
+
 function _refreshDiecutPreview() {
   const img = document.getElementById('diecut-preview-img');
   const noPreview = document.getElementById('diecut-no-preview');
@@ -155,12 +173,9 @@ function _refreshDiecutPreview() {
       ctx2.strokeStyle = '#000000';
       ctx2.lineWidth = 2;
       ctx2.setLineDash([]);
+      const pts2 = _thickDieCutContour.map(pt => [oX + pt[0] * iW, oY + pt[1] * iH]);
       ctx2.beginPath();
-      _thickDieCutContour.forEach((pt, i) => {
-        const px = oX + pt[0] * iW;
-        const py = oY + pt[1] * iH;
-        if (i === 0) ctx2.moveTo(px, py); else ctx2.lineTo(px, py);
-      });
+      _drawSmooth(ctx2, pts2);
       ctx2.closePath();
       ctx2.stroke();
       ctx2.restore();
@@ -200,12 +215,9 @@ async function _overlayThickDiecut(baseURL) {
       ctx.strokeStyle = '#000000';
       ctx.lineWidth = 2;
       ctx.setLineDash([]);
+      const ptsO = _thickDieCutContour.map(pt => [oX + pt[0] * iW, oY + pt[1] * iH]);
       ctx.beginPath();
-      _thickDieCutContour.forEach((pt, i) => {
-        const px = oX + pt[0] * iW;
-        const py = oY + pt[1] * iH;
-        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
-      });
+      _drawSmooth(ctx, ptsO);
       ctx.closePath();
       ctx.stroke();
       ctx.restore();

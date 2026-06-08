@@ -1264,13 +1264,25 @@ function _thickDiecutToSVGPath() {
   const iW = imgObj.getScaledWidth(), iH = imgObj.getScaledHeight();
   const oX = imgObj.originX === 'center' ? imgObj.left - iW / 2 : imgObj.left;
   const oY = imgObj.originY === 'center' ? imgObj.top  - iH / 2 : imgObj.top;
-  let d = '';
-  _thickDieCutContour.forEach((pt, i) => {
-    const sx = ((oX + pt[0] * iW) / cW * vW).toFixed(2);
-    const sy = ((oY + pt[1] * iH) / cH * vH).toFixed(2);
-    d += i === 0 ? `M${sx},${sy}` : `L${sx},${sy}`;
-  });
-  if (!d) return '';
+  const pts = _thickDieCutContour.map(pt => [
+    (oX + pt[0] * iW) / cW * vW,
+    (oY + pt[1] * iH) / cH * vH
+  ]);
+  if (pts.length < 3) return '';
+  // Catmull-Rom → SVG cubic bezier，圓滑輪廓
+  const n = pts.length;
+  let d = `M${pts[0][0].toFixed(2)},${pts[0][1].toFixed(2)}`;
+  for (let i = 0; i < n; i++) {
+    const p0 = pts[(i - 1 + n) % n];
+    const p1 = pts[i];
+    const p2 = pts[(i + 1) % n];
+    const p3 = pts[(i + 2) % n];
+    const cp1x = (p1[0] + (p2[0] - p0[0]) / 6).toFixed(2);
+    const cp1y = (p1[1] + (p2[1] - p0[1]) / 6).toFixed(2);
+    const cp2x = (p2[0] - (p3[0] - p1[0]) / 6).toFixed(2);
+    const cp2y = (p2[1] - (p3[1] - p1[1]) / 6).toFixed(2);
+    d += `C${cp1x},${cp1y} ${cp2x},${cp2y} ${pts[(i+1)%n][0].toFixed(2)},${pts[(i+1)%n][1].toFixed(2)}`;
+  }
   return `<path fill="none" stroke="#000000" stroke-width="0.5" d="${d}Z"/>`;
 }
 
