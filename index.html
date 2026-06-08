@@ -324,24 +324,6 @@
 <script src="js/mockup.js"></script>
 <script src="js/configurator.js?v=2"></script>
 
-<script>
-  // 覆寫 goStep，將 5 步改為 4 步
-  const _goStep = goStep;
-  function goStep(n) {
-    if (n < 1 || n > 4) return;
-    if (n > 1 && !STATE.productId) { alert('請先選擇產品'); return; }
-    if (n > 2 && !STATE.materialId) { alert('請先完成規格選擇'); return; }
-    // 離開設計步驟前快照
-    if (STATE.step === 3 && n !== 3) {
-      STATE.canvasJSON    = (typeof getCanvas2DJSON === 'function') ? getCanvas2DJSON()  : null;
-      STATE.designDataURL = (typeof get2DDataURL   === 'function') ? get2DDataURL()     : null;
-    }
-    STATE.step = n;
-    renderStep();
-    if (n === 2) renderSpecStep();
-  }
-
-</script>
 
 </body>
 </html>
