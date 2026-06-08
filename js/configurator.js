@@ -122,9 +122,46 @@ function _refreshDiecutPreview() {
   const noPreview = document.getElementById('diecut-no-preview');
   if (!img) return;
   if (typeof canvas2d === 'undefined' || !canvas2d) return;
-  canvas2d.discardActiveObject(); // 截圖前取消選取，避免綠色控制點被捕捉
-  canvas2d.renderAll();  // 同步渲染，確保 after:render 刀模已畫上
-  img.src = canvas2d.lowerCanvasEl.toDataURL('image/png');
+
+  canvas2d.discardActiveObject();
+  canvas2d.renderAll();
+
+  const lc = canvas2d.lowerCanvasEl;
+
+  // 手動疊加刀模輪廓（不依賴 after:render 時機）
+  if (typeof _thickDieCutContour !== 'undefined' && _thickDieCutContour) {
+    const imgObj = canvas2d.getObjects().find(o => o.type === 'image' && o.selectable !== false);
+    if (imgObj) {
+      const tmp = document.createElement('canvas');
+      tmp.width  = lc.width;
+      tmp.height = lc.height;
+      const ctx2 = tmp.getContext('2d');
+      ctx2.drawImage(lc, 0, 0);  // 複製 canvas 內容（同步）
+      const iW = imgObj.getScaledWidth();
+      const iH = imgObj.getScaledHeight();
+      const oX = imgObj.originX === 'center' ? imgObj.left - iW / 2 : imgObj.left;
+      const oY = imgObj.originY === 'center' ? imgObj.top  - iH / 2 : imgObj.top;
+      ctx2.save();
+      ctx2.strokeStyle = '#ff2222';
+      ctx2.lineWidth = 2;
+      ctx2.setLineDash([8, 5]);
+      ctx2.beginPath();
+      _thickDieCutContour.forEach((pt, i) => {
+        const px = oX + pt[0] * iW;
+        const py = oY + pt[1] * iH;
+        if (i === 0) ctx2.moveTo(px, py); else ctx2.lineTo(px, py);
+      });
+      ctx2.closePath();
+      ctx2.stroke();
+      ctx2.restore();
+      img.src = tmp.toDataURL('image/png');
+      img.style.display = '';
+      if (noPreview) noPreview.style.display = 'none';
+      return;
+    }
+  }
+
+  img.src = lc.toDataURL('image/png');
   img.style.display = '';
   if (noPreview) noPreview.style.display = 'none';
 }
