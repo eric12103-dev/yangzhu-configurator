@@ -134,12 +134,18 @@ function _refreshDiecutPreview() {
   if (typeof _thickDieCutContour !== 'undefined' && _thickDieCutContour) {
     const imgObj = canvas2d.getObjects().find(o => o.type === 'image' && o.selectable !== false);
     if (imgObj) {
+      // 四周加 padding，讓延伸到 canvas 外的輪廓也能顯示
+      const extraPad = Math.round(60 * dpr); // buffer 像素
       const tmp = document.createElement('canvas');
-      tmp.width  = lc.width;
-      tmp.height = lc.height;
+      tmp.width  = lc.width  + extraPad * 2;
+      tmp.height = lc.height + extraPad * 2;
       const ctx2 = tmp.getContext('2d');
-      ctx2.drawImage(lc, 0, 0);  // 1:1 複製 buffer（同步）
-      ctx2.scale(dpr, dpr);       // 後續座標切換為 Fabric.js 的 CSS 像素空間
+      ctx2.fillStyle = '#f8f8f8';
+      ctx2.fillRect(0, 0, tmp.width, tmp.height);
+      ctx2.drawImage(lc, extraPad, extraPad); // canvas 內容置中
+      // 轉換到 CSS 像素空間（含 padding 偏移）
+      ctx2.translate(extraPad, extraPad);
+      ctx2.scale(dpr, dpr);
       const iW = imgObj.getScaledWidth();
       const iH = imgObj.getScaledHeight();
       const oX = imgObj.originX === 'center' ? imgObj.left - iW / 2 : imgObj.left;
