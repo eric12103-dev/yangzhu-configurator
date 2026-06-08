@@ -136,6 +136,21 @@ function _drawSmooth(ctx, pts) {
   }
 }
 
+// 計算吊飾孔位置（外徑8mm / 內徑3mm，置於輪廓頂部中央正上方）
+// 回傳 { cx, cy, outerR, innerR } 或 null
+function _getHolePos(oX, oY, iW, iH) {
+  if (!_thickDieCutContour || !canvas2d) return null;
+  const minNy = Math.min(..._thickDieCutContour.map(pt => pt[1]));
+  const minNx = Math.min(..._thickDieCutContour.map(pt => pt[0]));
+  const maxNx = Math.max(..._thickDieCutContour.map(pt => pt[0]));
+  const topCy    = oY + minNy * iH;
+  const centerCx = oX + (minNx + maxNx) / 2 * iW;
+  const mmToCSS  = canvas2d.getWidth() / 54; // 卡片寬 54mm
+  const outerR = 4   * mmToCSS; // 外徑 8mm → 半徑 4mm
+  const innerR = 1.5 * mmToCSS; // 內徑 3mm → 半徑 1.5mm
+  return { cx: centerCx, cy: topCy - outerR, outerR, innerR };
+}
+
 function _refreshDiecutPreview() {
   const img = document.getElementById('diecut-preview-img');
   const noPreview = document.getElementById('diecut-no-preview');
@@ -173,11 +188,22 @@ function _refreshDiecutPreview() {
       ctx2.strokeStyle = '#000000';
       ctx2.lineWidth = 2;
       ctx2.setLineDash([]);
+      // 主輪廓
       const pts2 = _thickDieCutContour.map(pt => [oX + pt[0] * iW, oY + pt[1] * iH]);
       ctx2.beginPath();
       _drawSmooth(ctx2, pts2);
       ctx2.closePath();
       ctx2.stroke();
+      // 吊飾孔（外徑8mm / 內徑3mm）
+      const hole2 = _getHolePos(oX, oY, iW, iH);
+      if (hole2) {
+        ctx2.beginPath();
+        ctx2.arc(hole2.cx, hole2.cy, hole2.outerR, 0, Math.PI * 2);
+        ctx2.stroke();
+        ctx2.beginPath();
+        ctx2.arc(hole2.cx, hole2.cy, hole2.innerR, 0, Math.PI * 2);
+        ctx2.stroke();
+      }
       ctx2.restore();
       img.src = tmp.toDataURL('image/png');
       img.style.display = '';
@@ -215,11 +241,22 @@ async function _overlayThickDiecut(baseURL) {
       ctx.strokeStyle = '#000000';
       ctx.lineWidth = 2;
       ctx.setLineDash([]);
+      // 主輪廓
       const ptsO = _thickDieCutContour.map(pt => [oX + pt[0] * iW, oY + pt[1] * iH]);
       ctx.beginPath();
       _drawSmooth(ctx, ptsO);
       ctx.closePath();
       ctx.stroke();
+      // 吊飾孔（外徑8mm / 內徑3mm）
+      const holeO = _getHolePos(oX, oY, iW, iH);
+      if (holeO) {
+        ctx.beginPath();
+        ctx.arc(holeO.cx, holeO.cy, holeO.outerR, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(holeO.cx, holeO.cy, holeO.innerR, 0, Math.PI * 2);
+        ctx.stroke();
+      }
       ctx.restore();
       resolve(tmp.toDataURL('image/png'));
     };

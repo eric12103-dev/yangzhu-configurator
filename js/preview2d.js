@@ -1283,7 +1283,24 @@ function _thickDiecutToSVGPath() {
     const cp2y = (p2[1] - (p3[1] - p1[1]) / 6).toFixed(2);
     d += `C${cp1x},${cp1y} ${cp2x},${cp2y} ${pts[(i+1)%n][0].toFixed(2)},${pts[(i+1)%n][1].toFixed(2)}`;
   }
-  return `<path fill="none" stroke="#000000" stroke-width="0.5" d="${d}Z"/>`;
+  const contourPath = `<path fill="none" stroke="#000000" stroke-width="0.5" d="${d}Z"/>`;
+
+  // 吊飾孔（外徑8mm / 內徑3mm）
+  // vW/54 = 2.94 SVG units/mm；外半徑4mm、內半徑1.5mm
+  const mmSVG   = vW / 54;
+  const outerR  = (4   * mmSVG).toFixed(2); // 11.76
+  const innerR  = (1.5 * mmSVG).toFixed(2); // 4.41
+  const minNy   = Math.min(..._thickDieCutContour.map(pt => pt[1]));
+  const minNx   = Math.min(..._thickDieCutContour.map(pt => pt[0]));
+  const maxNx   = Math.max(..._thickDieCutContour.map(pt => pt[0]));
+  const topSVGy = ((oY + minNy * iH) / cH * vH).toFixed(2);
+  const cenSVGx = ((oX + (minNx + maxNx) / 2 * iW) / cW * vW).toFixed(2);
+  const holeCy  = ((oY + minNy * iH) / cH * vH - 4 * mmSVG).toFixed(2);
+  const holeCircles =
+    `<circle cx="${cenSVGx}" cy="${holeCy}" r="${outerR}" fill="none" stroke="#000000" stroke-width="0.5"/>` +
+    `<circle cx="${cenSVGx}" cy="${holeCy}" r="${innerR}" fill="none" stroke="#000000" stroke-width="0.5"/>`;
+
+  return `${contourPath}\n${holeCircles}`;
 }
 
 // 厚切電子票證上傳模式：高解析 canvas 截圖裁切到圓角框，疊加晶片圓、刀模線、紅框
