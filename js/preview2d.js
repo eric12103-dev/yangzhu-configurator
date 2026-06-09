@@ -995,8 +995,8 @@ async function getUploadOnlyRoundSVG() {
   if (!canvas2d) return null;
   const W_VB = 324.2, H_VB = 177.9, R_VB = 66.6;
   const logW = canvas2d.getWidth(), logH = canvas2d.getHeight();
-  // SCALE=12：480px canvas → 5760px，圓直徑≈2364px → 47mm@~1278DPI
-  const SCALE = 12;
+  // SCALE=3.28：480px canvas → 1574px，圓直徑≈647px → 47mm@~350DPI
+  const SCALE = 3.28;
 
   // 一次高解析渲染，兩圓共用
   const bgObjs = canvas2d.getObjects().filter(o => !o.selectable && o.name !== 'bottle-bg');
