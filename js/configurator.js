@@ -657,7 +657,7 @@ function initDesignStep() {
 
   // 旋轉滑桿（僅 biz_lightbox 顯示）
   const rotateSection = document.getElementById('rotate-slider-section');
-  if (rotateSection) rotateSection.style.display = STATE.productId === 'biz_lightbox' ? '' : 'none';
+  if (rotateSection) rotateSection.style.display = isUploadOnly ? '' : 'none';
   const rotateSlider = document.getElementById('rotate-slider');
   const rotateDisplay = document.getElementById('rotate-value-display');
   if (rotateSlider) rotateSlider.value = 0;
