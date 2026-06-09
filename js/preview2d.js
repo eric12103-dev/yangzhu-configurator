@@ -1166,10 +1166,10 @@ async function getUploadOnlyLightboxSVG() {
   const W_VB = 348.2, H_VB = 145.2, R_VB = 51;
   const logW = canvas2d.getWidth(), logH = canvas2d.getHeight();
 
-  // 以 4x 高解析度渲染後裁切圓形，提升印刷品質
+  // 以 4x 高解析度渲染後裁切圓形，圓直徑~562px → 36mm @ ~397 DPI
   function _cropCircle(cx_vb, cy_vb) {
     return new Promise(resolve => {
-      const SCALE  = 9;
+      const SCALE  = 4;
       const cx_log = logW * (cx_vb / W_VB);
       const cy_log = logH * (cy_vb / H_VB);
       const r_log  = logW * (R_VB  / W_VB);
