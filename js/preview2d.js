@@ -946,8 +946,8 @@ function getUploadOnlySVG() {
   if (!_lastUploadedDataURL) return null;
   const isPortrait = typeof STATE !== 'undefined' && STATE.orientationId === 'portrait';
   if (isPortrait) {
-    // 直式：使用畫布渲染結果（含使用者縮放/裁切），multiplier 7 → ~1034 DPI
-    const _canvasDataURL = (typeof get2DDataURL === 'function' && get2DDataURL(7)) || _lastUploadedDataURL;
+    // 直式：使用畫布渲染結果（含使用者縮放/裁切），multiplier 2.5 → ~369 DPI
+    const _canvasDataURL = (typeof get2DDataURL === 'function' && get2DDataURL(2.5)) || _lastUploadedDataURL;
     // viewBox 170.1×259.7，裁切邊 x=2.8,y=2.8 → 167.2,256.8
     return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 170.1 259.7" width="60mm" height="91.6mm">
 <style>.st0{fill:none;stroke:#E60012;stroke-miterlimit:10;}.st1{fill:none;stroke:#3E3A39;stroke-width:0.25;stroke-miterlimit:10;}.st2{fill:none;stroke:#3E3A39;stroke-width:0.25;stroke-miterlimit:10;stroke-dasharray:5.0813,5.0813;}.st3{fill:none;stroke:#3E3A39;stroke-width:0.25;stroke-miterlimit:10;stroke-dasharray:5.1404,5.1404;}</style>
@@ -968,8 +968,8 @@ function getUploadOnlySVG() {
 </g>
 </svg>`;
   }
-  // 橫式：viewBox 259.7×170.1，裁切邊 x=2.8,y=2.8 → 256.8,167.2；multiplier 7 → ~997 DPI
-  const _landscapeDataURL = (typeof get2DDataURL === 'function' && get2DDataURL(7)) || _lastUploadedDataURL;
+  // 橫式：viewBox 259.7×170.1，裁切邊 x=2.8,y=2.8 → 256.8,167.2；multiplier 2.5 → ~356 DPI
+  const _landscapeDataURL = (typeof get2DDataURL === 'function' && get2DDataURL(2.5)) || _lastUploadedDataURL;
   return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 259.7 170.1" width="91.6mm" height="60mm">
 <style>.st0{fill:none;stroke:#E60012;stroke-miterlimit:10;}.st1{fill:none;stroke:#3E3A39;stroke-width:0.25;stroke-miterlimit:10;}.st2{fill:none;stroke:#3E3A39;stroke-width:0.25;stroke-miterlimit:10;stroke-dasharray:5.0813,5.0813;}.st3{fill:none;stroke:#3E3A39;stroke-width:0.25;stroke-miterlimit:10;stroke-dasharray:5.1404,5.1404;}</style>
 <defs><clipPath id="card-clip"><rect x="2.8" y="2.8" width="254" height="164.4"/></clipPath></defs>
