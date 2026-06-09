@@ -1093,8 +1093,8 @@ async function getUploadOnlyOmamoriSVG() {
     canvas2d.backgroundColor = 'rgba(0,0,0,0)';
     canvas2d.backgroundImage = null;
     canvas2d.renderAll();
-    // 1200 DPI：viewBox 單位為 pt（Illustrator 預設），324.2pt=114.4mm=4.504"，目前 canvas 720DPI，multiplier 5/3 → 1200DPI
-    const dataURL = canvas2d.toDataURL({ format: 'png', multiplier: 5 / 3 });
+    // 800 DPI：canvas 顯示約 480px，物理寬 114.4mm=4.504"，4.504×800÷480≈7.5 → 輸出約 3600px ≈ 799 DPI
+    const dataURL = canvas2d.toDataURL({ format: 'png', multiplier: 7.5 });
     canvas2d.backgroundColor = origBg;
     canvas2d.backgroundImage = origBgImg;
     _suppressOverlay = false;
