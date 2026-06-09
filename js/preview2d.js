@@ -1093,8 +1093,8 @@ async function getUploadOnlyOmamoriSVG() {
     canvas2d.backgroundColor = 'rgba(0,0,0,0)';
     canvas2d.backgroundImage = null;
     canvas2d.renderAll();
-    // 800 DPI：canvas 顯示約 480px，物理寬 114.4mm=4.504"，4.504×800÷480≈7.5 → 輸出約 3600px ≈ 799 DPI
-    const dataURL = canvas2d.toDataURL({ format: 'png', multiplier: 7.5 });
+    // 350 DPI：canvas 顯示約 480px，物理寬 114.4mm=4.504"，4.504×350÷480≈3.28 → 輸出約 1576px ≈ 350 DPI
+    const dataURL = canvas2d.toDataURL({ format: 'png', multiplier: 3.28 });
     canvas2d.backgroundColor = origBg;
     canvas2d.backgroundImage = origBgImg;
     _suppressOverlay = false;
