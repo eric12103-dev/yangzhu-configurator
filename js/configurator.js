@@ -441,7 +441,37 @@ function selectProduct(productId) {
   STATE.finishId   = p.finishes[0].id;
   if (p.orientations)  STATE.orientationId = p.orientations[0].id;
 
+  _preloadProductAssets(productId);
   nextStep();
+}
+
+function _preloadProductAssets(productId) {
+  const p = PRODUCTS[productId];
+  if (!p) return;
+  const urls = [];
+
+  // 材質預覽圖
+  (p.materials || []).forEach(m => { if (m.image) urls.push(m.image); });
+
+  // 方向組合圖
+  if (p.orientationImages) {
+    Object.values(p.orientationImages).forEach(u => urls.push(u));
+  }
+
+  // SVG 框線（biz_card / biz_leather_round / biz_leather_omamori / biz_lightbox / biz_thick）
+  if (productId === 'biz_card') {
+    urls.push('assets/card_portrait_frame.svg', 'assets/card_landscape_frame.svg');
+  } else if (productId === 'biz_leather_round') {
+    urls.push('assets/leather_round_easycard_frame.svg', 'assets/leather_round_ipass_frame.svg');
+  } else if (productId === 'biz_leather_omamori') {
+    urls.push('assets/leather_omamori_easycard_frame.svg', 'assets/leather_omamori_ipass_frame.svg');
+  } else if (productId === 'biz_lightbox') {
+    urls.push('assets/lightbox_frame.svg');
+  } else if (productId === 'biz_thick') {
+    urls.push('assets/thick_frame.svg');
+  }
+
+  urls.forEach(url => { const i = new Image(); i.src = url; });
 }
 
 // ─── Step 2：選規格 ────────────────────────────────────────
