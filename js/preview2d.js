@@ -599,6 +599,7 @@ function uploadImage2D(file) {
   const reader = new FileReader();
   reader.onload = e => {
     _lastUploadedDataURL = e.target.result; // 保存原始圖片 URL，送出時使用
+    _lastRembgDataURL    = null;            // 重新上傳時清除去背快取
     fabric.Image.fromURL(e.target.result, img => {
       const w = canvas2d.getWidth();
       const h = canvas2d.getHeight();
@@ -937,7 +938,8 @@ let _cachedLeatherOmamoriEasycardFrameImg = null;
 let _cachedLeatherOmamoriIpassFrameImg = null;
 let _cachedLightboxFrameImg = null;
 let _cachedThickFrameImg = null;
-let _thickDieCutContour = null;  // 刀模正規化輪廓 [[nx,ny],...]
+let _thickDieCutContour = null;   // 刀模正規化輪廓 [[nx,ny],...]
+let _lastRembgDataURL   = null;   // 去背後的 canvas 圖片（含 FIXED_PAD 白邊，只設一次）
 var _lastUploadedDataURL = null;
 
 // 卡片橫式上傳模式：回傳向量 SVG（照片為 <image>，紅框+虛線為獨立向量路徑）
@@ -1257,50 +1259,51 @@ async function getUploadOnlyLightboxSVG() {
 }
 
 // 厚切電子票證：將刀模輪廓轉為 SVG path（viewBox 158.7×248.3）
+// 吊飾孔採「細頸凸出 tab」設計（同 _drawDiecutWithHole）
 function _thickDiecutToSVGPath() {
   if (!_thickDieCutContour || !canvas2d) return '';
   const imgObj = canvas2d.getObjects().find(o => o.type === 'image' && o.selectable !== false);
   if (!imgObj) return '';
   const cW = canvas2d.getWidth(), cH = canvas2d.getHeight();
   const vW = 158.7, vH = 248.3;
-  // 用 transform matrix 轉換，正確處理旋轉
   const tm = imgObj.calcTransformMatrix();
   const w  = imgObj.width, h = imgObj.height;
   const pts = _thickDieCutContour.map(pt => {
     const lx = (pt[0] - 0.5) * w;
     const ly = (pt[1] - 0.5) * h;
-    const cx = tm[0]*lx + tm[2]*ly + tm[4]; // canvas CSS px
+    const cx = tm[0]*lx + tm[2]*ly + tm[4];
     const cy = tm[1]*lx + tm[3]*ly + tm[5];
-    return [cx / cW * vW, cy / cH * vH];    // SVG 座標
+    return [cx / cW * vW, cy / cH * vH];
   });
   if (pts.length < 3) return '';
 
-  // 吊飾孔參數（SVG 座標）
-  const mmSVG  = vW / 54;                         // 2.94 SVG units/mm
-  const outerR = 4   * mmSVG;                     // 11.76
-  const innerR = 1.5 * mmSVG;                     // 4.41
-  const minSVGy = Math.min(...pts.map(p => p[1]));
-  const minSVGx = Math.min(...pts.map(p => p[0]));
-  const maxSVGx = Math.max(...pts.map(p => p[0]));
-  const hx = (minSVGx + maxSVGx) / 2;
-  const hy = minSVGy;                              // 中心在最高點
+  const n      = pts.length;
+  const mmSVG  = vW / 54;
+  const outerR = 4   * mmSVG;
+  const innerR = 1.5 * mmSVG;
+  const neckH  = 3   * mmSVG;
+  const neckHW = innerR;
+  const sqrtD  = Math.sqrt(outerR * outerR - innerR * innerR);
+  const minY   = Math.min(...pts.map(p => p[1]));
+  const minX   = Math.min(...pts.map(p => p[0]));
+  const maxX   = Math.max(...pts.map(p => p[0]));
+  const hx     = (minX + maxX) / 2;
+  const holeCy = minY - neckH - sqrtD;
+  const yConn  = minY - neckH;  // 細頸頂端 = holeCy + sqrtD
 
-  // 找在外圓內的輪廓點
-  const n   = pts.length;
-  const rSq = outerR * outerR;
-  const isIn = pts.map(p => (p[0]-hx)**2 + (p[1]-hy)**2 < rSq);
-  const cnt  = isIn.filter(Boolean).length;
-
-  // 找 entry/exit
-  let entryIdx = -1, exitIdx = -1;
+  // 找細頸底端輪廓點
+  let leftIdx = 0, rightIdx = 0;
+  let ld = Infinity, rd = Infinity;
   for (let i = 0; i < n; i++) {
-    const prev = (i-1+n)%n;
-    if (!isIn[prev] && isIn[i]  && entryIdx === -1) entryIdx = i;
-    if ( isIn[prev] && !isIn[i] && exitIdx  === -1) exitIdx  = i;
+    const [px, py] = pts[i];
+    const dl = Math.hypot(px - (hx - neckHW), py - minY);
+    const dr = Math.hypot(px - (hx + neckHW), py - minY);
+    if (dl < ld) { ld = dl; leftIdx = i; }
+    if (dr < rd) { rd = dr; rightIdx = i; }
   }
 
-  // 如果沒有有效交叉：fallback，獨立輪廓 + 兩個圓
-  if (cnt === 0 || cnt >= n-2 || entryIdx === -1 || exitIdx === -1) {
+  // fallback：獨立輪廓 + 外圓 + 內孔
+  if (leftIdx === rightIdx) {
     let d = `M${pts[0][0].toFixed(2)},${pts[0][1].toFixed(2)}`;
     for (let i = 0; i < n; i++) {
       const p0=pts[(i-1+n)%n],p1=pts[i],p2=pts[(i+1)%n],p3=pts[(i+2)%n];
@@ -1309,19 +1312,27 @@ function _thickDiecutToSVGPath() {
            `${p2[0].toFixed(2)},${p2[1].toFixed(2)}`;
     }
     return `<path fill="none" stroke="#000000" stroke-width="0.5" d="${d}Z"/>\n`+
-           `<circle cx="${hx.toFixed(2)}" cy="${hy.toFixed(2)}" r="${outerR.toFixed(2)}" fill="none" stroke="#000000" stroke-width="0.5"/>\n`+
-           `<circle cx="${hx.toFixed(2)}" cy="${hy.toFixed(2)}" r="${innerR.toFixed(2)}" fill="none" stroke="#000000" stroke-width="0.5"/>`;
+           `<circle cx="${hx.toFixed(2)}" cy="${holeCy.toFixed(2)}" r="${outerR.toFixed(2)}" fill="none" stroke="#000000" stroke-width="0.5"/>\n`+
+           `<circle cx="${hx.toFixed(2)}" cy="${holeCy.toFixed(2)}" r="${innerR.toFixed(2)}" fill="none" stroke="#000000" stroke-width="0.5"/>`;
   }
 
-  // 外側輪廓點（exitIdx → stopIdx）
-  const stopIdx = (entryIdx-1+n)%n;
+  // 取主體段（較長方向）
+  const fwdLen = ((leftIdx - rightIdx) + n) % n;
   const outside = [];
-  let idx = exitIdx, guard = 0;
-  while (idx !== stopIdx && guard < n) { outside.push(pts[idx]); idx=(idx+1)%n; guard++; }
-  outside.push(pts[stopIdx]);
+  if (fwdLen >= n / 2) {
+    let idx = rightIdx, g = 0;
+    while (idx !== leftIdx && g < n) { outside.push(pts[idx]); idx = (idx+1)%n; g++; }
+  } else {
+    const tmp = [];
+    let idx = leftIdx, g = 0;
+    while (idx !== rightIdx && g < n) { tmp.push(pts[idx]); idx = (idx+1)%n; g++; }
+    tmp.push(pts[rightIdx]); tmp.reverse();
+    outside.push(...tmp);
+  }
+  outside.push(pts[leftIdx]);
   const m = outside.length;
 
-  // Catmull-Rom（端點不循環，避免接孔端失真）
+  // Catmull-Rom（端點不循環）
   let d = `M${outside[0][0].toFixed(2)},${outside[0][1].toFixed(2)}`;
   for (let i = 0; i < m-1; i++) {
     const p0=outside[Math.max(i-1,0)], p1=outside[i], p2=outside[i+1], p3=outside[Math.min(i+2,m-1)];
@@ -1329,18 +1340,14 @@ function _thickDiecutToSVGPath() {
          `${(p2[0]-(p3[0]-p1[0])/6).toFixed(2)},${(p2[1]-(p3[1]-p1[1])/6).toFixed(2)} `+
          `${p2[0].toFixed(2)},${p2[1].toFixed(2)}`;
   }
-  // 圓弧起止角 → 弧段端點
-  const startA = Math.atan2(pts[stopIdx][1]-hy, pts[stopIdx][0]-hx);
-  const endA   = Math.atan2(pts[exitIdx][1] -hy, pts[exitIdx][0] -hx);
-  const ax1 = (hx + outerR*Math.cos(startA)).toFixed(2);
-  const ay1 = (hy + outerR*Math.sin(startA)).toFixed(2);
-  const ax2 = (hx + outerR*Math.cos(endA)).toFixed(2);
-  const ay2 = (hy + outerR*Math.sin(endA)).toFixed(2);
-  // L 接到弧起點，A 順時針（sweep=1）大弧（large=1）繞外圓頂部到弧終點
-  d += `L${ax1},${ay1}A${outerR.toFixed(2)},${outerR.toFixed(2)} 0 1 1 ${ax2},${ay2}Z`;
+  // 細頸 + 大弧（sweep=1 clockwise，large-arc=1）繞頂部
+  const lx = (hx - neckHW).toFixed(2), rx = (hx + neckHW).toFixed(2);
+  const ty = minY.toFixed(2), yc = yConn.toFixed(2);
+  const r  = outerR.toFixed(2);
+  d += `L${lx},${ty}L${lx},${yc}A${r},${r} 0 1 1 ${rx},${yc}L${rx},${ty}Z`;
 
   return `<path fill="none" stroke="#000000" stroke-width="0.5" d="${d}"/>\n`+
-         `<circle cx="${hx.toFixed(2)}" cy="${hy.toFixed(2)}" r="${innerR.toFixed(2)}" fill="none" stroke="#000000" stroke-width="0.5"/>`;
+         `<circle cx="${hx.toFixed(2)}" cy="${holeCy.toFixed(2)}" r="${innerR.toFixed(2)}" fill="none" stroke="#000000" stroke-width="0.5"/>`;
 }
 
 // 厚切電子票證上傳模式：高解析 canvas 截圖裁切到圓角框，疊加晶片圓、刀模線、紅框

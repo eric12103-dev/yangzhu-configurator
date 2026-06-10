@@ -154,7 +154,7 @@ function _contourToCanvasPts(imgObj) {
 }
 
 // 計算吊飾孔位置（外徑8mm / 內徑3mm）
-// cy = 輪廓最高點 → 外圓上半突出、下半嵌入輪廓，形成融合效果
+// 採「細頸凸出 tab」設計：圓形完全在主體上方，透過 3mm 細頸連接（如土司吊飾孔）
 function _getHolePos(imgObj) {
   if (!_thickDieCutContour || !canvas2d || !imgObj) return null;
   const canvasPts = _contourToCanvasPts(imgObj);
@@ -163,13 +163,16 @@ function _getHolePos(imgObj) {
   const minX = Math.min(...canvasPts.map(p => p[0]));
   const maxX = Math.max(...canvasPts.map(p => p[0]));
   const mmToCSS = canvas2d.getWidth() / 54;
-  const outerR  = 4   * mmToCSS;
-  const innerR  = 1.5 * mmToCSS;
-  return { cx: (minX + maxX) / 2, cy: minY, outerR, innerR };
+  const outerR = 4   * mmToCSS;
+  const innerR = 1.5 * mmToCSS;
+  const neckH  = 3   * mmToCSS;  // 細頸高度 3mm
+  const sqrtD  = Math.sqrt(outerR * outerR - innerR * innerR);
+  // 圓心位置：細頸底部在 topY，往上 neckH + sqrtD 到達圓弧連接點，再往上到圓心
+  const holeCy = minY - neckH - sqrtD;
+  return { cx: (minX + maxX) / 2, cy: holeCy, outerR, innerR, neckH, topY: minY };
 }
 
-// 吊飾孔融合繪製：把外圓弧段接入主輪廓，形成一條封閉路徑
-// clockwise arc（false）從 entry 到 exit 會繞過外圓頂部（UP and over）
+// 吊飾孔「細頸 tab」繪製：主體輪廓 + 細頸 + 圓弧（完全凸出在主體上方）
 function _drawDiecutWithHole(ctx, pts, hole) {
   const n = pts.length;
   const fallback = () => {
@@ -181,40 +184,53 @@ function _drawDiecutWithHole(ctx, pts, hole) {
   };
   if (n < 3 || !hole) { fallback(); return; }
 
-  const { cx: hx, cy: hy, outerR, innerR } = hole;
-  const rSq  = outerR * outerR;
-  const isIn = pts.map(p => (p[0]-hx)**2 + (p[1]-hy)**2 < rSq);
-  const cnt  = isIn.filter(Boolean).length;
-  if (cnt === 0 || cnt >= n - 2) { fallback(); return; }
+  const { cx: hx, cy: holeCy, outerR, innerR, topY } = hole;
+  const neckHW = innerR;  // 細頸半寬 = innerR
+  const sqrtD  = Math.sqrt(outerR * outerR - innerR * innerR);
+  const yConn  = holeCy + sqrtD;  // 細頸頂端與弧段的連接點（= topY - neckH）
 
-  // entry = outside→inside，exit = inside→outside
-  let entryIdx = -1, exitIdx = -1;
+  // 找最接近左右細頸底端的輪廓點
+  let leftIdx = 0, rightIdx = 0;
+  let ld = Infinity, rd = Infinity;
   for (let i = 0; i < n; i++) {
-    const prev = (i - 1 + n) % n;
-    if (!isIn[prev] && isIn[i]  && entryIdx === -1) entryIdx = i;
-    if ( isIn[prev] && !isIn[i] && exitIdx  === -1) exitIdx  = i;
+    const [px, py] = pts[i];
+    const dl = Math.hypot(px - (hx - neckHW), py - topY);
+    const dr = Math.hypot(px - (hx + neckHW), py - topY);
+    if (dl < ld) { ld = dl; leftIdx = i; }
+    if (dr < rd) { rd = dr; rightIdx = i; }
   }
-  if (entryIdx === -1 || exitIdx === -1) { fallback(); return; }
+  if (leftIdx === rightIdx) { fallback(); return; }
 
-  // 外側輪廓點：exitIdx → stopIdx（entryIdx-1），繞身體一圈
-  const stopIdx = (entryIdx - 1 + n) % n;
+  // 取主體段（較長方向，繞過身體而非頂部短路）
+  const fwdLen = ((leftIdx - rightIdx) + n) % n;
   const outside = [];
-  let idx = exitIdx, guard = 0;
-  while (idx !== stopIdx && guard < n) { outside.push(pts[idx]); idx = (idx+1)%n; guard++; }
-  outside.push(pts[stopIdx]);
+  if (fwdLen >= n / 2) {
+    let idx = rightIdx, g = 0;
+    while (idx !== leftIdx && g < n) { outside.push(pts[idx]); idx = (idx+1)%n; g++; }
+  } else {
+    const tmp = [];
+    let idx = leftIdx, g = 0;
+    while (idx !== rightIdx && g < n) { tmp.push(pts[idx]); idx = (idx+1)%n; g++; }
+    tmp.push(pts[rightIdx]); tmp.reverse();
+    outside.push(...tmp);
+  }
+  outside.push(pts[leftIdx]);
 
-  // 圓弧起止角（clockwise false 從左側繞頂部到右側）
-  const startA = Math.atan2(pts[stopIdx][1] - hy, pts[stopIdx][0] - hx);
-  const endA   = Math.atan2(pts[exitIdx][1]  - hy, pts[exitIdx][0]  - hx);
+  // 弧段角度：從左連接點順時針繞過頂部到右連接點（大弧，clockwise in canvas = false→anticlockwise）
+  const leftA  = Math.atan2(yConn - holeCy, -neckHW);  // 第二象限（左下方）
+  const rightA = Math.atan2(yConn - holeCy, +neckHW);  // 第一象限（右下方）
 
   ctx.beginPath();
-  _drawSmooth(ctx, outside);                    // 輪廓平滑曲線
-  ctx.arc(hx, hy, outerR, startA, endA, false); // 弧段繞頂部
+  _drawSmooth(ctx, outside);
+  ctx.lineTo(hx - neckHW, topY);   // 對齊左細頸底端
+  ctx.lineTo(hx - neckHW, yConn);  // 細頸往上
+  ctx.arc(hx, holeCy, outerR, leftA, rightA, false);  // 順時針大弧繞過頂部
+  ctx.lineTo(hx + neckHW, topY);   // 右細頸往下
   ctx.closePath();
   ctx.stroke();
-  // 內孔（打孔圓，獨立路徑）
+
   ctx.beginPath();
-  ctx.arc(hx, hy, innerR, 0, Math.PI * 2);
+  ctx.arc(hx, holeCy, innerR, 0, Math.PI * 2);
   ctx.stroke();
 }
 
@@ -321,35 +337,52 @@ async function regenDieCut() {
   if (status) status.textContent = '重新計算中…';
 
   try {
-    const resp = await fetch('http://localhost:5001/remove-bg-with-contour', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ imageDataURL: _lastUploadedDataURL, marginPx })
-    });
-    const data = await resp.json();
-    if (!data.success) throw new Error(data.error);
+    if (typeof _lastRembgDataURL !== 'undefined' && _lastRembgDataURL) {
+      // 已有去背結果：只重算輪廓，圖片不變
+      const resp = await fetch('http://localhost:5001/contour-only', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageDataURL: _lastRembgDataURL, marginPx })
+      });
+      const data = await resp.json();
+      if (!data.success) throw new Error(data.error);
+      _thickDieCutContour = data.contour || null;
+      _refreshDiecutPreview();
+      if (status) status.textContent = '刀模已更新！';
+      setTimeout(() => { if (status) status.textContent = ''; }, 3000);
+    } else {
+      // 首次：跑去背 + 計算輪廓，設置 canvas 圖片
+      const resp = await fetch('http://localhost:5001/remove-bg-with-contour', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageDataURL: _lastUploadedDataURL, marginPx })
+      });
+      const data = await resp.json();
+      if (!data.success) throw new Error(data.error);
 
-    _thickDieCutContour = data.contour || null;
+      _thickDieCutContour = data.contour || null;
+      _lastRembgDataURL = data.imageDataURL;  // 快取去背結果（含 FIXED_PAD 白邊）
 
-    // 更新 canvas 圖片物件
-    if (typeof canvas2d !== 'undefined' && canvas2d) {
-      const imgObj = canvas2d.getObjects().find(o => o.type === 'image' && o.selectable !== false);
-      if (imgObj) {
-        fabric.Image.fromURL(data.imageDataURL, newImg => {
-          newImg.set({
-            left: imgObj.left, top: imgObj.top,
-            scaleX: imgObj.scaleX * (imgObj.width / newImg.width),
-            scaleY: imgObj.scaleY * (imgObj.height / newImg.height),
-            originX: imgObj.originX, originY: imgObj.originY,
-            clipPath: imgObj.clipPath, selectable: true
-          });
-          canvas2d.remove(imgObj);
-          canvas2d.add(newImg);
-          canvas2d.sendToBack(newImg);
-          _refreshDiecutPreview();
-          if (status) status.textContent = '刀模已更新！';
-          setTimeout(() => { if (status) status.textContent = ''; }, 3000);
-        }, { crossOrigin: 'anonymous' });
+      // 更新 canvas 圖片物件（只在首次）
+      if (typeof canvas2d !== 'undefined' && canvas2d) {
+        const imgObj = canvas2d.getObjects().find(o => o.type === 'image' && o.selectable !== false);
+        if (imgObj) {
+          fabric.Image.fromURL(data.imageDataURL, newImg => {
+            newImg.set({
+              left: imgObj.left, top: imgObj.top,
+              scaleX: imgObj.scaleX * (imgObj.width / newImg.width),
+              scaleY: imgObj.scaleY * (imgObj.height / newImg.height),
+              originX: imgObj.originX, originY: imgObj.originY,
+              clipPath: imgObj.clipPath, selectable: true
+            });
+            canvas2d.remove(imgObj);
+            canvas2d.add(newImg);
+            canvas2d.sendToBack(newImg);
+            _refreshDiecutPreview();
+            if (status) status.textContent = '刀模已更新！';
+            setTimeout(() => { if (status) status.textContent = ''; }, 3000);
+          }, { crossOrigin: 'anonymous' });
+        }
       }
     }
   } catch (err) {
