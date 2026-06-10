@@ -1274,37 +1274,73 @@ function _thickDiecutToSVGPath() {
     return [cx / cW * vW, cy / cH * vH];    // SVG 座標
   });
   if (pts.length < 3) return '';
-  // Catmull-Rom → SVG cubic bezier，圓滑輪廓
-  const n = pts.length;
-  let d = `M${pts[0][0].toFixed(2)},${pts[0][1].toFixed(2)}`;
-  for (let i = 0; i < n; i++) {
-    const p0 = pts[(i - 1 + n) % n];
-    const p1 = pts[i];
-    const p2 = pts[(i + 1) % n];
-    const p3 = pts[(i + 2) % n];
-    const cp1x = (p1[0] + (p2[0] - p0[0]) / 6).toFixed(2);
-    const cp1y = (p1[1] + (p2[1] - p0[1]) / 6).toFixed(2);
-    const cp2x = (p2[0] - (p3[0] - p1[0]) / 6).toFixed(2);
-    const cp2y = (p2[1] - (p3[1] - p1[1]) / 6).toFixed(2);
-    d += `C${cp1x},${cp1y} ${cp2x},${cp2y} ${pts[(i+1)%n][0].toFixed(2)},${pts[(i+1)%n][1].toFixed(2)}`;
-  }
-  const contourPath = `<path fill="none" stroke="#000000" stroke-width="0.5" d="${d}Z"/>`;
 
-  // 吊飾孔：從已轉換的 SVG pts 推算位置（正確處理旋轉）
-  // vW/54 = 2.94 SVG units/mm；外半徑4mm、內半徑1.5mm
-  const mmSVG  = vW / 54;
-  const outerR = (4   * mmSVG).toFixed(2); // 11.76
-  const innerR = (1.5 * mmSVG).toFixed(2); // 4.41
+  // 吊飾孔參數（SVG 座標）
+  const mmSVG  = vW / 54;                         // 2.94 SVG units/mm
+  const outerR = 4   * mmSVG;                     // 11.76
+  const innerR = 1.5 * mmSVG;                     // 4.41
   const minSVGy = Math.min(...pts.map(p => p[1]));
   const minSVGx = Math.min(...pts.map(p => p[0]));
   const maxSVGx = Math.max(...pts.map(p => p[0]));
-  const cenSVGx = ((minSVGx + maxSVGx) / 2).toFixed(2);
-  const holeCy  = (minSVGy - 4 * mmSVG).toFixed(2);
-  const holeCircles =
-    `<circle cx="${cenSVGx}" cy="${holeCy}" r="${outerR}" fill="none" stroke="#000000" stroke-width="0.5"/>` +
-    `<circle cx="${cenSVGx}" cy="${holeCy}" r="${innerR}" fill="none" stroke="#000000" stroke-width="0.5"/>`;
+  const hx = (minSVGx + maxSVGx) / 2;
+  const hy = minSVGy;                              // 中心在最高點
 
-  return `${contourPath}\n${holeCircles}`;
+  // 找在外圓內的輪廓點
+  const n   = pts.length;
+  const rSq = outerR * outerR;
+  const isIn = pts.map(p => (p[0]-hx)**2 + (p[1]-hy)**2 < rSq);
+  const cnt  = isIn.filter(Boolean).length;
+
+  // 找 entry/exit
+  let entryIdx = -1, exitIdx = -1;
+  for (let i = 0; i < n; i++) {
+    const prev = (i-1+n)%n;
+    if (!isIn[prev] && isIn[i]  && entryIdx === -1) entryIdx = i;
+    if ( isIn[prev] && !isIn[i] && exitIdx  === -1) exitIdx  = i;
+  }
+
+  // 如果沒有有效交叉：fallback，獨立輪廓 + 兩個圓
+  if (cnt === 0 || cnt >= n-2 || entryIdx === -1 || exitIdx === -1) {
+    let d = `M${pts[0][0].toFixed(2)},${pts[0][1].toFixed(2)}`;
+    for (let i = 0; i < n; i++) {
+      const p0=pts[(i-1+n)%n],p1=pts[i],p2=pts[(i+1)%n],p3=pts[(i+2)%n];
+      d += `C${(p1[0]+(p2[0]-p0[0])/6).toFixed(2)},${(p1[1]+(p2[1]-p0[1])/6).toFixed(2)} `+
+           `${(p2[0]-(p3[0]-p1[0])/6).toFixed(2)},${(p2[1]-(p3[1]-p1[1])/6).toFixed(2)} `+
+           `${p2[0].toFixed(2)},${p2[1].toFixed(2)}`;
+    }
+    return `<path fill="none" stroke="#000000" stroke-width="0.5" d="${d}Z"/>\n`+
+           `<circle cx="${hx.toFixed(2)}" cy="${hy.toFixed(2)}" r="${outerR.toFixed(2)}" fill="none" stroke="#000000" stroke-width="0.5"/>\n`+
+           `<circle cx="${hx.toFixed(2)}" cy="${hy.toFixed(2)}" r="${innerR.toFixed(2)}" fill="none" stroke="#000000" stroke-width="0.5"/>`;
+  }
+
+  // 外側輪廓點（exitIdx → stopIdx）
+  const stopIdx = (entryIdx-1+n)%n;
+  const outside = [];
+  let idx = exitIdx, guard = 0;
+  while (idx !== stopIdx && guard < n) { outside.push(pts[idx]); idx=(idx+1)%n; guard++; }
+  outside.push(pts[stopIdx]);
+  const m = outside.length;
+
+  // Catmull-Rom（端點不循環，避免接孔端失真）
+  let d = `M${outside[0][0].toFixed(2)},${outside[0][1].toFixed(2)}`;
+  for (let i = 0; i < m-1; i++) {
+    const p0=outside[Math.max(i-1,0)], p1=outside[i], p2=outside[i+1], p3=outside[Math.min(i+2,m-1)];
+    d += `C${(p1[0]+(p2[0]-p0[0])/6).toFixed(2)},${(p1[1]+(p2[1]-p0[1])/6).toFixed(2)} `+
+         `${(p2[0]-(p3[0]-p1[0])/6).toFixed(2)},${(p2[1]-(p3[1]-p1[1])/6).toFixed(2)} `+
+         `${p2[0].toFixed(2)},${p2[1].toFixed(2)}`;
+  }
+  // 圓弧起止角 → 弧段端點
+  const startA = Math.atan2(pts[stopIdx][1]-hy, pts[stopIdx][0]-hx);
+  const endA   = Math.atan2(pts[exitIdx][1] -hy, pts[exitIdx][0] -hx);
+  const ax1 = (hx + outerR*Math.cos(startA)).toFixed(2);
+  const ay1 = (hy + outerR*Math.sin(startA)).toFixed(2);
+  const ax2 = (hx + outerR*Math.cos(endA)).toFixed(2);
+  const ay2 = (hy + outerR*Math.sin(endA)).toFixed(2);
+  // L 接到弧起點，A 順時針（sweep=1）大弧（large=1）繞外圓頂部到弧終點
+  d += `L${ax1},${ay1}A${outerR.toFixed(2)},${outerR.toFixed(2)} 0 1 1 ${ax2},${ay2}Z`;
+
+  return `<path fill="none" stroke="#000000" stroke-width="0.5" d="${d}"/>\n`+
+         `<circle cx="${hx.toFixed(2)}" cy="${hy.toFixed(2)}" r="${innerR.toFixed(2)}" fill="none" stroke="#000000" stroke-width="0.5"/>`;
 }
 
 // 厚切電子票證上傳模式：高解析 canvas 截圖裁切到圓角框，疊加晶片圓、刀模線、紅框

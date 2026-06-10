@@ -153,8 +153,8 @@ function _contourToCanvasPts(imgObj) {
   });
 }
 
-// 計算吊飾孔位置（外徑8mm / 內徑3mm，置於輪廓頂部中央正上方）
-// 回傳 { cx, cy, outerR, innerR } 或 null
+// 計算吊飾孔位置（外徑8mm / 內徑3mm）
+// cy = 輪廓最高點 → 外圓上半突出、下半嵌入輪廓，形成融合效果
 function _getHolePos(imgObj) {
   if (!_thickDieCutContour || !canvas2d || !imgObj) return null;
   const canvasPts = _contourToCanvasPts(imgObj);
@@ -162,10 +162,60 @@ function _getHolePos(imgObj) {
   const minY = Math.min(...canvasPts.map(p => p[1]));
   const minX = Math.min(...canvasPts.map(p => p[0]));
   const maxX = Math.max(...canvasPts.map(p => p[0]));
-  const mmToCSS = canvas2d.getWidth() / 54; // 卡片寬 54mm
-  const outerR  = 4   * mmToCSS; // 外徑 8mm → 半徑 4mm
-  const innerR  = 1.5 * mmToCSS; // 內徑 3mm → 半徑 1.5mm
-  return { cx: (minX + maxX) / 2, cy: minY - outerR, outerR, innerR };
+  const mmToCSS = canvas2d.getWidth() / 54;
+  const outerR  = 4   * mmToCSS;
+  const innerR  = 1.5 * mmToCSS;
+  return { cx: (minX + maxX) / 2, cy: minY, outerR, innerR };
+}
+
+// 吊飾孔融合繪製：把外圓弧段接入主輪廓，形成一條封閉路徑
+// clockwise arc（false）從 entry 到 exit 會繞過外圓頂部（UP and over）
+function _drawDiecutWithHole(ctx, pts, hole) {
+  const n = pts.length;
+  const fallback = () => {
+    ctx.beginPath(); _drawSmooth(ctx, pts); ctx.closePath(); ctx.stroke();
+    if (hole) {
+      ctx.beginPath(); ctx.arc(hole.cx, hole.cy, hole.outerR, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(hole.cx, hole.cy, hole.innerR, 0, Math.PI * 2); ctx.stroke();
+    }
+  };
+  if (n < 3 || !hole) { fallback(); return; }
+
+  const { cx: hx, cy: hy, outerR, innerR } = hole;
+  const rSq  = outerR * outerR;
+  const isIn = pts.map(p => (p[0]-hx)**2 + (p[1]-hy)**2 < rSq);
+  const cnt  = isIn.filter(Boolean).length;
+  if (cnt === 0 || cnt >= n - 2) { fallback(); return; }
+
+  // entry = outside→inside，exit = inside→outside
+  let entryIdx = -1, exitIdx = -1;
+  for (let i = 0; i < n; i++) {
+    const prev = (i - 1 + n) % n;
+    if (!isIn[prev] && isIn[i]  && entryIdx === -1) entryIdx = i;
+    if ( isIn[prev] && !isIn[i] && exitIdx  === -1) exitIdx  = i;
+  }
+  if (entryIdx === -1 || exitIdx === -1) { fallback(); return; }
+
+  // 外側輪廓點：exitIdx → stopIdx（entryIdx-1），繞身體一圈
+  const stopIdx = (entryIdx - 1 + n) % n;
+  const outside = [];
+  let idx = exitIdx, guard = 0;
+  while (idx !== stopIdx && guard < n) { outside.push(pts[idx]); idx = (idx+1)%n; guard++; }
+  outside.push(pts[stopIdx]);
+
+  // 圓弧起止角（clockwise false 從左側繞頂部到右側）
+  const startA = Math.atan2(pts[stopIdx][1] - hy, pts[stopIdx][0] - hx);
+  const endA   = Math.atan2(pts[exitIdx][1]  - hy, pts[exitIdx][0]  - hx);
+
+  ctx.beginPath();
+  _drawSmooth(ctx, outside);                    // 輪廓平滑曲線
+  ctx.arc(hx, hy, outerR, startA, endA, false); // 弧段繞頂部
+  ctx.closePath();
+  ctx.stroke();
+  // 內孔（打孔圓，獨立路徑）
+  ctx.beginPath();
+  ctx.arc(hx, hy, innerR, 0, Math.PI * 2);
+  ctx.stroke();
 }
 
 function _refreshDiecutPreview() {
@@ -204,20 +254,7 @@ function _refreshDiecutPreview() {
       ctx2.strokeStyle = '#000000';
       ctx2.lineWidth = 2;
       ctx2.setLineDash([]);
-      // 主輪廓
-      ctx2.beginPath();
-      _drawSmooth(ctx2, pts2);
-      ctx2.closePath();
-      ctx2.stroke();
-      // 吊飾孔（外徑8mm / 內徑3mm）
-      if (hole2) {
-        ctx2.beginPath();
-        ctx2.arc(hole2.cx, hole2.cy, hole2.outerR, 0, Math.PI * 2);
-        ctx2.stroke();
-        ctx2.beginPath();
-        ctx2.arc(hole2.cx, hole2.cy, hole2.innerR, 0, Math.PI * 2);
-        ctx2.stroke();
-      }
+      _drawDiecutWithHole(ctx2, pts2, hole2);
       ctx2.restore();
       img.src = tmp.toDataURL('image/png');
       img.style.display = '';
@@ -254,20 +291,7 @@ async function _overlayThickDiecut(baseURL) {
       ctx.strokeStyle = '#000000';
       ctx.lineWidth = 2;
       ctx.setLineDash([]);
-      // 主輪廓
-      ctx.beginPath();
-      _drawSmooth(ctx, ptsO);
-      ctx.closePath();
-      ctx.stroke();
-      // 吊飾孔（外徑8mm / 內徑3mm）
-      if (holeO) {
-        ctx.beginPath();
-        ctx.arc(holeO.cx, holeO.cy, holeO.outerR, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.arc(holeO.cx, holeO.cy, holeO.innerR, 0, Math.PI * 2);
-        ctx.stroke();
-      }
+      _drawDiecutWithHole(ctx, ptsO, holeO);
       ctx.restore();
       resolve(tmp.toDataURL('image/png'));
     };
