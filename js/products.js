@@ -84,10 +84,10 @@ const PRODUCTS = {
 
   bizzone: {
     id: 'bizzone',
-    name: '業務專區',
+    name: 'RAY專屬',
     icon: '💼',
     image: 'assets/photos/easycard.png',
-    badge: 'RAY專屬',
+    badge: '業務專區',
     badgeColor: '#1a4a8a',
     password: '38',
     description: '快速打樣專屬商品',
@@ -222,55 +222,6 @@ const PRODUCTS = {
     finishes: [{ id: 'uv_print', name: 'UV彩色噴印', price: 0 }],
     qtyBreaks: [{ min: 50, max: 9999, price: 0 }],
     minQty: 50, leadDays: 14, color: '#1a4a8a', textOnly: true
-  },
-
-  acrylic_charm: {
-    id: 'acrylic_charm',
-    name: '壓克力吊飾',
-    nameEn: 'Acrylic Charm',
-    icon: '✨',
-    image: 'assets/photos/acrylic_charm.png',
-    badge: '測試中',
-    badgeColor: '#888888',
-    description: '客製化壓克力吊飾，UV彩色噴印，造型多樣',
-    password: '79969123',
-    size: { w: 600, h: 600, unit: '' },
-    displaySize: '印刷範圍 待確認',
-    labelArea: { xRatio: 0.05, yRatio: 0.05, wRatio: 0.90, hRatio: 0.90 },
-    textLayout: {
-      title:    { yRatio: 0.42, sizeRatio: 0.11 },
-      subtitle: { yRatio: 0.62, sizeRatio: 0.08 }
-    },
-    materialLabel: '規格',
-    materials: [
-      { id: 'easycard',       name: '悠遊卡',     priceBase: 150, image: 'assets/photos/acrylic_charm.png' },
-      { id: 'ipass',          name: '一卡通',     priceBase: 150, image: 'assets/photos/acrylic_charm.png' },
-      { id: 'super_easycard', name: '超級悠遊卡', priceBase: 150, image: 'assets/photos/acrylic_charm.png' }
-    ],
-    orientations: [
-      { id: 'portrait',  name: '直式' },
-      { id: 'landscape', name: '橫式' }
-    ],
-    orientationImages: {
-      'easycard_portrait':        'assets/photos/easycard_portrait.png',
-      'easycard_landscape':       'assets/photos/easycard_landscape.png',
-      'ipass_portrait':           'assets/photos/ipass_portrait.png',
-      'ipass_landscape':          'assets/photos/ipass_landscape.png',
-      'super_easycard_portrait':  'assets/photos/super_easycard_portrait.png',
-      'super_easycard_landscape': 'assets/photos/super_easycard_landscape.png'
-    },
-    finishes: [
-      { id: 'uv_print', name: 'UV彩色噴印', price: 0 }
-    ],
-    qtyBreaks: [
-      { min: 1,   max: 49,   price: 0 },
-      { min: 50,  max: 99,   price: -10 },
-      { min: 100, max: 9999, price: -20 }
-    ],
-    minQty: 100,
-    leadDays: 14,
-    color: '#888888',
-    textOnly: true
   }
 };
 
