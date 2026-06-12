@@ -119,3 +119,11 @@ function _drawHighlight(ctx, corners, W, H) {
   ctx.fillRect(tl[0]-10, tl[1]-10, tr[0]-tl[0]+20, bl[1]-tl[1]+20);
   ctx.restore();
 }
+
+// 質感原木金屬馬克杯各顏色背景圖
+const MUG_MOCKUP_DATA = {
+  charcoal_mist: { src: 'assets/mug/charcoal_mist.png' },
+  roasted_latte: { src: 'assets/mug/roasted_latte.png' },
+  cloud_milk:    { src: 'assets/mug/cloud_milk.png' },
+  mint_green:    { src: 'assets/mug/mint_green.png' }
+};

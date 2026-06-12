@@ -618,7 +618,7 @@ function initDesignStep() {
   const nextBtn = document.getElementById('btn-step3-next');
   if (nextBtn) nextBtn.textContent = STATE.productId === 'biz_thick' ? '前往生產刀模 →' : '前往確認 →';
 
-  const isThermos = STATE.productId === 'thermos';
+  const isThermos = STATE.productId === 'thermos' || STATE.productId === 'mug';
 
   // 上傳框線模式：biz_card（橫式／直式）、biz_leather_round、biz_leather_omamori、biz_lightbox 或 biz_thick
   const isUploadOnly = STATE.productId === 'biz_leather_round' || STATE.productId === 'biz_leather_omamori' || STATE.productId === 'biz_lightbox' || STATE.productId === 'biz_thick' || (STATE.productId === 'biz_card' && (

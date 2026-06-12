@@ -84,6 +84,8 @@ function init2DCanvas(productId) {
 
   const containerW = el.parentElement.offsetWidth || 400;
   const isThermos  = currentProduct.id === 'thermos';
+  const isMug = currentProduct.id === 'mug';
+  const isThermosLike = isThermos || isMug;
 
   let cw, ch, _mdata = null;
   if (isThermos) {
@@ -112,7 +114,7 @@ function init2DCanvas(productId) {
 
   canvas2d = new fabric.Canvas('canvas-2d', {
     width: cw, height: ch,
-    backgroundColor: isThermos ? '#f0ece6' : '#ffffff'
+    backgroundColor: isThermosLike ? '#f0ece6' : '#ffffff'
   });
 
   // ── 手機觸控優化 ──────────────────────────
@@ -132,14 +134,14 @@ function init2DCanvas(productId) {
 
   // 隨行杯文字：只允許等比例縮放，靜止時隱藏框線（拖曳時才顯示）
   const _applyThermosTextControls = obj => {
-    if (!isThermos || !obj || obj.type !== 'textbox') return;
+    if (!isThermosLike || !obj || obj.type !== 'textbox') return;
     obj.setControlsVisibility({ ml: false, mr: false, mt: false, mb: false });
     obj.set({ lockUniScaling: true, hasBorders: true });
   };
 
   canvas2d.on('selection:created', e => {
     // 隨行杯：選取時不顯示咖啡色虛線，只有拖曳中才顯示
-    _showLabelBorder = !isThermos;
+    _showLabelBorder = !isThermosLike;
     canvas2d.requestRenderAll();
     const obj = e.selected?.[0] || canvas2d.getActiveObject();
     _applyThermosTextControls(obj);
@@ -148,7 +150,7 @@ function init2DCanvas(productId) {
     _syncRotateSlider(obj);
   });
   canvas2d.on('selection:updated', e => {
-    _showLabelBorder = !isThermos;
+    _showLabelBorder = !isThermosLike;
     canvas2d.requestRenderAll();
     const obj = e.selected?.[0] || canvas2d.getActiveObject();
     _applyThermosTextControls(obj);
@@ -162,7 +164,7 @@ function init2DCanvas(productId) {
     if (typeof _hideFloatToolbar === 'function') _hideFloatToolbar();
   });
   canvas2d.on('object:scaling', e => {
-    if (isThermos && e.target && e.target.type === 'textbox') e.target.set('hasBorders', true);
+    if (isThermosLike && e.target && e.target.type === 'textbox') e.target.set('hasBorders', true);
     if (typeof _updateFloatToolbar === 'function') _updateFloatToolbar();
   });
   canvas2d.on('object:modified', e => {
@@ -212,7 +214,7 @@ function init2DCanvas(productId) {
   });
   canvas2d.on('text:changed', () => {
     // 隨行杯：文字橫向自動展開，不換行（手動 Enter 仍可換行）
-    if (isThermos) {
+    if (isThermosLike) {
       const obj = canvas2d.getActiveObject();
       if (obj && obj.type === 'textbox') {
         // 依目前字體與文字內容重新計算 padding
@@ -245,7 +247,7 @@ function init2DCanvas(productId) {
   canvas2d.on('object:moving', function(e) {
     const obj = e.target;
     if (!obj) return;
-    if (isThermos && obj.type === 'textbox') {
+    if (isThermosLike && obj.type === 'textbox') {
       obj.set('hasBorders', true);
       _showLabelBorder = true;
     }
@@ -300,7 +302,7 @@ function init2DCanvas(productId) {
       }
     } else if (_isLbImg) {
       // 不限制邊界，clip path 處理可見範圍
-    } else if (!isThermos) {
+    } else if (!isThermosLike) {
       const w = canvas2d.getWidth();
       const h = canvas2d.getHeight();
       obj.setCoords();
@@ -321,7 +323,7 @@ function init2DCanvas(productId) {
   });
 
   // 隨行杯：拖曳結束後隱藏咖啡色虛線
-  if (isThermos) {
+  if (isThermosLike) {
     canvas2d.on('mouse:up', () => {
       _showLabelBorder = false;
       canvas2d.requestRenderAll();
@@ -336,7 +338,7 @@ function init2DCanvas(productId) {
     const h   = canvas2d.getHeight();
 
     // 隨行杯：在印刷範圍內補繪 100% 不透明（框外保持 35%，框內恢復全色）
-    if (isThermos && currentProduct.labelArea) {
+    if (isThermosLike && currentProduct.labelArea) {
       const la = currentProduct.labelArea;
       const fadedObjs = canvas2d.getObjects().filter(o => o.selectable && o.opacity < 1);
       if (fadedObjs.length > 0) {
@@ -355,7 +357,7 @@ function init2DCanvas(productId) {
     }
 
     // 虛線框（隨行杯僅選取時顯示）
-    if (isThermos && !_showLabelBorder) return;
+    if (isThermosLike && !_showLabelBorder) return;
 
     ctx.save();
     ctx.setLineDash([10, 5]);
@@ -432,6 +434,20 @@ function init2DCanvas(productId) {
       img.set({ scaleX: cw / img.width, scaleY: ch / img.height });
       canvas2d.setBackgroundImage(img, () => { addDefaultElements(); });
     });
+  } else if (isMug) {
+    // 馬克杯：載入對應顏色商品照作為 canvas 背景
+    const _mugColorId = (typeof STATE !== 'undefined' && STATE.materialId) ? STATE.materialId : 'charcoal_mist';
+    const _mugSrc = (typeof MUG_MOCKUP_DATA !== 'undefined' && MUG_MOCKUP_DATA[_mugColorId])
+      ? MUG_MOCKUP_DATA[_mugColorId].src : null;
+    if (_mugSrc) {
+      fabric.Image.fromURL(_mugSrc, img => {
+        if (!canvas2d) return;
+        img.set({ scaleX: cw / img.width, scaleY: ch / img.height });
+        canvas2d.setBackgroundImage(img, () => { addDefaultElements(); });
+      }, { crossOrigin: 'anonymous' });
+    } else {
+      addDefaultElements();
+    }
   } else {
     addDefaultElements();
   }
@@ -543,7 +559,7 @@ function _doAddText2D(text, color, size, font, role) {
     defaultSize = la ? Math.round(h * la.hRatio * 0.18) : Math.round(h * 0.08);
   }
 
-  const isThermos = currentProduct && currentProduct.id === 'thermos';
+  const isThermos = currentProduct && (currentProduct.id === 'thermos' || currentProduct.id === 'mug');
   const boxWidth = la ? w * la.wRatio * (isThermos ? 0.93 : 1.0) : w * 0.92;
   const textCenterX = la ? w * (la.xRatio + la.wRatio / 2) : w / 2;
 
@@ -907,7 +923,7 @@ function setBackground2D(color) {
 // 直接用 getBoundingRect()（已含 padding 校正），判斷 selection box 是否超出邊界
 function _updateTextOpacity() {
   if (!canvas2d || !currentProduct || !currentProduct.labelArea) return;
-  const isTh = currentProduct && currentProduct.id === 'thermos';
+  const isTh = currentProduct && (currentProduct.id === 'thermos' || currentProduct.id === 'mug');
   if (!isTh) return;
   const la = currentProduct.labelArea;
   const w  = canvas2d.getWidth();
@@ -1552,13 +1568,13 @@ function get2DCanvas() {
 // ─── 匯出 SVG（基本，無字體嵌入）────────────────────────────
 function get2DSVG() {
   if (!canvas2d) return null;
-  const isThermos = currentProduct && currentProduct.id === 'thermos';
+  const isThermos = currentProduct && (currentProduct.id === 'thermos' || currentProduct.id === 'mug');
 
   const bgObjs = canvas2d.getObjects().filter(o => !o.selectable && o.name !== 'bottle-bg');
   bgObjs.forEach(o => o.set('visible', false));
   _suppressOverlay = true;
 
-  // 隨行杯：移除瓶身背景圖與背景色，SVG 只保留文字元素
+  // 隨行杯／馬克杯：移除背景圖與背景色，SVG 只保留文字元素
   const origBgImg   = canvas2d.backgroundImage;
   const origBgColor = canvas2d.backgroundColor;
   if (isThermos) {
