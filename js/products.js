@@ -55,7 +55,7 @@ const PRODUCTS = {
     url: 'https://www.songligifts.com/products/%E5%AE%A2%E8%A3%BD%E5%8C%96%E8%B3%AA%E6%84%9F%E5%8E%9F%E6%9C%A8%E6%9F%84%E9%9C%B2%E7%87%9F%E6%9D%AF-%E7%9C%9F%E7%A9%BA%E9%9B%99%E5%B1%A4%E4%B8%8D%E9%8F%BD%E9%8B%BC-%E5%B0%88%E5%B1%AC%E5%8D%B0%E5%88%B7%E6%9C%8D%E5%8B%99-%E7%A6%AE%E7%89%A9%E5%8C%85%E8%A3%9D',
     description: '雙層真空不鏽鋼製造，UV彩色噴印客製文字',
     size: { w: 600, h: 600, unit: '' },
-    displaySize: '印刷範圍 26.6 × 37.2 mm',
+    displaySize: '印刷範圍 51 × 71 mm',
     labelArea: { xRatio: 0.333, yRatio: 0.344, wRatio: 0.266, hRatio: 0.372 },
     textLayout: {
       title:    { yRatio: 0.47, sizeRatio: 0.08 },
@@ -80,6 +80,44 @@ const PRODUCTS = {
     minQty: 1,
     leadDays: 20,
     color: '#8B6F47',
+    textOnly: true
+  },
+
+  power_bank: {
+    id: 'power_bank',
+    name: '星耀Mini行動電源',
+    nameEn: 'Star Mini Power Bank',
+    icon: '🔋',
+    image: 'assets/photos/power_bank.png',
+    badge: '星耀質感設計',
+    badgeColor: '#2C3E6B',
+    password: '88',
+    url: '',
+    description: '星耀Mini行動電源，UV彩色噴印客製文字',
+    size: { w: 600, h: 600, unit: '' },
+    displaySize: '印刷範圍 待確認',
+    labelArea: { xRatio: 0.05, yRatio: 0.05, wRatio: 0.90, hRatio: 0.90 },
+    textLayout: {
+      title:    { yRatio: 0.47, sizeRatio: 0.08 },
+      subtitle: { yRatio: 0.58, sizeRatio: 0.06 }
+    },
+    materialLabel: '顏色',
+    materials: [
+      { id: 'ice_white',     name: '冰川白', priceBase: 580, image: 'assets/power_bank/ice_white.png' },
+      { id: 'blazing_black', name: '耀石黑', priceBase: 580, image: 'assets/power_bank/blazing_black.png' }
+    ],
+    finishes: [
+      { id: 'uv_print', name: 'UV彩色噴印', price: 0 }
+    ],
+    qtyBreaks: [
+      { min: 1,   max: 49,   price: 0 },
+      { min: 50,  max: 99,   price: -30 },
+      { min: 100, max: 299,  price: -60 },
+      { min: 300, max: 9999, price: -100 }
+    ],
+    minQty: 1,
+    leadDays: 20,
+    color: '#2C3E6B',
     textOnly: true
   },
 

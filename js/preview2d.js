@@ -1597,13 +1597,20 @@ function get2DSVG() {
   // 後處理：移除所有 <image> 元素（瓶身背景圖，Illustrator 會找不到連結檔案）
   svg = svg.replace(/<image\b[^>]*(?:\/>|>[\s\S]*?<\/image>)/gi, '');
 
-  // 後處理：印刷尺寸 85×46.5mm
+  // 後處理：印刷尺寸（依商品）
   const cw = canvas2d.getWidth();
   const ch = canvas2d.getHeight();
-  svg = svg.replace(/(<svg\b[^>]*)\swidth="[^"]*"/, '$1 width="85mm"');
-  svg = svg.replace(/(<svg\b[^>]*)\sheight="[^"]*"/, '$1 height="46.5mm"');
+  const _isThermosOnly = currentProduct && currentProduct.id === 'thermos';
+  const _isMugOnly     = currentProduct && currentProduct.id === 'mug';
+  if (_isThermosOnly) {
+    svg = svg.replace(/(<svg\b[^>]*)\swidth="[^"]*"/,  '$1 width="85mm"');
+    svg = svg.replace(/(<svg\b[^>]*)\sheight="[^"]*"/, '$1 height="46.5mm"');
+  } else if (_isMugOnly) {
+    svg = svg.replace(/(<svg\b[^>]*)\swidth="[^"]*"/,  '$1 width="51mm"');
+    svg = svg.replace(/(<svg\b[^>]*)\sheight="[^"]*"/, '$1 height="71mm"');
+  }
 
-  // 隨行杯：viewBox 裁切到標籤印刷區，排除瓶身其他區域
+  // 裁切 viewBox 到印刷區（thermos/mug 移除瓶身背景，只保留文字區）
   if (isThermos && currentProduct.labelArea) {
     const la  = currentProduct.labelArea;
     const vbX = Math.round(cw * la.xRatio);
