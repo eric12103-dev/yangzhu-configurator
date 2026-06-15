@@ -1450,9 +1450,9 @@ function _addLabelAreaFrame(base) {
       tmp.width = w; tmp.height = h;
       const ctx = tmp.getContext('2d');
       ctx.drawImage(img, 0, 0, w, h);
-      ctx.strokeStyle = 'rgba(220, 50, 50, 0.88)';
-      ctx.lineWidth = 3;
-      ctx.setLineDash([10, 6]);
+      ctx.strokeStyle = 'rgba(220, 50, 50, 0.9)';
+      ctx.lineWidth = 4;
+      ctx.setLineDash([]);
       ctx.strokeRect(la.xRatio * w, la.yRatio * h, la.wRatio * w, la.hRatio * h);
       resolve(tmp.toDataURL('image/png'));
     };

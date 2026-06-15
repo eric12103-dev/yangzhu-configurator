@@ -949,20 +949,19 @@ function initPreviewStep() {
     else             { btnLink.style.display = 'none'; }
   }
 
-  if (isThermosLike && typeof get2DDataURLWithFrame === 'function') {
-    // 隨行杯／馬克杯／行動電源：疊加印刷範圍虛線框後顯示
+  if (isThermosLike) {
+    // 隨行杯／馬克杯／行動電源：畫面顯示不含框線的底圖，同時背景產生含框版本供送出用
     if (flatEl)    flatEl.style.display    = '';
     if (mockupDiv) mockupDiv.style.display = 'none';
     if (btnMockup) btnMockup.style.display = '';
-    if (flatEl) flatEl.innerHTML = '<p style="color:var(--gray-400);">載入中...</p>';
-    get2DDataURLWithFrame().then(frameURL => {
-      if (frameURL) STATE.designDataURL = frameURL;
-      if (flatEl) {
-        flatEl.innerHTML = frameURL
-          ? `<img src="${frameURL}" style="max-width:280px;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.12);">`
-          : '<p style="color:var(--gray-400);">尚無設計圖，請返回編輯。</p>';
-      }
-    });
+    if (flatEl) {
+      flatEl.innerHTML = dataURL
+        ? `<img src="${dataURL}" style="max-width:280px;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.12);">`
+        : '<p style="color:var(--gray-400);">尚無設計圖，請返回編輯。</p>';
+    }
+    if (typeof get2DDataURLWithFrame === 'function') {
+      get2DDataURLWithFrame().then(frameURL => { if (frameURL) STATE.designDataURL = frameURL; });
+    }
   } else if (isUploadOnly && typeof get2DDataURLWithFrame === 'function') {
     // 卡片上傳模式：非同步合成框線後顯示
     if (mockupDiv) mockupDiv.style.display = 'none';
@@ -1089,6 +1088,15 @@ async function submitDesign() {
       }
     }
     if (!svg) svg = (typeof get2DSVG === 'function') ? get2DSVG() : null;
+    // 隨行杯／馬克杯／行動電源：覆寫送出檔為含底圖+框線的參考圖
+    if (['thermos', 'mug', 'power_bank'].includes(STATE.productId) && typeof get2DDataURLWithFrame === 'function') {
+      const _framedURL = await get2DDataURLWithFrame();
+      if (_framedURL) {
+        const _pw = STATE.productId === 'thermos' ? '85mm' : STATE.productId === 'mug' ? '51mm' : '50.5mm';
+        const _ph = STATE.productId === 'thermos' ? '46.5mm' : STATE.productId === 'mug' ? '71mm' : '25.5mm';
+        svg = `<?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${_pw}" height="${_ph}"><image xlink:href="${_framedURL}" width="${_pw}" height="${_ph}"/></svg>`;
+      }
+    }
     if (svg && DRIVE_SCRIPT_URL && DRIVE_SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL') {
       const fd = new FormData();
       fd.append('filename', filename + '.svg');
