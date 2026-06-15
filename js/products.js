@@ -79,7 +79,8 @@ const PRODUCTS = {
     minQty: 1,
     leadDays: 20,
     color: '#8B6F47',
-    textOnly: true
+    textOnly: true,
+    textColors: ['#000000']
   },
 
   power_bank: {
