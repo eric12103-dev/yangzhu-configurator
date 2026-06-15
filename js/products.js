@@ -55,11 +55,11 @@ const PRODUCTS = {
     url: 'https://www.songligifts.com/products/%E5%AE%A2%E8%A3%BD%E5%8C%96%E8%B3%AA%E6%84%9F%E5%8E%9F%E6%9C%A8%E6%9F%84%E9%9C%B2%E7%87%9F%E6%9D%AF-%E7%9C%9F%E7%A9%BA%E9%9B%99%E5%B1%A4%E4%B8%8D%E9%8F%BD%E9%8B%BC-%E5%B0%88%E5%B1%AC%E5%8D%B0%E5%88%B7%E6%9C%8D%E5%8B%99-%E7%A6%AE%E7%89%A9%E5%8C%85%E8%A3%9D',
     description: '雙層真空不鏽鋼製造，UV彩色噴印客製文字',
     size: { w: 600, h: 600, unit: '' },
-    displaySize: '印刷範圍 待確認',
-    labelArea: { xRatio: 0.18, yRatio: 0.20, wRatio: 0.55, hRatio: 0.55 },
+    displaySize: '印刷範圍 26.6 × 37.2 mm',
+    labelArea: { xRatio: 0.333, yRatio: 0.344, wRatio: 0.266, hRatio: 0.372 },
     textLayout: {
-      title:    { yRatio: 0.42, sizeRatio: 0.11 },
-      subtitle: { yRatio: 0.62, sizeRatio: 0.08 }
+      title:    { yRatio: 0.47, sizeRatio: 0.08 },
+      subtitle: { yRatio: 0.58, sizeRatio: 0.06 }
     },
     materialLabel: '顏色',
     materials: [
