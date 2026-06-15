@@ -446,7 +446,14 @@ function init2DCanvas(productId) {
     fabric.Image.fromURL(_mdata.src, img => {
       if (!canvas2d) return;
       img.set({ scaleX: cw / img.width, scaleY: ch / img.height });
-      canvas2d.setBackgroundImage(img, () => { addDefaultElements(); });
+      canvas2d.setBackgroundImage(img, () => {
+        const _savedJSON = (typeof STATE !== 'undefined') ? STATE.canvasJSON : null;
+        if (_savedJSON && typeof loadCanvas2DJSON === 'function') {
+          loadCanvas2DJSON(_savedJSON);
+        } else {
+          addDefaultElements();
+        }
+      });
     });
   } else if (currentProduct.id === 'power_bank') {
     // 星耀行動電源：載入對應顏色商品照作為 canvas 背景
@@ -474,10 +481,22 @@ function init2DCanvas(productId) {
       fabric.Image.fromURL(_mugSrc, img => {
         if (!canvas2d) return;
         img.set({ scaleX: cw / img.width, scaleY: ch / img.height });
-        canvas2d.setBackgroundImage(img, () => { addDefaultElements(); });
+        canvas2d.setBackgroundImage(img, () => {
+          const _savedJSON = (typeof STATE !== 'undefined') ? STATE.canvasJSON : null;
+          if (_savedJSON && typeof loadCanvas2DJSON === 'function') {
+            loadCanvas2DJSON(_savedJSON);
+          } else {
+            addDefaultElements();
+          }
+        });
       }, { crossOrigin: 'anonymous' });
     } else {
-      addDefaultElements();
+      const _savedJSON = (typeof STATE !== 'undefined') ? STATE.canvasJSON : null;
+      if (_savedJSON && typeof loadCanvas2DJSON === 'function') {
+        loadCanvas2DJSON(_savedJSON);
+      } else {
+        addDefaultElements();
+      }
     }
   } else {
     addDefaultElements();
