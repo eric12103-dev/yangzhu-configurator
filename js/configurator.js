@@ -1088,14 +1088,10 @@ async function submitDesign() {
       }
     }
     if (!svg) svg = (typeof get2DSVG === 'function') ? get2DSVG() : null;
-    // 隨行杯／馬克杯／行動電源：覆寫送出檔為含底圖+框線的參考圖
-    if (['thermos', 'mug', 'power_bank'].includes(STATE.productId) && typeof get2DDataURLWithFrame === 'function') {
-      const _framedURL = await get2DDataURLWithFrame();
-      if (_framedURL) {
-        const _pw = STATE.productId === 'thermos' ? '85mm' : STATE.productId === 'mug' ? '51mm' : '50.5mm';
-        const _ph = STATE.productId === 'thermos' ? '46.5mm' : STATE.productId === 'mug' ? '71mm' : '25.5mm';
-        svg = `<?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${_pw}" height="${_ph}"><image xlink:href="${_framedURL}" width="${_pw}" height="${_ph}"/></svg>`;
-      }
+    // 隨行杯／馬克杯／行動電源：覆寫送出檔為底圖+紅框+文字向量的分層 SVG
+    if (['thermos', 'mug', 'power_bank'].includes(STATE.productId) && typeof get2DLayeredSVG === 'function') {
+      const _layeredSVG = await get2DLayeredSVG();
+      if (_layeredSVG) svg = _layeredSVG;
     }
     if (svg && DRIVE_SCRIPT_URL && DRIVE_SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL') {
       const fd = new FormData();

@@ -1775,6 +1775,50 @@ async function get2DSVGOutlined() {
   return new XMLSerializer().serializeToString(svgDoc);
 }
 
+// ─── 匯出分層向量 SVG（底圖 + 紅框 + 文字路徑 三圖層）────────────────────────
+async function get2DLayeredSVG() {
+  if (!canvas2d || !currentProduct) return null;
+  const cw = canvas2d.getWidth();
+  const ch = canvas2d.getHeight();
+  const la = currentProduct.labelArea;
+
+  // 1. 取得文字輪廓路徑（從 get2DSVGOutlined 擷取 <g> 內容）
+  const outlinedSVG = await get2DSVGOutlined();
+  if (!outlinedSVG) return null;
+  const textContent = outlinedSVG
+    .replace(/<\?xml[^>]*\?>/gi, '')
+    .replace(/<svg\b[^>]*>/i, '')
+    .replace(/<\/svg>\s*$/i, '')
+    .replace(/<defs>[\s\S]*?<\/defs>/gi, '')
+    .trim();
+
+  // 2. 取得底圖（從 canvas 已載入的背景圖轉 base64）
+  let bgDataURL = '';
+  const bgEl = canvas2d.backgroundImage && canvas2d.backgroundImage._element;
+  if (bgEl) {
+    try {
+      const tmp = document.createElement('canvas');
+      tmp.width  = bgEl.naturalWidth  || cw;
+      tmp.height = bgEl.naturalHeight || ch;
+      tmp.getContext('2d').drawImage(bgEl, 0, 0);
+      bgDataURL = tmp.toDataURL('image/png');
+    } catch(e) { console.warn('[layeredSVG] 底圖轉換失敗', e); }
+  }
+
+  // 3. 印刷範圍框線座標（canvas 像素坐標）
+  const lx = la ? (la.xRatio * cw).toFixed(1) : '0';
+  const ly = la ? (la.yRatio * ch).toFixed(1) : '0';
+  const lw = la ? (la.wRatio * cw).toFixed(1) : String(cw);
+  const lh = la ? (la.hRatio * ch).toFixed(1) : String(ch);
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 ${cw} ${ch}">
+  <g id="底圖">${bgDataURL ? `<image xlink:href="${bgDataURL}" x="0" y="0" width="${cw}" height="${ch}" preserveAspectRatio="none"/>` : ''}</g>
+  <g id="印刷範圍"><rect x="${lx}" y="${ly}" width="${lw}" height="${lh}" fill="none" stroke="#DC3232" stroke-width="2"/></g>
+  <g id="文字">${textContent}</g>
+</svg>`;
+}
+
 // ─── 本地字體對應路徑 ─────────────────────────────────────
 const _LOCAL_FONTS = {
   '(中英)標準體':   '字體/標準體中、英文.ttf',
