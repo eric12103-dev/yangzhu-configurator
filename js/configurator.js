@@ -930,7 +930,7 @@ function applyBgPreset(color) {
 
 // ─── Step 4：預覽 ──────────────────────────────────────────
 function initPreviewStep() {
-  const isThermos = STATE.productId === 'thermos';
+  const isThermosLike = ['thermos', 'mug', 'power_bank'].includes(STATE.productId);
   const isUploadOnly = STATE.productId === 'biz_leather_round' || STATE.productId === 'biz_leather_omamori' || STATE.productId === 'biz_lightbox' || STATE.productId === 'biz_thick' || (STATE.productId === 'biz_card' && (
     (['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId) && STATE.orientationId === 'landscape') ||
     (['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId) && STATE.orientationId === 'portrait')
@@ -949,14 +949,20 @@ function initPreviewStep() {
     else             { btnLink.style.display = 'none'; }
   }
 
-  if (isThermos) {
-    // 隨行杯：直接展示帶瓶身背景的 canvas 匯出圖
+  if (isThermosLike && typeof get2DDataURLWithFrame === 'function') {
+    // 隨行杯／馬克杯／行動電源：疊加印刷範圍虛線框後顯示
     if (flatEl)    flatEl.style.display    = '';
     if (mockupDiv) mockupDiv.style.display = 'none';
     if (btnMockup) btnMockup.style.display = '';
-    if (flatEl && dataURL) {
-      flatEl.innerHTML = `<img src="${dataURL}" style="max-width:280px;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.12);">`;
-    }
+    if (flatEl) flatEl.innerHTML = '<p style="color:var(--gray-400);">載入中...</p>';
+    get2DDataURLWithFrame().then(frameURL => {
+      if (frameURL) STATE.designDataURL = frameURL;
+      if (flatEl) {
+        flatEl.innerHTML = frameURL
+          ? `<img src="${frameURL}" style="max-width:280px;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.12);">`
+          : '<p style="color:var(--gray-400);">尚無設計圖，請返回編輯。</p>';
+      }
+    });
   } else if (isUploadOnly && typeof get2DDataURLWithFrame === 'function') {
     // 卡片上傳模式：非同步合成框線後顯示
     if (mockupDiv) mockupDiv.style.display = 'none';
@@ -988,7 +994,7 @@ function initPreviewStep() {
       }
     });
   } else {
-    // 其他商品（馬克杯等）：顯示平面設計圖 + 設計稿確認送出
+    // 其他商品（biz_card 等）：顯示平面設計圖 + 設計稿確認送出
     if (mockupDiv) mockupDiv.style.display = 'none';
     if (btnMockup) btnMockup.style.display = '';
     if (flatEl && dataURL) {

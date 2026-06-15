@@ -1437,9 +1437,38 @@ ${_diecutPath}
 </svg>`;
 }
 
+function _addLabelAreaFrame(base) {
+  if (!canvas2d || !currentProduct || !currentProduct.labelArea) return Promise.resolve(base);
+  const la = currentProduct.labelArea;
+  const scale = 2;
+  const w = canvas2d.getWidth() * scale;
+  const h = canvas2d.getHeight() * scale;
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const tmp = document.createElement('canvas');
+      tmp.width = w; tmp.height = h;
+      const ctx = tmp.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      ctx.strokeStyle = 'rgba(220, 50, 50, 0.88)';
+      ctx.lineWidth = 3;
+      ctx.setLineDash([10, 6]);
+      ctx.strokeRect(la.xRatio * w, la.yRatio * h, la.wRatio * w, la.hRatio * h);
+      resolve(tmp.toDataURL('image/png'));
+    };
+    img.onerror = () => resolve(base);
+    img.src = base;
+  });
+}
+
 function get2DDataURLWithFrame() {
   const base = get2DDataURL();
   if (!base) return Promise.resolve(null);
+
+  // 隨行杯／馬克杯／行動電源：在底圖上疊加印刷範圍虛線框
+  const _isThermosLike = typeof STATE !== 'undefined' &&
+    ['thermos', 'mug', 'power_bank'].includes(STATE.productId);
+  if (_isThermosLike) return _addLabelAreaFrame(base);
 
   const doComposite = (frameImg) => {
     const w = canvas2d.getWidth() * 2;
