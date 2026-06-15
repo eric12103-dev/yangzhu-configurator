@@ -104,8 +104,8 @@ const PRODUCTS = {
     materialLabel: '顏色',
     noPrice: true,
     materials: [
-      { id: 'ice_white',     name: '冰川白', priceBase: 0, image: 'assets/power_bank/ice_white.png' },
-      { id: 'blazing_black', name: '耀石黑', priceBase: 0, image: 'assets/power_bank/blazing_black.png' }
+      { id: 'ice_white',     name: '冰川白', priceBase: 0, image: 'assets/power_bank/ice_white.png',     textColors: ['#000000'] },
+      { id: 'blazing_black', name: '耀石黑', priceBase: 0, image: 'assets/power_bank/blazing_black.png', textColors: ['#ffffff'] }
     ],
     finishes: [
       { id: 'uv_print', name: 'UV彩色噴印', price: 0 }
@@ -114,8 +114,7 @@ const PRODUCTS = {
     minQty: 1,
     leadDays: 20,
     color: '#B87333',
-    textOnly: true,
-    textColors: ['#ffffff']
+    textOnly: true
   },
 
   bizzone: {

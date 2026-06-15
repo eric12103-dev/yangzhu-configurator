@@ -770,7 +770,9 @@ function _initFreeTextUI() {
     sel.value = FONTS[0].id;
   }
   const _activeProduct = PRODUCTS[STATE.productId];
-  const _colorPalette = (_activeProduct && _activeProduct.textColors) ? _activeProduct.textColors : _TEXT_COLORS;
+  const _curMat = _activeProduct && _activeProduct.materials && _activeProduct.materials.find(m => m.id === STATE.materialId);
+  const _colorPalette = (_curMat && _curMat.textColors) ? _curMat.textColors :
+                        (_activeProduct && _activeProduct.textColors) ? _activeProduct.textColors : _TEXT_COLORS;
   _buildDotPalette('text-color-dots', _colorPalette, false, color => {
     const obj = canvas2d && canvas2d.getActiveObject();
     if (obj && obj.type === 'textbox') { obj.set('fill', color); canvas2d.renderAll(); }
@@ -802,7 +804,11 @@ function _buildDotPalette(containerId, colors, withNone, onClick) {
 function addFreeText() {
   if (!canvas2d) return;
   const font = document.getElementById('free-font-select')?.value || '(中英)標準體';
-  addText2D('新增文字', '#333333', null, font, 'ft_' + Date.now());
+  const _prod = PRODUCTS[STATE.productId];
+  const _mat  = _prod && _prod.materials && _prod.materials.find(m => m.id === STATE.materialId);
+  const _defColor = (_mat && _mat.textColors && _mat.textColors[0]) ||
+                    (_prod && _prod.textColors && _prod.textColors[0]) || '#333333';
+  addText2D('新增文字', _defColor, null, font, 'ft_' + Date.now());
   // 字體非同步載入，等完成後進入編輯模式
   setTimeout(() => {
     const obj = canvas2d.getActiveObject();
