@@ -114,7 +114,8 @@ const PRODUCTS = {
     minQty: 1,
     leadDays: 20,
     color: '#2C3E6B',
-    textOnly: true
+    textOnly: true,
+    textColors: ['#000000']
   },
 
   bizzone: {

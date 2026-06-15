@@ -84,7 +84,7 @@ function init2DCanvas(productId) {
 
   const containerW = el.parentElement.offsetWidth || 400;
   const isThermos  = currentProduct.id === 'thermos';
-  const isMug = currentProduct.id === 'mug';
+  const isMug = currentProduct.id === 'mug' || currentProduct.id === 'power_bank';
   const isThermosLike = isThermos || isMug;
 
   let cw, ch, _mdata = null;
@@ -559,7 +559,7 @@ function _doAddText2D(text, color, size, font, role) {
     defaultSize = la ? Math.round(h * la.hRatio * 0.18) : Math.round(h * 0.08);
   }
 
-  const isThermos = currentProduct && (currentProduct.id === 'thermos' || currentProduct.id === 'mug');
+  const isThermos = currentProduct && (currentProduct.id === 'thermos' || currentProduct.id === 'mug' || currentProduct.id === 'power_bank');
   const boxWidth = la ? w * la.wRatio * (isThermos ? 0.93 : 1.0) : w * 0.92;
   const textCenterX = la ? w * (la.xRatio + la.wRatio / 2) : w / 2;
 
@@ -1568,7 +1568,7 @@ function get2DCanvas() {
 // ─── 匯出 SVG（基本，無字體嵌入）────────────────────────────
 function get2DSVG() {
   if (!canvas2d) return null;
-  const isThermos = currentProduct && (currentProduct.id === 'thermos' || currentProduct.id === 'mug');
+  const isThermos = currentProduct && (currentProduct.id === 'thermos' || currentProduct.id === 'mug' || currentProduct.id === 'power_bank');
 
   const bgObjs = canvas2d.getObjects().filter(o => !o.selectable && o.name !== 'bottle-bg');
   bgObjs.forEach(o => o.set('visible', false));
@@ -1600,14 +1600,18 @@ function get2DSVG() {
   // 後處理：印刷尺寸（依商品）
   const cw = canvas2d.getWidth();
   const ch = canvas2d.getHeight();
-  const _isThermosOnly = currentProduct && currentProduct.id === 'thermos';
-  const _isMugOnly     = currentProduct && currentProduct.id === 'mug';
+  const _isThermosOnly   = currentProduct && currentProduct.id === 'thermos';
+  const _isMugOnly       = currentProduct && currentProduct.id === 'mug';
+  const _isPowerBankOnly = currentProduct && currentProduct.id === 'power_bank';
   if (_isThermosOnly) {
     svg = svg.replace(/(<svg\b[^>]*)\swidth="[^"]*"/,  '$1 width="85mm"');
     svg = svg.replace(/(<svg\b[^>]*)\sheight="[^"]*"/, '$1 height="46.5mm"');
   } else if (_isMugOnly) {
     svg = svg.replace(/(<svg\b[^>]*)\swidth="[^"]*"/,  '$1 width="51mm"');
     svg = svg.replace(/(<svg\b[^>]*)\sheight="[^"]*"/, '$1 height="71mm"');
+  } else if (_isPowerBankOnly) {
+    svg = svg.replace(/(<svg\b[^>]*)\swidth="[^"]*"/,  '$1 width="50.5mm"');
+    svg = svg.replace(/(<svg\b[^>]*)\sheight="[^"]*"/, '$1 height="25.5mm"');
   }
 
   // 裁切 viewBox 到印刷區（thermos/mug 移除瓶身背景，只保留文字區）
