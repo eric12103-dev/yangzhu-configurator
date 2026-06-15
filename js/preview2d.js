@@ -62,6 +62,20 @@ document.addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && e.key === 'y') { e.preventDefault(); redo2D(); }
 });
 
+// 桌面 Ctrl+V：textbox 選取但未進入 editing 模式時，攔截貼上事件插入文字
+document.addEventListener('paste', e => {
+  if (!canvas2d) return;
+  const active = canvas2d.getActiveObject();
+  if (!active || active.type !== 'textbox') return;
+  if (active.isEditing) return; // editing 模式由 Fabric.js 自己處理
+  const text = (e.clipboardData?.getData('text/plain') || '').trim();
+  if (!text) return;
+  e.preventDefault();
+  active.enterEditing();
+  active.insertChars(text);
+  canvas2d.requestRenderAll();
+});
+
 // 可用字體清單
 const FONTS = [
   { id: '(中英)標準體',   label: '(中英)標準體',   preview: '頌禮Aa'  },

@@ -811,6 +811,28 @@ function addFreeText() {
   }, 200);
 }
 
+async function pasteText2D() {
+  let text = '';
+  try {
+    text = await navigator.clipboard.readText();
+  } catch(e) {
+    const fallback = prompt('請貼上文字（自動剪貼簿存取失敗）：');
+    if (fallback) text = fallback;
+  }
+  text = (text || '').trim();
+  if (!text) return;
+  if (!canvas2d) return;
+  const obj = canvas2d.getActiveObject();
+  if (obj && obj.type === 'textbox') {
+    if (!obj.isEditing) obj.enterEditing();
+    obj.insertChars(text);
+    canvas2d.requestRenderAll();
+  } else {
+    const font = document.getElementById('free-font-select')?.value || '(中英)標準體';
+    addText2D(text, '#333333', null, font, 'ft_' + Date.now());
+  }
+}
+
 function _syncTextPropsPanel(obj) {
   const propsPanel = document.getElementById('panel-text-props');
   const addPanel   = document.getElementById('panel-add');
