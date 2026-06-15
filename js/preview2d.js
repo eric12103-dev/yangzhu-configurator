@@ -1749,7 +1749,12 @@ async function get2DSVGOutlined() {
     if (!font) continue;  // 無對應字體，保留原 text 元素
 
     const fontSize = parseFloat(textEl.getAttribute('font-size') || '16');
-    const fill     = textEl.getAttribute('fill') || '#000000';
+    // fill 可能在 style 屬性裡（如 fabric.js 輸出 "fill: rgb(255,255,255)"），優先讀 attribute 再 fallback style
+    const _styleFill = (() => {
+      const m = (textEl.getAttribute('style') || '').match(/(?:^|;)\s*fill\s*:\s*([^;]+)/);
+      return m ? m[1].trim() : null;
+    })();
+    const fill = textEl.getAttribute('fill') || _styleFill || '#000000';
     const newG     = document.createElementNS(ns, 'g');
 
     const tspans = Array.from(textEl.querySelectorAll('tspan'));
