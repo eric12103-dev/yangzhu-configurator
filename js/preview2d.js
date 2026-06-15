@@ -1781,42 +1781,77 @@ async function get2DLayeredSVG() {
   const cw = canvas2d.getWidth();
   const ch = canvas2d.getHeight();
   const la = currentProduct.labelArea;
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const xlNS  = 'http://www.w3.org/1999/xlink';
 
-  // 1. 取得文字輪廓路徑（從 get2DSVGOutlined 擷取 <g> 內容）
+  // 1. 取得並解析輪廓 SVG（文字已轉路徑）
   const outlinedSVG = await get2DSVGOutlined();
   if (!outlinedSVG) return null;
-  const textContent = outlinedSVG
-    .replace(/<\?xml[^>]*\?>/gi, '')
-    .replace(/<svg\b[^>]*>/i, '')
-    .replace(/<\/svg>\s*$/i, '')
-    .replace(/<defs>[\s\S]*?<\/defs>/gi, '')
-    .trim();
+  const parser  = new DOMParser();
+  const outDoc  = parser.parseFromString(outlinedSVG, 'image/svg+xml');
+  if (outDoc.querySelector('parsererror')) return null;
+  const outRoot = outDoc.documentElement;
 
-  // 2. 取得底圖（從 canvas 已載入的背景圖轉 base64）
-  let bgDataURL = '';
-  const bgEl = canvas2d.backgroundImage && canvas2d.backgroundImage._element;
-  if (bgEl) {
+  // 2. 建立新 SVG 文件（確保命名空間正確）
+  const doc = document.implementation.createDocument(svgNS, 'svg', null);
+  const svg = doc.documentElement;
+  svg.setAttribute('xmlns',       svgNS);
+  svg.setAttribute('xmlns:xlink', xlNS);
+  svg.setAttribute('viewBox',     `0 0 ${cw} ${ch}`);
+
+  // 3. 圖層一：底圖（商品背景圖，縮至最大 800px 以 JPEG 嵌入）
+  const gBg = doc.createElementNS(svgNS, 'g');
+  gBg.setAttribute('id', '底圖');
+  const bgFabricImg = canvas2d.backgroundImage;
+  if (bgFabricImg && bgFabricImg._element) {
     try {
+      const bgEl = bgFabricImg._element;
+      const origW = bgEl.naturalWidth  || cw;
+      const origH = bgEl.naturalHeight || ch;
+      const scale = Math.min(1, 800 / Math.max(origW, origH));
+      const tw = Math.round(origW * scale);
+      const th = Math.round(origH * scale);
       const tmp = document.createElement('canvas');
-      tmp.width  = bgEl.naturalWidth  || cw;
-      tmp.height = bgEl.naturalHeight || ch;
-      tmp.getContext('2d').drawImage(bgEl, 0, 0);
-      bgDataURL = tmp.toDataURL('image/png');
+      tmp.width = tw; tmp.height = th;
+      tmp.getContext('2d').drawImage(bgEl, 0, 0, tw, th);
+      const bgDataURL = tmp.toDataURL('image/jpeg', 0.85);
+      const imgEl = doc.createElementNS(svgNS, 'image');
+      imgEl.setAttributeNS(xlNS, 'xlink:href', bgDataURL);
+      imgEl.setAttribute('x', '0');
+      imgEl.setAttribute('y', '0');
+      imgEl.setAttribute('width',  String(cw));
+      imgEl.setAttribute('height', String(ch));
+      imgEl.setAttribute('preserveAspectRatio', 'none');
+      gBg.appendChild(imgEl);
     } catch(e) { console.warn('[layeredSVG] 底圖轉換失敗', e); }
   }
+  svg.appendChild(gBg);
 
-  // 3. 印刷範圍框線座標（canvas 像素坐標）
-  const lx = la ? (la.xRatio * cw).toFixed(1) : '0';
-  const ly = la ? (la.yRatio * ch).toFixed(1) : '0';
-  const lw = la ? (la.wRatio * cw).toFixed(1) : String(cw);
-  const lh = la ? (la.hRatio * ch).toFixed(1) : String(ch);
+  // 4. 圖層二：印刷範圍紅框（向量矩形）
+  const gFrame = doc.createElementNS(svgNS, 'g');
+  gFrame.setAttribute('id', '印刷範圍');
+  const rect = doc.createElementNS(svgNS, 'rect');
+  rect.setAttribute('x',            la ? (la.xRatio * cw).toFixed(1) : '0');
+  rect.setAttribute('y',            la ? (la.yRatio * ch).toFixed(1) : '0');
+  rect.setAttribute('width',        la ? (la.wRatio * cw).toFixed(1) : String(cw));
+  rect.setAttribute('height',       la ? (la.hRatio * ch).toFixed(1) : String(ch));
+  rect.setAttribute('fill',         'none');
+  rect.setAttribute('stroke',       '#DC3232');
+  rect.setAttribute('stroke-width', '2');
+  gFrame.appendChild(rect);
+  svg.appendChild(gFrame);
 
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 ${cw} ${ch}">
-  <g id="底圖">${bgDataURL ? `<image xlink:href="${bgDataURL}" x="0" y="0" width="${cw}" height="${ch}" preserveAspectRatio="none"/>` : ''}</g>
-  <g id="印刷範圍"><rect x="${lx}" y="${ly}" width="${lw}" height="${lh}" fill="none" stroke="#DC3232" stroke-width="2"/></g>
-  <g id="文字">${textContent}</g>
-</svg>`;
+  // 5. 圖層三：文字路徑（從 outlined SVG 使用 importNode 確保命名空間）
+  const gText = doc.createElementNS(svgNS, 'g');
+  gText.setAttribute('id', '文字');
+  for (const child of Array.from(outRoot.childNodes)) {
+    if (child.nodeName === 'defs') continue;
+    if (child.nodeType === 3 && !child.textContent.trim()) continue;
+    gText.appendChild(doc.importNode(child, true));
+  }
+  svg.appendChild(gText);
+
+  return '<?xml version="1.0" encoding="UTF-8"?>\n' + new XMLSerializer().serializeToString(svg);
 }
 
 // ─── 本地字體對應路徑 ─────────────────────────────────────
