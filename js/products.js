@@ -92,29 +92,25 @@ const PRODUCTS = {
     badge: '星耀質感設計-建置中',
     badgeColor: '#2C3E6B',
     password: '88',
-    url: '',
+    url: 'https://www.songligifts.com/products/10000mah-%E8%87%AA%E5%B8%B6%E7%B7%9A%E9%9B%99%E5%90%91%E5%BF%AB%E5%85%85%E8%A1%8C%E5%8B%95%E9%9B%BB%E6%BA%90',
     description: '星耀Mini行動電源，UV彩色噴印客製文字',
-    size: { w: 600, h: 600, unit: '' },
-    displaySize: '印刷範圍 待確認',
-    labelArea: { xRatio: 0.05, yRatio: 0.05, wRatio: 0.90, hRatio: 0.90 },
+    size: { w: 505, h: 255, unit: '' },
+    displaySize: '印刷範圍 50.5 × 25.5 mm',
+    labelArea: { xRatio: 0.02, yRatio: 0.02, wRatio: 0.96, hRatio: 0.96 },
     textLayout: {
-      title:    { yRatio: 0.47, sizeRatio: 0.08 },
-      subtitle: { yRatio: 0.58, sizeRatio: 0.06 }
+      title:    { yRatio: 0.38, sizeRatio: 0.13 },
+      subtitle: { yRatio: 0.65, sizeRatio: 0.09 }
     },
     materialLabel: '顏色',
+    noPrice: true,
     materials: [
-      { id: 'ice_white',     name: '冰川白', priceBase: 580, image: 'assets/power_bank/ice_white.png' },
-      { id: 'blazing_black', name: '耀石黑', priceBase: 580, image: 'assets/power_bank/blazing_black.png' }
+      { id: 'ice_white',     name: '冰川白', priceBase: 0, image: 'assets/power_bank/ice_white.png' },
+      { id: 'blazing_black', name: '耀石黑', priceBase: 0, image: 'assets/power_bank/blazing_black.png' }
     ],
     finishes: [
       { id: 'uv_print', name: 'UV彩色噴印', price: 0 }
     ],
-    qtyBreaks: [
-      { min: 1,   max: 49,   price: 0 },
-      { min: 50,  max: 99,   price: -30 },
-      { min: 100, max: 299,  price: -60 },
-      { min: 300, max: 9999, price: -100 }
-    ],
+    qtyBreaks: [{ min: 1, max: 9999, price: 0 }],
     minQty: 1,
     leadDays: 20,
     color: '#2C3E6B',
