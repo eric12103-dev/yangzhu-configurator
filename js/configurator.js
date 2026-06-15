@@ -52,6 +52,9 @@ function goStep(n) {
   // 離開設計步驟前快照
   if (STATE.step === 3 || (STATE.productId === 'biz_thick' && STATE.step === 4)) {
     STATE.designDataURL = (typeof get2DDataURL === 'function') ? get2DDataURL() : null;
+    if (STATE.productId === 'power_bank' && typeof canvas2d !== 'undefined' && canvas2d) {
+      STATE.canvasJSON = canvas2d.toJSON(['name', 'padding', 'lineHeight']);
+    }
   }
 
   STATE.step = n;

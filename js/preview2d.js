@@ -456,7 +456,14 @@ function init2DCanvas(productId) {
     fabric.Image.fromURL(_pbSrc, img => {
       if (!canvas2d) return;
       img.set({ scaleX: cw / img.width, scaleY: ch / img.height });
-      canvas2d.setBackgroundImage(img, () => { addDefaultElements(); });
+      canvas2d.setBackgroundImage(img, () => {
+        const _savedJSON = (typeof STATE !== 'undefined') ? STATE.canvasJSON : null;
+        if (_savedJSON && typeof loadCanvas2DJSON === 'function') {
+          loadCanvas2DJSON(_savedJSON);
+        } else {
+          addDefaultElements();
+        }
+      });
     }, { crossOrigin: 'anonymous' });
   } else if (isMug) {
     // 馬克杯：載入對應顏色商品照作為 canvas 背景
