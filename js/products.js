@@ -89,7 +89,7 @@ const PRODUCTS = {
     nameEn: 'Star Mini Power Bank',
     icon: '🔋',
     image: 'assets/photos/power_bank.png',
-    badge: '星耀質感設計',
+    badge: '星耀質感設計-建置中',
     badgeColor: '#2C3E6B',
     password: '88',
     url: '',
