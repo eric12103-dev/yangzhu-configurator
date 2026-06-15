@@ -113,7 +113,7 @@ const PRODUCTS = {
     qtyBreaks: [{ min: 1, max: 9999, price: 0 }],
     minQty: 1,
     leadDays: 20,
-    color: '#2C3E6B',
+    color: '#B87333',
     textOnly: true,
     textColors: ['#ffffff']
   },
