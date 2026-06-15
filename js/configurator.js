@@ -458,11 +458,13 @@ function renderProductGrid(parentId) {
         ? `promptPassword('${p.id}', () => renderProductGrid('${p.id}'))`
         : `renderProductGrid('${p.id}')`;
     } else {
-      onclick = `selectProduct('${p.id}')`;
+      onclick = p.password
+        ? `promptPassword('${p.id}', () => selectProduct('${p.id}'))`
+        : `selectProduct('${p.id}')`;
     }
 
     const badgeHtml = p.badge
-      ? `<div class="product-badge" style="background:${p.badgeColor || '#888'}">${p.isCategory && p.password ? '🔒 ' : ''}${p.badge}</div>`
+      ? `<div class="product-badge" style="background:${p.badgeColor || '#888'}">${p.password ? '🔒 ' : ''}${p.badge}</div>`
       : '';
     const sizeHtml = !p.isCategory && p.displaySize
       ? `<div class="product-size">${p.displaySize}</div>` : '';
