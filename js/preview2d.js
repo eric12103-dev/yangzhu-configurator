@@ -448,6 +448,16 @@ function init2DCanvas(productId) {
       img.set({ scaleX: cw / img.width, scaleY: ch / img.height });
       canvas2d.setBackgroundImage(img, () => { addDefaultElements(); });
     });
+  } else if (currentProduct.id === 'power_bank') {
+    // 星耀行動電源：載入對應顏色商品照作為 canvas 背景
+    const _pbColorId = (typeof STATE !== 'undefined' && STATE.materialId) ? STATE.materialId : 'ice_white';
+    const _pbMat = currentProduct.materials && currentProduct.materials.find(m => m.id === _pbColorId);
+    const _pbSrc = _pbMat ? _pbMat.image : 'assets/power_bank/ice_white.png';
+    fabric.Image.fromURL(_pbSrc, img => {
+      if (!canvas2d) return;
+      img.set({ scaleX: cw / img.width, scaleY: ch / img.height });
+      canvas2d.setBackgroundImage(img, () => { addDefaultElements(); });
+    }, { crossOrigin: 'anonymous' });
   } else if (isMug) {
     // 馬克杯：載入對應顏色商品照作為 canvas 背景
     const _mugColorId = (typeof STATE !== 'undefined' && STATE.materialId) ? STATE.materialId : 'charcoal_mist';

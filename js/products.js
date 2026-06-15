@@ -94,12 +94,12 @@ const PRODUCTS = {
     password: '88',
     url: 'https://www.songligifts.com/products/10000mah-%E8%87%AA%E5%B8%B6%E7%B7%9A%E9%9B%99%E5%90%91%E5%BF%AB%E5%85%85%E8%A1%8C%E5%8B%95%E9%9B%BB%E6%BA%90',
     description: '星耀Mini行動電源，UV彩色噴印客製文字',
-    size: { w: 505, h: 255, unit: '' },
+    size: { w: 1254, h: 1254, unit: '' },
     displaySize: '印刷範圍 50.5 × 25.5 mm',
-    labelArea: { xRatio: 0.02, yRatio: 0.02, wRatio: 0.96, hRatio: 0.96 },
+    labelArea: { xRatio: 0.29, yRatio: 0.714, wRatio: 0.354, hRatio: 0.179 },
     textLayout: {
-      title:    { yRatio: 0.38, sizeRatio: 0.13 },
-      subtitle: { yRatio: 0.65, sizeRatio: 0.09 }
+      title:    { yRatio: 0.78, sizeRatio: 0.05 },
+      subtitle: { yRatio: 0.84, sizeRatio: 0.04 }
     },
     materialLabel: '顏色',
     noPrice: true,
