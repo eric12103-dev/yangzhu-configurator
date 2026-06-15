@@ -793,7 +793,7 @@ function _buildDotPalette(containerId, colors, withNone, onClick) {
   colors.forEach(c => {
     const d = document.createElement('button');
     d.className = 'dot'; d.style.background = c; d.title = c; d.dataset.color = c;
-    if (c === '#FFFFFF') d.style.border = '1.5px solid #ddd';
+    if (c.toUpperCase() === '#FFFFFF') d.style.border = '1.5px solid #000';
     d.addEventListener('click', () => onClick(c));
     el.appendChild(d);
   });
