@@ -1041,6 +1041,24 @@ async function _uploadWithRetry(url, formData, maxRetries = 3) {
   return false;
 }
 
+async function copyOrderName() {
+  const name = STATE.submittedFilename || '';
+  if (!name) return;
+  const btn = document.getElementById('btn-copy-order');
+  try {
+    await navigator.clipboard.writeText(name);
+    if (btn) { btn.textContent = '已複製 ✓'; setTimeout(() => { btn.textContent = '複製'; }, 2000); }
+  } catch(e) {
+    const el = document.getElementById('submit-order-name');
+    if (el) {
+      const r = document.createRange();
+      r.selectNodeContents(el);
+      window.getSelection().removeAllRanges();
+      window.getSelection().addRange(r);
+    }
+  }
+}
+
 async function submitDesign() {
   const p   = PRODUCTS[STATE.productId];
   if (!p) return;
