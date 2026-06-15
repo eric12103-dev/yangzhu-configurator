@@ -973,7 +973,7 @@ function setBackground2D(color) {
 // 直接用 getBoundingRect()（已含 padding 校正），判斷 selection box 是否超出邊界
 function _updateTextOpacity() {
   if (!canvas2d || !currentProduct || !currentProduct.labelArea) return;
-  const isTh = currentProduct && (currentProduct.id === 'thermos' || currentProduct.id === 'mug');
+  const isTh = currentProduct && (currentProduct.id === 'thermos' || currentProduct.id === 'mug' || currentProduct.id === 'power_bank');
   if (!isTh) return;
   const la = currentProduct.labelArea;
   const w  = canvas2d.getWidth();
