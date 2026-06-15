@@ -115,7 +115,7 @@ const PRODUCTS = {
     leadDays: 20,
     color: '#2C3E6B',
     textOnly: true,
-    textColors: ['#000000']
+    textColors: ['#ffffff']
   },
 
   bizzone: {
