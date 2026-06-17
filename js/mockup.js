@@ -2,21 +2,15 @@
 // 各顏色讀取各自單瓶圖 → 設計圖貼合標籤區 → 高光
 
 // 標籤座標依「文字框.png」紅框分析（y=548~1088，x≈3~W-2）
-// editorSrc / editorLabel：編輯步驟用新圖（375×475）；src / label：確認送出步驟合成用原圖（不動）
-const _edL = { tl:[8,190], tr:[367,190], br:[367,455], bl:[8,455] }; // 共用框線座標
 const MOCKUP_DATA = {
   mint_green:  { src: 'assets/thermos/mockup/thermos_mint_green.png',  W: 389, H: 875,
-                 label: { tl:[5,204], tr:[384,204], br:[384,406], bl:[5,406] },
-                 editorSrc: 'assets/thermos/editor/editor_mint_green.jpg',  editorW: 375, editorH: 475, editorLabel: _edL },
+                 label: { tl:[5,204], tr:[384,204], br:[384,406], bl:[5,406] } },
   cherry_pink: { src: 'assets/thermos/mockup/thermos_cherry_pink.png', W: 391, H: 875,
-                 label: { tl:[5,204], tr:[386,204], br:[386,406], bl:[5,406] },
-                 editorSrc: 'assets/thermos/editor/editor_cherry_pink.jpg', editorW: 375, editorH: 475, editorLabel: _edL },
+                 label: { tl:[5,204], tr:[386,204], br:[386,406], bl:[5,406] } },
   milk_purple: { src: 'assets/thermos/mockup/thermos_milk_purple.png', W: 391, H: 875,
-                 label: { tl:[5,204], tr:[386,204], br:[386,406], bl:[5,406] },
-                 editorSrc: 'assets/thermos/editor/editor_milk_purple.jpg', editorW: 375, editorH: 475, editorLabel: _edL },
+                 label: { tl:[5,204], tr:[386,204], br:[386,406], bl:[5,406] } },
   oat_tea:     { src: 'assets/thermos/mockup/thermos_oat_tea.png',     W: 393, H: 874,
-                 label: { tl:[5,204], tr:[388,204], br:[388,405], bl:[5,405] },
-                 editorSrc: 'assets/thermos/editor/editor_oat_tea.jpg',     editorW: 375, editorH: 475, editorLabel: _edL },
+                 label: { tl:[5,204], tr:[388,204], br:[388,405], bl:[5,405] } },
 };
 
 function _loadImg(src) {
