@@ -105,7 +105,7 @@ function init2DCanvas(productId) {
   if (isThermos) {
     const _colorId = (typeof STATE !== 'undefined' && STATE.materialId) ? STATE.materialId : 'oat_tea';
     _mdata = (typeof MOCKUP_DATA !== 'undefined') ? MOCKUP_DATA[_colorId] : null;
-    const _aspect  = _mdata ? (_mdata.H / _mdata.W) : 2.35;
+    const _aspect  = _mdata ? ((_mdata.editorH || _mdata.H) / (_mdata.editorW || _mdata.W)) : 2.35;
     cw = Math.min(containerW - 40, 360);
     ch = Math.round(cw * _aspect);
   } else {
@@ -431,19 +431,23 @@ function init2DCanvas(productId) {
   });
 
   if (isThermos && _mdata) {
-    // 更新 labelArea / textLayout 對應瓶身標籤實際位置
-    const _lxr = _mdata.label.tl[0] / _mdata.W;
-    const _lyr = _mdata.label.tl[1] / _mdata.H;
-    const _lwr = (_mdata.label.tr[0] - _mdata.label.tl[0]) / _mdata.W;
-    const _lhr = (_mdata.label.bl[1] - _mdata.label.tl[1]) / _mdata.H;
+    // 編輯步驟：優先使用 editorLabel / editorSrc；確認送出用原 label / src（不動）
+    const _eLabel = _mdata.editorLabel || _mdata.label;
+    const _eW     = _mdata.editorW    || _mdata.W;
+    const _eH     = _mdata.editorH    || _mdata.H;
+    const _eSrc   = _mdata.editorSrc  || _mdata.src;
+    const _lxr = _eLabel.tl[0] / _eW;
+    const _lyr = _eLabel.tl[1] / _eH;
+    const _lwr = (_eLabel.tr[0] - _eLabel.tl[0]) / _eW;
+    const _lhr = (_eLabel.bl[1] - _eLabel.tl[1]) / _eH;
     currentProduct.labelArea  = { xRatio: _lxr, yRatio: _lyr, wRatio: _lwr, hRatio: _lhr };
     currentProduct.textLayout = {
       line1: { yRatio: _lyr + _lhr * 0.22, sizeRatio: _lhr * 0.19 },
       line2: { yRatio: _lyr + _lhr * 0.52, sizeRatio: _lhr * 0.15 },
       line3: { yRatio: _lyr + _lhr * 0.80, sizeRatio: _lhr * 0.12 },
     };
-    // 載入瓶身照片作為 canvas 不可選取背景
-    fabric.Image.fromURL(_mdata.src, img => {
+    // 載入編輯步驟專用瓶身照片作為 canvas 不可選取背景
+    fabric.Image.fromURL(_eSrc, img => {
       if (!canvas2d) return;
       img.set({ scaleX: cw / img.width, scaleY: ch / img.height });
       canvas2d.setBackgroundImage(img, () => {
