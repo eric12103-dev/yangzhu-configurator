@@ -348,24 +348,49 @@
 <script src="js/rembg_client.js?v=1"></script>
 <script src="js/configurator.js?v=2"></script>
 
-<!-- ─── AI 去背函式庫（@imgly/background-removal，僅 biz_thick 使用）──── -->
+<!-- ─── AI 去背函式庫（@huggingface/transformers，僅 biz_thick 使用）──── -->
 <script type="module">
-  try {
-    const { removeBackground } = await import(
-      'https://esm.sh/@imgly/background-removal@1.4.5'
-    );
-    window.__removeBg = async function(blob, progressCb) {
-      return await removeBackground(blob, {
-        publicPath: 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/dist/',
-        progress: progressCb
-      });
-    };
-    window.__removeBgReady = true;
-    console.log('[AI去背] @imgly/background-removal 載入完成');
-  } catch (e) {
-    console.warn('[AI去背] 函式庫載入失敗：', e.message);
-    window.__removeBgReady = false;
+  import { pipeline } from
+    'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3/dist/transformers.min.js';
+
+  let _rmbgPipe = null;
+  let _rmbgLoading = null;
+
+  // 懶載入模型（第一次呼叫時才下載）
+  async function _ensurePipe(onProgress) {
+    if (_rmbgPipe) return _rmbgPipe;
+    if (!_rmbgLoading) {
+      _rmbgLoading = pipeline(
+        'image-segmentation',
+        'briaai/RMBG-1.4',
+        {
+          quantized: false,
+          progress_callback: function(info) {
+            if (onProgress && info.status === 'progress' && info.progress != null) {
+              onProgress('模型載入中 ' + Math.round(info.progress) + '%…');
+            }
+          }
+        }
+      ).then(function(p) { _rmbgPipe = p; _rmbgLoading = null; return p; });
+    }
+    return _rmbgLoading;
   }
+
+  // 公開 API：去背（回傳遠罩資料及原始圖尺寸）
+  window.__removeBgAI = async function(imageDataURL, onProgress) {
+    try {
+      const pipe   = await _ensurePipe(onProgress);
+      if (onProgress) onProgress('AI 去背處理中…');
+      const result = await pipe(imageDataURL);
+      // result[0].mask = RawImage { data: Uint8ClampedArray, width, height }
+      return { ok: true, mask: result[0] ? result[0].mask : null };
+    } catch (e) {
+      return { ok: false, error: e.message || String(e) };
+    }
+  };
+
+  window.__removeBgReady = true;
+  console.log('[AI去背] @huggingface/transformers 載入完成');
 </script>
 
 
