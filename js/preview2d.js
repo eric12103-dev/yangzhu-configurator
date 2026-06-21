@@ -2030,7 +2030,7 @@ function alignCenter2D(axis) {
   canvas2d.requestRenderAll();
 }
 
-// 厚切票證去背 + 刀模生成（本機 rembg_server.py 才有效）
+// 厚切票證去背 + 刀模生成（純瀏覽器 AI，不需本機 rembg_server.py）
 async function removeBgThick() {
   if (!canvas2d) return;
   const obj = canvas2d.getActiveObject() || canvas2d.getObjects().find(o => o.type === 'image' && o.selectable !== false);
@@ -2039,37 +2039,51 @@ async function removeBgThick() {
     return;
   }
 
-  const btn = document.getElementById('btn-rmbg');
-  const status = document.getElementById('rmbg-status');
+  const btn         = document.getElementById('btn-rmbg');
+  const status      = document.getElementById('rmbg-status');
+  const progressWrap = document.getElementById('rmbg-progress-wrap');
+  const progressBar  = document.getElementById('rmbg-progress-bar');
   const marginInput = document.getElementById('rmbg-margin');
-  const marginPx = marginInput ? parseInt(marginInput.value) : 15;
+  const marginPx    = marginInput ? parseInt(marginInput.value) : 15;
+
+  // 進度更新輔助函式
+  function _setStatus(msg) {
+    if (status) status.textContent = msg;
+    // 解析百分比更新進度條（格式："AI 去背 xx%…"）
+    if (progressBar) {
+      const m = msg.match(/(\d+)%/);
+      progressBar.style.width = m ? m[1] + '%' : '100%';
+    }
+  }
 
   if (btn) btn.disabled = true;
-  if (status) status.textContent = '去背中，請稍候…';
+  if (progressWrap) progressWrap.style.display = '';
+  if (progressBar)  progressBar.style.width = '5%';
+  _setStatus('準備去背…');
 
   try {
     const el = obj.getElement();
     const tmp = document.createElement('canvas');
-    tmp.width = el.naturalWidth || el.width;
+    tmp.width  = el.naturalWidth  || el.width;
     tmp.height = el.naturalHeight || el.height;
     tmp.getContext('2d').drawImage(el, 0, 0);
     const dataURL = tmp.toDataURL('image/png');
 
-    const resp = await fetch('http://localhost:5001/remove-bg-with-contour', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ imageDataURL: dataURL, marginPx })
-    });
-    const data = await resp.json();
+    // 呼叫純前端去背（rembg_client.js）
+    const data = await removeBgWithContourClient(dataURL, marginPx, _setStatus);
+
     if (!data.success) throw new Error(data.error || '去背失敗');
 
+    // 快取去背結果（供刀模步驟重算輪廓使用）
+    _lastRembgDataURL = data.imageDataURL;
+
     fabric.Image.fromURL(data.imageDataURL, (newImg) => {
-      const scaleX = obj.scaleX * (obj.width / newImg.width);
+      const scaleX = obj.scaleX * (obj.width  / newImg.width);
       const scaleY = obj.scaleY * (obj.height / newImg.height);
       newImg.set({
         left: obj.left, top: obj.top,
         scaleX, scaleY,
-        originX: obj.originX, originY: obj.originY,
+        originX:  obj.originX,  originY: obj.originY,
         clipPath: obj.clipPath,
         selectable: true
       });
@@ -2080,12 +2094,19 @@ async function removeBgThick() {
       _thickDieCutContour = data.contour || null;
 
       canvas2d.requestRenderAll();
-      if (status) status.textContent = data.contour ? '已完成去背！' : '去背完成（無輪廓）';
-      setTimeout(() => { if (status) status.textContent = ''; }, 5000);
+
+      if (progressBar) progressBar.style.width = '100%';
+      _setStatus(data.contour ? '✅ 已完成去背！' : '✅ 去背完成（無輪廓）');
+      setTimeout(() => {
+        if (progressWrap) progressWrap.style.display = 'none';
+        if (progressBar)  progressBar.style.width = '0%';
+        if (status)       status.textContent = '';
+      }, 3000);
     }, { crossOrigin: 'anonymous' });
 
   } catch (err) {
-    if (status) status.textContent = err.message.includes('fetch') ? '請先執行 rembg_server.py' : `失敗：${err.message}`;
+    _setStatus('❌ 失敗：' + (err.message || err));
+    if (progressWrap) { setTimeout(() => { progressWrap.style.display = 'none'; }, 3000); }
     console.error('[removeBgThick]', err);
   } finally {
     if (btn) btn.disabled = false;

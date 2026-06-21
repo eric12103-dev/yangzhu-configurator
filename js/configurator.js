@@ -341,26 +341,20 @@ async function regenDieCut() {
 
   try {
     if (typeof _lastRembgDataURL !== 'undefined' && _lastRembgDataURL) {
-      // 已有去背結果：只重算輪廓，圖片不變
-      const resp = await fetch('http://localhost:5001/contour-only', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageDataURL: _lastRembgDataURL, marginPx })
-      });
-      const data = await resp.json();
+      // 已有去背結果：只重算輪廓，圖片不變（純前端計算）
+      const data = await calcContourOnlyClient(_lastRembgDataURL, marginPx);
       if (!data.success) throw new Error(data.error);
       _thickDieCutContour = data.contour || null;
       _refreshDiecutPreview();
-      if (status) status.textContent = '刀模已更新！';
+      if (status) status.textContent = '✅ 刀模已更新！';
       setTimeout(() => { if (status) status.textContent = ''; }, 3000);
     } else {
-      // 首次：跑去背 + 計算輪廓，設置 canvas 圖片
-      const resp = await fetch('http://localhost:5001/remove-bg-with-contour', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageDataURL: _lastUploadedDataURL, marginPx })
-      });
-      const data = await resp.json();
+      // 首次：跑去背 + 計算輪廓，設置 canvas 圖片（純前端 AI）
+      const data = await removeBgWithContourClient(
+        _lastUploadedDataURL,
+        marginPx,
+        (msg) => { if (status) status.textContent = msg; }
+      );
       if (!data.success) throw new Error(data.error);
 
       _thickDieCutContour = data.contour || null;
@@ -382,14 +376,15 @@ async function regenDieCut() {
             canvas2d.add(newImg);
             canvas2d.sendToBack(newImg);
             _refreshDiecutPreview();
-            if (status) status.textContent = '刀模已更新！';
+            if (status) status.textContent = '✅ 刀模已更新！';
             setTimeout(() => { if (status) status.textContent = ''; }, 3000);
           }, { crossOrigin: 'anonymous' });
         }
       }
     }
   } catch (err) {
-    if (status) status.textContent = err.message.includes('fetch') ? '請先執行 rembg_server.py' : `失敗：${err.message}`;
+    if (status) status.textContent = '❌ 失敗：' + (err.message || err);
+    console.error('[regenDieCut]', err);
   } finally {
     if (btn) btn.disabled = false;
   }
