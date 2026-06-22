@@ -163,7 +163,7 @@
               </div>
             </div>
             <p id="rmbg-status" style="font-size:12px;color:var(--gray-400);margin-top:6px;min-height:16px;"></p>
-            <p style="font-size:11px;color:var(--gray-300);margin-top:4px;line-height:1.4;">首次使用會自動下載 AI 模型（約 50MB），請稍候。</p>
+            <p style="font-size:11px;color:var(--gray-300);margin-top:4px;line-height:1.4;">首次使用會自動下載 AI 模型（約 30MB），請稍候。</p>
           </div>
 
           <!-- 背景底色（隨行杯隱藏） -->
@@ -348,8 +348,8 @@
 <script src="js/rembg_client.js?v=1"></script>
 <script src="js/configurator.js?v=2"></script>
 
-<!-- ─── AI 去背函式庫（@imgly/background-removal small，僅 biz_thick 使用）──── -->
-<!-- 使用 u2netp 小型模型（~5MB），比 RMBG-1.4(178MB) 快 10 倍以上 -->
+<!-- ─── AI 去背函式庫（@imgly/background-removal medium，僅 biz_thick 使用）──── -->
+<!-- 使用 isnet-general-use 中型模型（~30MB），適合處理毛髮、細節邊緣，品質媒美念念印刷 -->
 <!-- proxyToWorker:false → 主線程執行，解決 CDN Worker publicPath 路徑問題 -->
 <script type="module">
   try {
@@ -365,7 +365,7 @@
 
         const resultBlob = await removeBackground(blob, {
           publicPath: 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/dist/',
-          model: 'small',          // u2netp: ~5MB，首次下載秒級完成
+          model: 'medium',        // isnet-general-use: ~30MB，正確處理毛髮/細節邊緣
           proxyToWorker: false,    // 主線程執行，publicPath 正確套用
           progress: function(key, cur, total) {
             if (onProgress && total > 0) {
@@ -388,7 +388,7 @@
     };
 
     window.__removeBgReady = true;
-    console.log('[AI去背] @imgly/background-removal small(u2netp ~5MB) 載入完成');
+    console.log('[AI去背] @imgly/background-removal medium(isnet ~30MB) 載入完成');
   } catch (e) {
     console.error('[AI去背] 載入失敗：', e.message);
     window.__removeBgReady = false;
