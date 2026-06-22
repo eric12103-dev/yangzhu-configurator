@@ -348,52 +348,71 @@
 <script src="js/rembg_client.js?v=1"></script>
 <script src="js/configurator.js?v=2"></script>
 
-<!-- ─── AI 去背函式庫（@imgly/background-removal medium，僅 biz_thick 使用）──── -->
-<!-- 使用 isnet-general-use 中型模型（~30MB），適合處理毛髮、細節邊緣，品質媒美念念印刷 -->
-<!-- proxyToWorker:false → 主線程執行，解決 CDN Worker publicPath 路徑問題 -->
+<!-- ─── AI 去背函式庫（@huggingface/transformers，僅 biz_thick 使用）──── -->
+<!-- briaai/RMBG-1.4：精準去背，可正確處理毛髮/細節邊緣，品質比 @imgly 更好 -->
+<!-- quantized:true → 量化版 ONNX，體積更小速度更快（若可用）-->
 <script type="module">
-  try {
-    const { removeBackground } = await import(
-      'https://esm.sh/@imgly/background-removal@1.4.5'
-    );
+  import { pipeline, env } from
+    'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3/dist/transformers.min.js';
 
-    // 公開 API：去背（直接回傳已去背的透明 PNG DataURL）
-    window.__removeBgAI = async function(imageDataURL, onProgress) {
-      try {
-        // DataURL → Blob
-        const blob = await fetch(imageDataURL).then(function(r) { return r.blob(); });
+  // 不使用本機快取 worker（避免跨域問題）
+  env.allowLocalModels = false;
 
-        const resultBlob = await removeBackground(blob, {
-          publicPath: 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/dist/',
-          model: 'medium',        // isnet-general-use: ~30MB，正確處理毛髮/細節邊緣
-          proxyToWorker: false,    // 主線程執行，publicPath 正確套用
-          progress: function(key, cur, total) {
-            if (onProgress && total > 0) {
-              onProgress('AI 去背 ' + Math.round(cur / total * 100) + '%…');
-            }
+  let _rmbgPipe    = null;
+  let _rmbgLoading = null;
+
+  // 建立 pipeline（懶載入，第一次呼叫才下載）
+  function _buildPipe(quantized, onProgress) {
+    return pipeline(
+      'image-segmentation',
+      'briaai/RMBG-1.4',
+      {
+        quantized: quantized,
+        progress_callback: function(info) {
+          if (onProgress && info.status === 'progress' && info.progress != null) {
+            var mb  = quantized ? '~44MB' : '~178MB';
+            onProgress('模型載入中 ' + Math.round(info.progress) + '%… (' + mb + ')');
           }
-        });
-
-        // Blob → DataURL
-        const dataURL = await new Promise(function(res) {
-          var reader = new FileReader();
-          reader.onload = function(e) { res(e.target.result); };
-          reader.readAsDataURL(resultBlob);
-        });
-
-        return { ok: true, removedDataURL: dataURL };
-      } catch (e) {
-        return { ok: false, error: e.message || String(e) };
+        }
       }
-    };
-
-    window.__removeBgReady = true;
-    console.log('[AI去背] @imgly/background-removal medium(isnet ~30MB) 載入完成');
-  } catch (e) {
-    console.error('[AI去背] 載入失敗：', e.message);
-    window.__removeBgReady = false;
+    );
   }
+
+  async function _ensurePipe(onProgress) {
+    if (_rmbgPipe) return _rmbgPipe;
+    if (_rmbgLoading) return _rmbgLoading;
+
+    // 先嘗試量化版（~44MB），失敗再用完整版（~178MB）
+    _rmbgLoading = _buildPipe(true, onProgress)
+      .catch(function() {
+        console.warn('[AI去背] 量化版不可用，改用完整版 (~178MB)…');
+        return _buildPipe(false, onProgress);
+      })
+      .then(function(p) {
+        _rmbgPipe    = p;
+        _rmbgLoading = null;
+        return p;
+      });
+
+    return _rmbgLoading;
+  }
+
+  // 公開 API：去背（回傳 mask，由 rembg_client.js 套用至原圖）
+  window.__removeBgAI = async function(imageDataURL, onProgress) {
+    try {
+      const pipe   = await _ensurePipe(onProgress);
+      if (onProgress) onProgress('AI 去背處理中…');
+      const result = await pipe(imageDataURL);
+      return { ok: true, mask: result[0] ? result[0].mask : null };
+    } catch (e) {
+      return { ok: false, error: e.message || String(e) };
+    }
+  };
+
+  window.__removeBgReady = true;
+  console.log('[AI去背] @huggingface/transformers + briaai/RMBG-1.4 就緒');
 </script>
+
 
 
 </body>
