@@ -348,49 +348,51 @@
 <script src="js/rembg_client.js?v=1"></script>
 <script src="js/configurator.js?v=2"></script>
 
-<!-- ─── AI 去背函式庫（@huggingface/transformers，僅 biz_thick 使用）──── -->
+<!-- ─── AI 去背函式庫（@imgly/background-removal small，僅 biz_thick 使用）──── -->
+<!-- 使用 u2netp 小型模型（~5MB），比 RMBG-1.4(178MB) 快 10 倍以上 -->
+<!-- proxyToWorker:false → 主線程執行，解決 CDN Worker publicPath 路徑問題 -->
 <script type="module">
-  import { pipeline } from
-    'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3/dist/transformers.min.js';
+  try {
+    const { removeBackground } = await import(
+      'https://esm.sh/@imgly/background-removal@1.4.5'
+    );
 
-  let _rmbgPipe = null;
-  let _rmbgLoading = null;
+    // 公開 API：去背（直接回傳已去背的透明 PNG DataURL）
+    window.__removeBgAI = async function(imageDataURL, onProgress) {
+      try {
+        // DataURL → Blob
+        const blob = await fetch(imageDataURL).then(function(r) { return r.blob(); });
 
-  // 懶載入模型（第一次呼叫時才下載）
-  async function _ensurePipe(onProgress) {
-    if (_rmbgPipe) return _rmbgPipe;
-    if (!_rmbgLoading) {
-      _rmbgLoading = pipeline(
-        'image-segmentation',
-        'briaai/RMBG-1.4',
-        {
-          quantized: false,
-          progress_callback: function(info) {
-            if (onProgress && info.status === 'progress' && info.progress != null) {
-              onProgress('模型載入中 ' + Math.round(info.progress) + '%…');
+        const resultBlob = await removeBackground(blob, {
+          publicPath: 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/dist/',
+          model: 'small',          // u2netp: ~5MB，首次下載秒級完成
+          proxyToWorker: false,    // 主線程執行，publicPath 正確套用
+          progress: function(key, cur, total) {
+            if (onProgress && total > 0) {
+              onProgress('AI 去背 ' + Math.round(cur / total * 100) + '%…');
             }
           }
-        }
-      ).then(function(p) { _rmbgPipe = p; _rmbgLoading = null; return p; });
-    }
-    return _rmbgLoading;
+        });
+
+        // Blob → DataURL
+        const dataURL = await new Promise(function(res) {
+          var reader = new FileReader();
+          reader.onload = function(e) { res(e.target.result); };
+          reader.readAsDataURL(resultBlob);
+        });
+
+        return { ok: true, removedDataURL: dataURL };
+      } catch (e) {
+        return { ok: false, error: e.message || String(e) };
+      }
+    };
+
+    window.__removeBgReady = true;
+    console.log('[AI去背] @imgly/background-removal small(u2netp ~5MB) 載入完成');
+  } catch (e) {
+    console.error('[AI去背] 載入失敗：', e.message);
+    window.__removeBgReady = false;
   }
-
-  // 公開 API：去背（回傳遠罩資料及原始圖尺寸）
-  window.__removeBgAI = async function(imageDataURL, onProgress) {
-    try {
-      const pipe   = await _ensurePipe(onProgress);
-      if (onProgress) onProgress('AI 去背處理中…');
-      const result = await pipe(imageDataURL);
-      // result[0].mask = RawImage { data: Uint8ClampedArray, width, height }
-      return { ok: true, mask: result[0] ? result[0].mask : null };
-    } catch (e) {
-      return { ok: false, error: e.message || String(e) };
-    }
-  };
-
-  window.__removeBgReady = true;
-  console.log('[AI去背] @huggingface/transformers 載入完成');
 </script>
 
 

@@ -405,6 +405,8 @@ function _buildPaddedDataURL(img, rMin, rMax, cMin, cMax, newW, newH) {
 
 /**
  * 去背 + 刀模輪廓（首次流程）
+ * 使用 @imgly/background-removal small(u2netp ~5MB)，速度快 10x+
+ * imgly 直接輸出透明 PNG，不需要再套用 mask
  * @param {string}   imageDataURL  原始含背景圖片
  * @param {number}   marginPx      刀模邊距（預設 15）
  * @param {Function} onProgress    進度回呼 (msg: string) => void
@@ -415,12 +417,13 @@ async function removeBgWithContourClient(imageDataURL, marginPx, onProgress) {
     await _waitForLib(35000);
 
     // 呼叫 index.html 中定義的 window.__removeBgAI
+    // imgly 版：回傳 { ok: true, removedDataURL: string }
     var aiResult = await window.__removeBgAI(imageDataURL, onProgress);
     if (!aiResult.ok) throw new Error(aiResult.error || 'AI 去背失敗');
-    if (!aiResult.mask) throw new Error('模型未回傳遮罩');
+    if (!aiResult.removedDataURL) throw new Error('去背結果為空');
 
-    if (onProgress) onProgress('套用遮罩中…');
-    var removedDataURL = await _applyMaskToImage(imageDataURL, aiResult.mask);
+    // imgly 已直接輸出透明 PNG，不需套用 mask
+    var removedDataURL = aiResult.removedDataURL;
 
     if (onProgress) onProgress('計算刀模輪廓…');
 
@@ -469,6 +472,7 @@ async function removeBgWithContourClient(imageDataURL, marginPx, onProgress) {
 }
 
 /**
+
  * 只重算刀模輪廓（不重跑去背，供邊距滑桿調整用）
  * @param {string} imageDataURL  已去背且含 FIXED_PAD 白邊的 PNG
  * @param {number} marginPx      新的刀模邊距
