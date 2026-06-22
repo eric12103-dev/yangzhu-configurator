@@ -755,6 +755,17 @@ function initDesignStep() {
 
   // 確保 panel 預設狀態
   _syncTextPropsPanel(null);
+
+  // ── 業務提案按鈕（bizzone 子商品才顯示）──
+  const proposalTrigger = document.getElementById('proposal-trigger-wrap');
+  if (proposalTrigger) {
+    const isBizProduct = !!(PRODUCTS[STATE.productId] && PRODUCTS[STATE.productId].parentId === 'bizzone');
+    proposalTrigger.style.display = isBizProduct ? '' : 'none';
+    // 同步提案面板的商品 ID
+    if (isBizProduct && window.PROPOSAL_STATE) {
+      window.PROPOSAL_STATE.productId = STATE.productId;
+    }
+  }
 }
 
 function _initFreeTextUI() {
