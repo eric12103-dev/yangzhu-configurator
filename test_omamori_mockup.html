@@ -14,6 +14,7 @@
             --text-main: #f3f4f6;
             --text-muted: #9ca3af;
             --accent-green: #10b981;
+            --accent-blue: #3b82f6;
         }
 
         * {
@@ -267,6 +268,29 @@
             box-shadow: 0 6px 28px rgba(212, 175, 55, 0.5);
         }
 
+        .btn-download {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 4px 20px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-download:hover {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 28px rgba(37, 99, 235, 0.5);
+        }
+
         .status-tag {
             background: rgba(16, 185, 129, 0.2);
             color: var(--accent-green);
@@ -304,7 +328,7 @@
     <header>
         <div class="brand-title">
             <span>🛡️ 頌禮文創 AI 業務提案系統</span>
-            <span class="badge">V2 全套下拉選單 & 光影渲染引擎</span>
+            <span class="badge">V2 全功能 + 下載餵圖按鈕</span>
         </div>
         <div style="font-size:0.85rem; color:var(--text-muted);">
             📍 獨立測試單檔 (不影響既有產品)
@@ -411,8 +435,14 @@
                 </div>
             </div>
             
+            <!-- 動作按鈕區：包含下載餵圖按鈕 -->
+            <div style="width:100%; display:flex; justify-content:center; gap:16px; margin-top:8px;">
+                <button class="btn-download" onclick="downloadCanvasImage()">📥 下載此 2D 規格圖 (餵給 GPT 用)</button>
+                <button class="btn-action" style="padding: 14px 18px;" onclick="renderCanvas()">⚡ 刷新合成</button>
+            </div>
+
             <div style="font-size:0.85rem; color:var(--text-muted); text-align:center;">
-                💡 升級說明：系統採用原生幾何光影運算，100% 獨立繪製透明折射厚度與金屬扣，零算圖變形！
+                💡 秘訣：點擊藍色下載按鈕，存下 2D 規格圖後，上傳到 ChatGPT 並搭配下方提示詞，即可產出完美的 3D 渲染照！
             </div>
         </div>
 
@@ -464,6 +494,16 @@
                 img.src = e.target.result;
             };
             reader.readAsDataURL(file);
+        }
+
+        // 核心下載功能：一鍵將畫布匯出為 PNG 供餵給 GPT
+        function downloadCanvasImage() {
+            const canvas = document.getElementById('mockupCanvas');
+            const prod = document.getElementById('prodShape').value.split('|')[0];
+            const link = document.createElement('a');
+            link.download = `${prod}_AI算圖基底圖.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
         }
 
         // 核心：純 Vanilla Canvas 2D 物理光影與素材合成渲染引擎
@@ -665,7 +705,7 @@
             ctx.fillText('• 悠遊卡晶片層 1mm + 底蓋壓克力 1mm + 膠合縫隙 1mm', 320, 445);
         }
 
-        // 智能組裝完整 AI 商攝提示詞
+        // 智能組裝完整 AI 商攝提示詞 (搭配餵圖使用)
         function generatePrompt() {
             const prod = document.getElementById('prodShape').value.split('|')[0];
             const clientSel = document.getElementById('client定位').value;
@@ -679,19 +719,18 @@
             let crafts = [];
             document.querySelectorAll('.craft-ck:checked').forEach(ck => crafts.push(ck.value));
 
-            const fullPrompt = `【產品名稱】${prod}
+            const fullPrompt = `請嚴格參考我上傳的這張【產品規格設計圖】的版面配置、設計圖案、文字資訊與尺寸標註線，將其重新渲染生成為一張「超擬真 頂級商業產品攝影照 (Ultra-Realistic Commercial Product Photography)」。
+
+【產品名稱】${prod}
 【產品定位】${client || '高級文創紀念品'}
 【產品外觀】${prod.includes('圓') ? '正圓造型外框' : '御守造型外框'}，加上${hardware}
 【尺寸標示】${dim}。圖面需出現完整尺寸標註線與側面分層結構說明
-【材質設定】${crafts.join('，')}。折射效果明顯高透光材質，可見真實組裝結構與膠合縫隙
-【正面設計】${front}，外框燙金效果，高級精品視覺，色彩飽和但真實，避免平面感，具有層次深度
-【背面設計】${back}，卡號與客服資訊區規整簡潔，企業商品規格感
+【材質設定】${crafts.join('，')}。折射效果明顯高透光材質，可見真實組裝結構與物理厚度
+【正面設計】${front}，外框燙金效果，高級精品視覺，色彩飽和但真實，具有層次深度
+【背面設計】${back}，卡號與客服條碼規整簡潔，企業商品規格感
 【攝影角度】${camera}
-【畫面配置】左側：正面展示，右側：背面展示，下方：尺寸標示圖與結構說明
-【燈光設定】商業產品攝影，柔和棚燈大型柔光罩，高級精品燈光，真實陰影真實反射，金屬反光自然
-【背景設定】白沙屯拱天宮，高級展示台
-【渲染要求】超擬真渲染，真實產品攝影等級，真實量產樣品感，8K細節，高解析度，精品展示效果
-【禁止事項】不要插畫風，不要卡通風，不要玩具感，不要漂浮結構，不要不合理厚度，不要AI生成感，不要誇張發光，必須像已完成開模之量產商品`;
+【燈光與渲染】商業棚燈大型柔光罩，高級精品光影，真實陰影與倒影，金屬高光自然，8K細節，精品展示效果
+【禁止事項】不要插畫風，不要卡通風，不要玩具感，不要漂浮結構，不要不合理厚度，不要AI生成感，必須像已完成開模之量產實品照！`;
 
             document.getElementById('promptOutput').innerText = fullPrompt;
         }
@@ -699,7 +738,7 @@
         function copyPrompt() {
             const text = document.getElementById('promptOutput').innerText;
             navigator.clipboard.writeText(text).then(() => {
-                alert('🎉 提示詞已成功複製！直接貼入 ChatGPT 或 Midjourney 即可算圖。');
+                alert('🎉 提示詞已成功複製！請先點擊上方藍色按鈕下載圖片，一併傳給 ChatGPT 算圖！');
             });
         }
 
