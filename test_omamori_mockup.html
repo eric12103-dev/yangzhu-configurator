@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>業務專用 - 客製化御守壓克力 AI 提案與預覽產生器 (測試版)</title>
+    <style>
+        :root {
+            --bg-gradient: radial-gradient(circle at 50% 0%, #1a1c24 0%, #0d0e12 100%);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --gold-primary: #d4af37;
+            --gold-glow: rgba(212, 175, 55, 0.3);
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --accent-blue: #3b82f6;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'PingFang TC', 'Microsoft JhengHei', 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 28px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .brand-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff 0%, var(--gold-primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .badge {
+            background: rgba(212, 175, 55, 0.15);
+            color: var(--gold-primary);
+            border: 1px solid var(--gold-primary);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .main-container {
+            display: grid;
+            grid-template-columns: 420px 1fr;
+            gap: 24px;
+            flex: 1;
+        }
+
+        @media (max-width: 1100px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 28px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .panel-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--gold-primary);
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+            padding-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+
+        input[type="text"], select, textarea {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 12px 16px;
+            color: #fff;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--gold-primary);
+            box-shadow: 0 0 12px var(--gold-glow);
+        }
+
+        .file-upload-box {
+            border: 2px dashed rgba(212, 175, 55, 0.4);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            background: rgba(212, 175, 55, 0.03);
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .file-upload-box:hover {
+            background: rgba(212, 175, 55, 0.08);
+            border-color: var(--gold-primary);
+        }
+
+        .file-upload-box input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .checkbox-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            background: rgba(0,0,0,0.2);
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+
+        .checkbox-item:hover {
+            border-color: rgba(255,255,255,0.1);
+        }
+
+        .checkbox-item input {
+            accent-color: var(--gold-primary);
+        }
+
+        .preview-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at center, #252836 0%, #111217 100%);
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.08);
+            position: relative;
+            min-height: 480px;
+            overflow: hidden;
+            padding: 20px;
+        }
+
+        .canvas-wrapper {
+            position: relative;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            border-radius: 12px;
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .canvas-wrapper:hover {
+            transform: scale(1.02);
+        }
+
+        canvas {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            border-radius: 12px;
+        }
+
+        .prompt-panel {
+            grid-column: 1 / -1;
+            background: linear-gradient(145deg, rgba(26, 28, 36, 0.9) 0%, rgba(13, 14, 18, 0.95) 100%);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+        }
+
+        .prompt-box {
+            position: relative;
+            background: #090a0d;
+            border-radius: 12px;
+            padding: 18px;
+            border: 1px solid rgba(255,255,255,0.08);
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: #34d399;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 220px;
+            overflow-y: auto;
+        }
+
+        .btn-action {
+            background: linear-gradient(135deg, var(--gold-primary) 0%, #b89728 100%);
+            color: #000;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 4px 20px rgba(212, 175, 55, 0.3);
+        }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 28px rgba(212, 175, 55, 0.5);
+        }
+
+        .btn-action:active {
+            transform: translateY(0);
+        }
+
+        .status-tag {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border: 1px solid #10b981;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .tools-bar {
+            display: flex;
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .btn-sub {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-sub:hover {
+            background: rgba(255,255,255,0.2);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="brand-title">
+            <span>🛡️ 頌禮文創 AI 業務提案系統</span>
+            <span class="badge">御守壓克力模組測試</span>
+        </div>
+        <div style="font-size:0.85rem; color:var(--text-muted);">
+            📍 獨立測試環境 (不影響既有商品)
+        </div>
+    </header>
+
+    <div class="main-container">
+        <!-- 左側：業務參數輸入表單 -->
+        <div class="panel">
+            <div class="panel-title">📝 1. 客戶需求快速填充</div>
+            
+            <div class="form-group">
+                <label>【產品品項】</label>
+                <select id="prodType" onchange="generatePrompt()">
+                    <option value="客製化御守造型壓克力悠遊卡">客製化御守造型壓克力悠遊卡 (標準模組)</option>
+                    <option value="客製化御守造型皮革一卡通">客製化御守造型皮革一卡通</option>
+                    <option value="厚切透明壓克力紀念鑰匙圈">厚切透明壓克力紀念鑰匙圈</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>【客戶名稱與產品定位】</label>
+                <input type="text" id="clientPosition" value="白沙屯拱天宮文創商品，活動紀念品，高級收藏品" oninput="generatePrompt()">
+            </div>
+
+            <div class="form-group">
+                <label>【正面主視覺標語 / 元素描述】</label>
+                <input type="text" id="frontDesc" value="白沙屯媽祖神像、紅色電聯車、拱天宮建築、飄浮小物件六個" oninput="generatePrompt()">
+            </div>
+
+            <div class="form-group">
+                <label>【背面電子票證版面】</label>
+                <select id="backTemplate" onchange="generatePrompt()">
+                    <option value="標準悠遊卡公司官方版面，悠遊卡LOGO區，卡號條碼區">官方授權標準悠遊卡版面 (乾淨簡潔)</option>
+                    <option value="標準一卡通 iPASS 官方資訊版面">標準一卡通 iPASS 版面</option>
+                    <option value="企業專屬客製化客服卡號區">企業專屬客製化版面</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>【工廠尺寸與結構標示】</label>
+                <input type="text" id="dimSpec" value="正面直徑長寬55mm，壓克力總厚度6mm (上蓋1mm+中間活動層2mm+晶片層1mm)" oninput="generatePrompt()">
+            </div>
+
+            <div class="form-group">
+                <label>【正面客製化圖案上傳】(自動套入御守刀模)</label>
+                <div class="file-upload-box">
+                    <span id="uploadLabel">📁 點擊或拖曳上傳客戶 LOGO / 設計圖</span>
+                    <input type="file" id="customImgInput" accept="image/*" onchange="handleImageUpload(event)">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>【工藝與材質渲染設定】</label>
+                <div class="checkbox-grid">
+                    <label class="checkbox-item"><input type="checkbox" checked onchange="generatePrompt()" class="craft-ck" value="超透明壓克力雷射切割成型"> 超透明壓克力</label>
+                    <label class="checkbox-item"><input type="checkbox" checked onchange="generatePrompt()" class="craft-ck" value="拋光高透光折射透明邊緣"> 拋光折射邊緣</label>
+                    <label class="checkbox-item"><input type="checkbox" checked onchange="generatePrompt()" class="craft-ck" value="雙面UV彩色印刷"> 雙面UV彩色印刷</label>
+                    <label class="checkbox-item"><input type="checkbox" checked onchange="generatePrompt()" class="craft-ck" value="局部浮雕效果0.3mm與外框燙金"> 局部浮雕與燙金</label>
+                </div>
+            </div>
+
+            <button class="btn-action" onclick="renderCanvas()">⚡ 刷新合成樣品圖</button>
+        </div>
+
+        <!-- 右側：即時 Canvas 樣品合成預覽區 -->
+        <div class="panel" style="align-items: center; justify-content: flex-start;">
+            <div style="width:100%; display:flex; justify-content:space-between; align-items:center;">
+                <div class="panel-title">🎨 2. 即時刀模樣品合成預覽 (Canvas 物理疊加)</div>
+                <span class="status-tag">御守刀模鎖定中</span>
+            </div>
+
+            <div class="preview-area" style="width:100%;">
+                <div class="canvas-wrapper">
+                    <canvas id="mockupCanvas" width="600" height="480"></canvas>
+                </div>
+            </div>
+            
+            <div style="font-size:0.85rem; color:var(--text-muted); text-align:center;">
+                💡 說明：底圖採用阿斯拉 `biz_leather_omamori.png` 固定外框，結合 SVG 刀模路徑完美合成，絕不變形。
+            </div>
+        </div>
+
+        <!-- 下方：結構化 AI 提示詞產生器 -->
+        <div class="panel prompt-panel">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div class="panel-title" style="color:#34d399;">🤖 3. 自動生成算圖咒語 (AI Commercial Mockup Prompt)</div>
+                <button class="btn-action" style="background:#10b981; color:#fff;" onclick="copyPrompt()">✨ 一鍵複製提示詞</button>
+            </div>
+            
+            <div class="prompt-box" id="promptOutput">載入提示詞中...</div>
+            <div class="tools-bar">
+                <button class="btn-sub" onclick="openGPT()">🌐 前往 ChatGPT / DALL-E 3</button>
+                <button class="btn-sub" onclick="openMidjourney()">🎨 前往 Midjourney</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 隱藏素材區：預載阿斯拉檔案庫的御守圖與SVG -->
+    <div style="display:none;">
+        <img id="baseOmamoriImg" src="assets/photos/biz_leather_omamori.png" crossorigin="anonymous">
+        <img id="defaultDesignImg" src="assets/photos/biz_leather_omamori_easycard.png" crossorigin="anonymous">
+    </div>
+
+    <script>
+        let customUserImage = null;
+
+        window.onload = function() {
+            generatePrompt();
+            setTimeout(renderCanvas, 300); // 確保圖片素材載入完成
+        };
+
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            document.getElementById('uploadLabel').innerText = `✅ 已選擇：${file.name}`;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    customUserImage = img;
+                    renderCanvas();
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // 核心：使用 HTML5 Canvas 將阿斯拉底圖與客製化設計疊加
+        function renderCanvas() {
+            const canvas = document.getElementById('mockupCanvas');
+            const ctx = canvas.getContext('2d');
+            const baseImg = document.getElementById('baseOmamoriImg');
+            const defaultDesign = document.getElementById('defaultDesignImg');
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 1. 繪製深色精品情境背景
+            let gradient = ctx.createRadialGradient(300, 240, 50, 300, 240, 400);
+            gradient.addColorStop(0, '#2e3244');
+            gradient.addColorStop(1, '#13151f');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 2. 繪製展示台倒影與光暈
+            ctx.fillStyle = 'rgba(0,0,0,0.5)';
+            ctx.beginPath();
+            ctx.ellipse(300, 420, 180, 25, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 3. 繪製御守客製化內容 (左側：正面展示，右側：背面展示)
+            const designToDraw = customUserImage || defaultDesign;
+
+            // --- 左側正面 ---
+            ctx.save();
+            ctx.translate(160, 230);
+            
+            // 模擬御守外切角剪裁路徑
+            ctx.beginPath();
+            ctx.moveTo(-70, -110);
+            ctx.lineTo(70, -110);
+            ctx.lineTo(85, -70);
+            ctx.lineTo(85, 110);
+            ctx.quadraticCurveTo(85, 125, 70, 125);
+            ctx.lineTo(-70, 125);
+            ctx.quadraticCurveTo(-85, 125, -85, 110);
+            ctx.lineTo(-85, -70);
+            ctx.closePath();
+            ctx.clip();
+
+            // 畫入客人設計圖
+            if (designToDraw) {
+                ctx.drawImage(designToDraw, -100, -130, 200, 260);
+            }
+
+            // 繪製透明壓克力折射高光層緣
+            ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+            ctx.lineWidth = 4;
+            ctx.stroke();
+            ctx.restore();
+
+            // 把阿斯拉原始外框鏈條底圖疊加上去
+            if (baseImg && baseImg.complete) {
+                ctx.drawImage(baseImg, 60, 80, 200, 300);
+                // 右側背面展示
+                ctx.drawImage(baseImg, 340, 90, 190, 285);
+            }
+
+            // --- 加上提案圖面尺標文字 ---
+            ctx.fillStyle = '#d4af37';
+            ctx.font = 'bold 14px sans-serif';
+            ctx.fillText('← 55mm →', 130, 80);
+            ctx.fillText('總厚度 6mm', 240, 430);
+            ctx.fillStyle = '#9ca3af';
+            ctx.font = '13px sans-serif';
+            ctx.fillText('【正面主視覺展示】', 110, 400);
+            ctx.fillText('【標準電子票證背面】', 370, 400);
+        }
+
+        // 自動組裝商業算圖 Prompt
+        function generatePrompt() {
+            const prod = document.getElementById('prodType').value;
+            const client = document.getElementById('clientPosition').value;
+            const front = document.getElementById('frontDesc').value;
+            const back = document.getElementById('backTemplate').value;
+            const dim = document.getElementById('dimSpec').value;
+
+            let crafts = [];
+            document.querySelectorAll('.craft-ck:checked').forEach(ck => crafts.push(ck.value));
+
+            const fullPrompt = `【產品名稱】${prod}
+【產品定位】${client}
+【產品外觀】御守造型外框，加上鑰匙圈金色龍蝦扣與金屬掛環
+【尺寸標示】${dim}，圖面需出現完整尺寸標註線與結構厚度說明
+【材質設定】${crafts.join('，')}，可見真實材質結構與光線折射
+【正面設計】${front}，外框高級燙金效果，色彩飽和豐富，避免平面感，具有層次深度
+【背面設計】${back}，客服電話與卡號條碼規整，版面簡潔
+【攝影角度】45度產品商業攝影，正面與背面同時展示，主商品置中，呈現雙面設計
+【畫面配置】左側：正面展示，右側：背面展示，下方：尺寸標示與結構圖
+【燈光與渲染】商業精品棚燈，真實反射陰影，金屬反光自然，超擬真8K渲染，量產樣品完成品質感
+【禁止事項】不要插畫風，不要卡通風，不要玩具感，不要漂浮結構，不要不合理厚度，不要文字亂碼，不要AI生成感，必須像已完成開模之量產商品`;
+
+            document.getElementById('promptOutput').innerText = fullPrompt;
+        }
+
+        function copyPrompt() {
+            const text = document.getElementById('promptOutput').innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('🎉 提示詞已成功複製！您可以直接貼到 ChatGPT 或 Midjourney 算圖。');
+            });
+        }
+
+        function openGPT() {
+            window.open('https://chatgpt.com/', '_blank');
+        }
+
+        function openMidjourney() {
+            window.open('https://www.midjourney.com/', '_blank');
+        }
+    </script>
+</body>
+</html>
