@@ -328,7 +328,7 @@
     <header>
         <div class="brand-title">
             <span>🛡️ 頌禮文創 AI 業務提案系統</span>
-            <span class="badge">V2 全功能 + 下載餵圖按鈕</span>
+            <span class="badge">V3 嚴格覆蓋式咒語引擎 + 下載餵圖按鈕</span>
         </div>
         <div style="font-size:0.85rem; color:var(--text-muted);">
             📍 獨立測試單檔 (不影響既有產品)
@@ -705,7 +705,7 @@
             ctx.fillText('• 悠遊卡晶片層 1mm + 底蓋壓克力 1mm + 膠合縫隙 1mm', 320, 445);
         }
 
-        // 智能組裝完整 AI 商攝提示詞 (搭配餵圖使用)
+        // 智能組裝完整 AI 商攝提示詞 (V3 嚴格覆蓋式渲染專用)
         function generatePrompt() {
             const prod = document.getElementById('prodShape').value.split('|')[0];
             const clientSel = document.getElementById('client定位').value;
@@ -719,18 +719,18 @@
             let crafts = [];
             document.querySelectorAll('.craft-ck:checked').forEach(ck => crafts.push(ck.value));
 
-            const fullPrompt = `請嚴格參考我上傳的這張【產品規格設計圖】的版面配置、設計圖案、文字資訊與尺寸標註線，將其重新渲染生成為一張「超擬真 頂級商業產品攝影照 (Ultra-Realistic Commercial Product Photography)」。
+            const fullPrompt = `🔒【最高指令：嚴格鎖死構圖與版面 (Do NOT Redesign Layout)】
+請將我上傳的這張圖片作為「絕對構圖基準 (Absolute Layout Reference)」。嚴格禁止重新設計或移動整張版面！必須 100% 準確保留原圖的左右雙面配置（左側正面、右側背面）、上方的金屬扣位置、下方的工程分隔線、「←—— 55mm ——→」尺寸標註線，以及最底部的側面爆炸結構說明文字。
 
-【產品名稱】${prod}
-【產品定位】${client || '高級文創紀念品'}
-【產品外觀】${prod.includes('圓') ? '正圓造型外框' : '御守造型外框'}，加上${hardware}
-【尺寸標示】${dim}。圖面需出現完整尺寸標註線與側面分層結構說明
-【材質設定】${crafts.join('，')}。折射效果明顯高透光材質，可見真實組裝結構與物理厚度
-【正面設計】${front}，外框燙金效果，高級精品視覺，色彩飽和但真實，具有層次深度
-【背面設計】${back}，卡號與客服條碼規整簡潔，企業商品規格感
-【攝影角度】${camera}
-【燈光與渲染】商業棚燈大型柔光罩，高級精品光影，真實陰影與倒影，金屬高光自然，8K細節，精品展示效果
-【禁止事項】不要插畫風，不要卡通風，不要玩具感，不要漂浮結構，不要不合理厚度，不要AI生成感，必須像已完成開模之量產實品照！`;
+✨【核心任務：純材質與光影升維 (Material Elevation Only)】
+你的唯一任務，就是對原圖中的物件進行「覆蓋式材質超擬真升級」：
+1. 壓克力材質：將壓克力渲染出 8K 真實商業棚拍的 6mm 物理厚度與側邊拋光透明折射亮邊 (Optical Acrylic Caustics)。
+2. 金屬五金扣：將頂部的${hardware}渲染出真實的金屬光澤與高光反射 (Specular Reflection)。
+3. 印刷工藝：將正面的視覺（${front}）與外框金邊渲染出微浮雕與燙金質感；將背面（${back}）的卡號與條碼保留規整清晰。
+4. 環境與倒影：在底部高級展示台加上柔和的商業棚燈反射倒影與真實物理陰影。
+
+🚫【紅線禁忌：嚴禁抹除尺標與文字 (Strictly Forbidden)】
+絕對禁止刪除、模糊或扭曲圖中的「←—— 55mm ——→」標註線與下方的結構文字！絕對禁止將畫面變成單純的特寫圖或平面插畫！必須像是一張由專業工業設計師與商業攝影師共同完成的頂級量產提案規格書！`;
 
             document.getElementById('promptOutput').innerText = fullPrompt;
         }
