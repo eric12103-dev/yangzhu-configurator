@@ -5,3 +5,9 @@ node_modules/
 .DS_Store
 字體/meiyifont-proportional.ttf
 字體/meiyifont-monospaced.ttf
+
+# 後端 Python 環境與輸出（勿上傳 GitHub）
+backend/venv/
+backend/__pycache__/
+backend/core/__pycache__/
+output/

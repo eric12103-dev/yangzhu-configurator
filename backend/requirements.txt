@@ -1,0 +1,16 @@
+fastapi
+uvicorn
+opencv-python
+shapely
+ezdxf
+pillow
+python-multipart
+numpy
+svgwrite
+rembg[gpu]
+onnxruntime-gpu
+torch
+torchvision
+diffusers
+transformers
+accelerate
