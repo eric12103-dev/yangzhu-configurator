@@ -1004,8 +1004,8 @@ let _cachedLeatherOmamoriEasycardFrameImg = null;
 let _cachedLeatherOmamoriIpassFrameImg = null;
 let _cachedLightboxFrameImg = null;
 let _cachedThickFrameImg = null;
-let _thickDieCutContour = null;   // 刀模正規化輪廓 [[nx,ny],...]
-let _lastRembgDataURL   = null;   // 去背後的 canvas 圖片（含 FIXED_PAD 白邊，只設一次）
+var _thickDieCutContour = null;   // 刀模正規化輪廓 [[nx,ny],...]
+var _lastRembgDataURL   = null;   // 去背後的 canvas 圖片（含 FIXED_PAD 白邊，只設一次）
 var _lastUploadedDataURL = null;
 
 // 卡片橫式上傳模式：回傳向量 SVG（照片為 <image>，紅框+虛線為獨立向量路徑）
@@ -2030,7 +2030,7 @@ function alignCenter2D(axis) {
   canvas2d.requestRenderAll();
 }
 
-// 厚切票證去背 + 刀模生成（純瀏覽器 AI，不需本機 rembg_server.py）
+// 厚切票證去背 + 刀模生成（改由後端 Python GPU API 處理：http://127.0.0.1:8000）
 async function removeBgThick() {
   if (!canvas2d) return;
   const obj = canvas2d.getActiveObject() || canvas2d.getObjects().find(o => o.type === 'image' && o.selectable !== false);
@@ -2049,7 +2049,6 @@ async function removeBgThick() {
   // 進度更新輔助函式
   function _setStatus(msg) {
     if (status) status.textContent = msg;
-    // 解析百分比更新進度條（格式："AI 去背 xx%…"）
     if (progressBar) {
       const m = msg.match(/(\d+)%/);
       progressBar.style.width = m ? m[1] + '%' : '100%';
@@ -2058,8 +2057,8 @@ async function removeBgThick() {
 
   if (btn) btn.disabled = true;
   if (progressWrap) progressWrap.style.display = '';
-  if (progressBar)  progressBar.style.width = '5%';
-  _setStatus('準備去背…');
+  if (progressBar)  progressBar.style.width = '10%';
+  _setStatus('連線後端 GPU 引擎中…');
 
   try {
     const el = obj.getElement();
@@ -2069,12 +2068,12 @@ async function removeBgThick() {
     tmp.getContext('2d').drawImage(el, 0, 0);
     const dataURL = tmp.toDataURL('image/png');
 
-    // 呼叫純前端去背（rembg_client.js）
+    // 呼叫後端 API 去背 + 刀模計算（定義於 rembg_client.js）
     const data = await removeBgWithContourClient(dataURL, marginPx, _setStatus);
 
     if (!data.success) throw new Error(data.error || '去背失敗');
 
-    // 快取去背結果（供刀模步驟重算輪廓使用）
+    // 快取去背結果
     _lastRembgDataURL = data.imageDataURL;
 
     fabric.Image.fromURL(data.imageDataURL, (newImg) => {
@@ -2096,7 +2095,7 @@ async function removeBgThick() {
       canvas2d.requestRenderAll();
 
       if (progressBar) progressBar.style.width = '100%';
-      _setStatus(data.contour ? '✅ 已完成去背！' : '✅ 去背完成（無輪廓）');
+      _setStatus('✅ GPU 去背與刀模運算完成！');
       setTimeout(() => {
         if (progressWrap) progressWrap.style.display = 'none';
         if (progressBar)  progressBar.style.width = '0%';

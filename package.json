@@ -1,7 +1,7 @@
 {
   "name": "yangzhu-configurator",
   "version": "1.0.0",
-  "description": "楊竹科技線上客製化配置器",
+  "description": "頌禮-客製化編輯即時預覽",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
