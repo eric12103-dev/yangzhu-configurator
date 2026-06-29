@@ -121,208 +121,19 @@ function initDieCutStep() {
   }
 }
 
-// Catmull-Rom → cubic bezier，讓多邊形輪廓平滑繪製
-function _drawSmooth(ctx, pts) {
-  if (!pts || pts.length < 3) return;
-  const n = pts.length;
-  ctx.moveTo(pts[0][0], pts[0][1]);
-  for (let i = 0; i < n; i++) {
-    const p0 = pts[(i - 1 + n) % n];
-    const p1 = pts[i];
-    const p2 = pts[(i + 1) % n];
-    const p3 = pts[(i + 2) % n];
-    ctx.bezierCurveTo(
-      p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6,
-      p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6,
-      p2[0], p2[1]
-    );
-  }
-}
+// ─── 以下舊有 JS 輪廓繪製函式群已移除（biz_thick 升級為後端 API 模式）──────────
+// 移除：_drawSmooth (Catmull-Rom 平滑), _contourToCanvasPts (輪廓座標轉換)
+// 移除：_getHolePos (孔位計算), _drawDiecutWithHole (細頸孔繪製)
+// 移除：_refreshDiecutPreview (JS輪廓截圖), _overlayThickDiecut (JS輪廓疊加)
+// 以上功能現在全部由後端 Python API 處理，結果以圖片形式直接回傳。
+// 相關函式已在 rembg_client.js v2 重新實作（_refreshDiecutPreview, _overlayThickDiecut）
+// ────────────────────────────────────────────────────────────────────────────
 
-// 用 Fabric.js transform matrix 把正規化輪廓點轉換為 canvas CSS 像素座標
-// （正確處理旋轉、縮放、翻轉）
-function _contourToCanvasPts(imgObj) {
-  if (!_thickDieCutContour) return [];
-  const tm = imgObj.calcTransformMatrix(); // [a,b,c,d,tx,ty]
-  const w  = imgObj.width;   // 原始圖片像素寬（未縮放）
-  const h  = imgObj.height;  // 原始圖片像素高
-  return _thickDieCutContour.map(pt => {
-    const lx = (pt[0] - 0.5) * w; // Fabric 局部座標（中心為 0,0）
-    const ly = (pt[1] - 0.5) * h;
-    return [
-      tm[0] * lx + tm[2] * ly + tm[4], // canvas CSS x
-      tm[1] * lx + tm[3] * ly + tm[5]  // canvas CSS y
-    ];
-  });
-}
-
-// 計算吊飾孔位置（外徑8mm / 內徑3mm）
-// 採「細頸凸出 tab」設計：圓形完全在主體上方，透過 3mm 細頸連接（如土司吊飾孔）
-function _getHolePos(imgObj) {
-  if (!_thickDieCutContour || !canvas2d || !imgObj) return null;
-  const canvasPts = _contourToCanvasPts(imgObj);
-  if (!canvasPts.length) return null;
-  const minY = Math.min(...canvasPts.map(p => p[1]));
-  const minX = Math.min(...canvasPts.map(p => p[0]));
-  const maxX = Math.max(...canvasPts.map(p => p[0]));
-  const mmToCSS = canvas2d.getWidth() / 54;
-  const outerR = 4   * mmToCSS;
-  const innerR = 1.5 * mmToCSS;
-  const neckH  = 3   * mmToCSS;  // 細頸高度 3mm
-  const sqrtD  = Math.sqrt(outerR * outerR - innerR * innerR);
-  // 圓心位置：細頸底部在 topY，往上 neckH + sqrtD 到達圓弧連接點，再往上到圓心
-  const holeCy = minY - neckH - sqrtD;
-  return { cx: (minX + maxX) / 2, cy: holeCy, outerR, innerR, neckH, topY: minY };
-}
-
-// 吊飾孔「細頸 tab」繪製：主體輪廓 + 細頸 + 圓弧（完全凸出在主體上方）
-function _drawDiecutWithHole(ctx, pts, hole) {
-  const n = pts.length;
-  const fallback = () => {
-    ctx.beginPath(); _drawSmooth(ctx, pts); ctx.closePath(); ctx.stroke();
-    if (hole) {
-      ctx.beginPath(); ctx.arc(hole.cx, hole.cy, hole.outerR, 0, Math.PI * 2); ctx.stroke();
-      ctx.beginPath(); ctx.arc(hole.cx, hole.cy, hole.innerR, 0, Math.PI * 2); ctx.stroke();
-    }
-  };
-  if (n < 3 || !hole) { fallback(); return; }
-
-  const { cx: hx, cy: holeCy, outerR, innerR, topY } = hole;
-  const neckHW = innerR;  // 細頸半寬 = innerR
-  const sqrtD  = Math.sqrt(outerR * outerR - innerR * innerR);
-  const yConn  = holeCy + sqrtD;  // 細頸頂端與弧段的連接點（= topY - neckH）
-
-  // 找最接近左右細頸底端的輪廓點
-  let leftIdx = 0, rightIdx = 0;
-  let ld = Infinity, rd = Infinity;
-  for (let i = 0; i < n; i++) {
-    const [px, py] = pts[i];
-    const dl = Math.hypot(px - (hx - neckHW), py - topY);
-    const dr = Math.hypot(px - (hx + neckHW), py - topY);
-    if (dl < ld) { ld = dl; leftIdx = i; }
-    if (dr < rd) { rd = dr; rightIdx = i; }
-  }
-  if (leftIdx === rightIdx) { fallback(); return; }
-
-  // 取主體段（較長方向，繞過身體而非頂部短路）
-  const fwdLen = ((leftIdx - rightIdx) + n) % n;
-  const outside = [];
-  if (fwdLen >= n / 2) {
-    let idx = rightIdx, g = 0;
-    while (idx !== leftIdx && g < n) { outside.push(pts[idx]); idx = (idx+1)%n; g++; }
-  } else {
-    const tmp = [];
-    let idx = leftIdx, g = 0;
-    while (idx !== rightIdx && g < n) { tmp.push(pts[idx]); idx = (idx+1)%n; g++; }
-    tmp.push(pts[rightIdx]); tmp.reverse();
-    outside.push(...tmp);
-  }
-  outside.push(pts[leftIdx]);
-
-  // 弧段角度：從左連接點順時針繞過頂部到右連接點（大弧，clockwise in canvas = false→anticlockwise）
-  const leftA  = Math.atan2(yConn - holeCy, -neckHW);  // 第二象限（左下方）
-  const rightA = Math.atan2(yConn - holeCy, +neckHW);  // 第一象限（右下方）
-
-  ctx.beginPath();
-  _drawSmooth(ctx, outside);
-  ctx.lineTo(hx - neckHW, topY);   // 對齊左細頸底端
-  ctx.lineTo(hx - neckHW, yConn);  // 細頸往上
-  ctx.arc(hx, holeCy, outerR, leftA, rightA, false);  // 順時針大弧繞過頂部
-  ctx.lineTo(hx + neckHW, topY);   // 右細頸往下
-  ctx.closePath();
-  ctx.stroke();
-
-  ctx.beginPath();
-  ctx.arc(hx, holeCy, innerR, 0, Math.PI * 2);
-  ctx.stroke();
-}
-
-function _refreshDiecutPreview() {
-  const img = document.getElementById('diecut-preview-img');
-  const noPreview = document.getElementById('diecut-no-preview');
-  if (!img) return;
-  if (typeof canvas2d === 'undefined' || !canvas2d) return;
-
-  canvas2d.discardActiveObject();
-  canvas2d.renderAll();
-
-  const lc  = canvas2d.lowerCanvasEl;
-  // Fabric.js 內部以 CSS 像素為座標，但 lowerCanvasEl 是 CSS×DPR 的 buffer 尺寸
-  const dpr = lc.width / canvas2d.getWidth();
-
-  // 手動疊加刀模輪廓（不依賴 after:render 時機）
-  if (typeof _thickDieCutContour !== 'undefined' && _thickDieCutContour) {
-    const imgObj = canvas2d.getObjects().find(o => o.type === 'image' && o.selectable !== false);
-    if (imgObj) {
-      // 四周加 padding，讓延伸到 canvas 外的輪廓也能顯示
-      const extraPad = Math.round(60 * dpr); // buffer 像素
-      const tmp = document.createElement('canvas');
-      tmp.width  = lc.width  + extraPad * 2;
-      tmp.height = lc.height + extraPad * 2;
-      const ctx2 = tmp.getContext('2d');
-      ctx2.fillStyle = '#f8f8f8';
-      ctx2.fillRect(0, 0, tmp.width, tmp.height);
-      ctx2.drawImage(lc, extraPad, extraPad); // canvas 內容置中
-      // 轉換到 CSS 像素空間（含 padding 偏移）
-      ctx2.translate(extraPad, extraPad);
-      ctx2.scale(dpr, dpr);
-      // 用 transform matrix 轉換（正確處理旋轉）
-      const pts2  = _contourToCanvasPts(imgObj);
-      const hole2 = _getHolePos(imgObj);
-      ctx2.save();
-      ctx2.strokeStyle = '#000000';
-      ctx2.lineWidth = 2;
-      ctx2.setLineDash([]);
-      _drawDiecutWithHole(ctx2, pts2, hole2);
-      ctx2.restore();
-      img.src = tmp.toDataURL('image/png');
-      img.style.display = '';
-      if (noPreview) noPreview.style.display = 'none';
-      return;
-    }
-  }
-
-  img.src = lc.toDataURL('image/png');
-  img.style.display = '';
-  if (noPreview) noPreview.style.display = 'none';
-}
-
-// 將刀模輪廓疊加到已合成的 PNG 上（供步驟5確認預覽用）
-async function _overlayThickDiecut(baseURL) {
-  if (typeof _thickDieCutContour === 'undefined' || !_thickDieCutContour) return baseURL;
-  if (typeof canvas2d === 'undefined' || !canvas2d) return baseURL;
-  const imgObj = canvas2d.getObjects().find(o => o.type === 'image' && o.selectable !== false);
-  if (!imgObj) return baseURL;
-  return new Promise(resolve => {
-    const img = new Image();
-    img.onload = () => {
-      const tmp = document.createElement('canvas');
-      tmp.width  = img.width;
-      tmp.height = img.height;
-      const ctx  = tmp.getContext('2d');
-      ctx.drawImage(img, 0, 0);
-      const scale = img.width / canvas2d.getWidth();  // PNG 是 canvas CSS 寬的 2x
-      ctx.scale(scale, scale);
-      // 用 transform matrix 轉換（正確處理旋轉）
-      const ptsO  = _contourToCanvasPts(imgObj);
-      const holeO = _getHolePos(imgObj);
-      ctx.save();
-      ctx.strokeStyle = '#000000';
-      ctx.lineWidth = 2;
-      ctx.setLineDash([]);
-      _drawDiecutWithHole(ctx, ptsO, holeO);
-      ctx.restore();
-      resolve(tmp.toDataURL('image/png'));
-    };
-    img.onerror = () => resolve(baseURL);
-    img.src = baseURL;
-  });
-}
-
+// ─── regenDieCut（biz_thick 後端 API 模式）──────────────────────────────────
 async function regenDieCut() {
-  const btn    = document.getElementById('btn-regen-diecut');
-  const status = document.getElementById('diecut-status');
-  const slider = document.getElementById('diecut-margin');
+  const btn      = document.getElementById('btn-regen-diecut');
+  const status   = document.getElementById('diecut-status');
+  const slider   = document.getElementById('diecut-margin');
   const marginPx = slider ? parseInt(slider.value) : 15;
 
   // 同步回 rmbg-section 的滑桿
@@ -337,19 +148,18 @@ async function regenDieCut() {
   }
 
   if (btn) btn.disabled = true;
-  if (status) status.textContent = '重新計算中…';
+  if (status) status.textContent = '連線後端 GPU 引擎中…';
 
   try {
     if (typeof _lastRembgDataURL !== 'undefined' && _lastRembgDataURL) {
-      // 已有去背結果：只重算輪廓，圖片不變（純前端計算）
+      // 已有去背結果：只重算刀模外框（呼叫後端 /api/preview_die）
       const data = await calcContourOnlyClient(_lastRembgDataURL, marginPx);
       if (!data.success) throw new Error(data.error);
-      _thickDieCutContour = data.contour || null;
       _refreshDiecutPreview();
       if (status) status.textContent = '✅ 刀模已更新！';
       setTimeout(() => { if (status) status.textContent = ''; }, 3000);
     } else {
-      // 首次：跑去背 + 計算輪廓，設置 canvas 圖片（純前端 AI）
+      // 首次：呼叫後端去背 + 刀模預覽 API
       const data = await removeBgWithContourClient(
         _lastUploadedDataURL,
         marginPx,
@@ -357,10 +167,9 @@ async function regenDieCut() {
       );
       if (!data.success) throw new Error(data.error);
 
-      _thickDieCutContour = data.contour || null;
-      _lastRembgDataURL = data.imageDataURL;  // 快取去背結果（含 FIXED_PAD 白邊）
+      _lastRembgDataURL = data.imageDataURL;
 
-      // 更新 canvas 圖片物件（只在首次）
+      // 更新 canvas 圖片物件（使用後端去背結果）
       if (typeof canvas2d !== 'undefined' && canvas2d) {
         const imgObj = canvas2d.getObjects().find(o => o.type === 'image' && o.selectable !== false);
         if (imgObj) {
@@ -379,8 +188,12 @@ async function regenDieCut() {
             if (status) status.textContent = '✅ 刀模已更新！';
             setTimeout(() => { if (status) status.textContent = ''; }, 3000);
           }, { crossOrigin: 'anonymous' });
+          return; // 等 fabric.Image.fromURL callback 執行
         }
       }
+      _refreshDiecutPreview();
+      if (status) status.textContent = '✅ 刀模已更新！';
+      setTimeout(() => { if (status) status.textContent = ''; }, 3000);
     }
   } catch (err) {
     if (status) status.textContent = '❌ 失敗：' + (err.message || err);
