@@ -2172,6 +2172,11 @@ async function removeBgThick() {
 
       canvas2d.requestRenderAll();
 
+      if (typeof toggleBrushMode === 'function') {
+        _brushMode = null;
+        toggleBrushMode('erase');
+      }
+
       if (progressBar) progressBar.style.width = '100%';
       _setStatus('✅ GPU 去背與刀模運算完成！');
       setTimeout(() => {
