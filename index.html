@@ -297,10 +297,19 @@
           </div>
         </div>
 
-        <!-- 預覽圖 -->
+        <!-- 預覽圖與可拖曳打孔標記 -->
         <div style="flex:1;min-width:280px;text-align:center;">
-          <img id="diecut-preview-img" style="max-width:320px;max-height:480px;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.12);">
+          <div id="diecut-preview-wrap" style="position:relative;display:inline-block;max-width:320px;user-select:none;">
+            <img id="diecut-preview-img" style="max-width:320px;max-height:480px;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.12);display:block;">
+            <!-- 互動式鑰匙孔 (外徑 8mm, 內圓 3mm) -->
+            <div id="diecut-keyhole" title="按住拖曳調整打孔位置" style="display:none;position:absolute;border-radius:50%;border:2px solid #2563eb;background:rgba(59,130,246,0.2);cursor:grab;box-shadow:0 0 0 1px #ffffff, 0 2px 6px rgba(0,0,0,0.25);z-index:20;box-sizing:border-box;">
+              <div id="diecut-keyhole-inner" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);border-radius:50%;border:1.5px solid #2563eb;background:#ffffff;box-shadow:0 0 2px rgba(0,0,0,0.3);"></div>
+            </div>
+          </div>
           <p id="diecut-no-preview" style="font-size:13px;color:var(--gray-400);margin-top:16px;display:none;">請先在步驟三上傳圖片並執行去背</p>
+          <div id="keyhole-info" style="font-size:12px;color:#2563eb;margin-top:8px;font-weight:600;display:none;">
+            🔵 藍色打孔標記 (外 8mm / 內 3mm)，可直接按住用滑鼠自由拖曳位置
+          </div>
         </div>
       </div>
 
@@ -365,7 +374,7 @@
 <script src="js/products.js"></script>
 <script src="js/preview2d.js?v=11"></script>
 <script src="js/mockup.js"></script>
-<script src="js/rembg_client.js?v=2"></script>
+<script src="js/rembg_client.js?v=3"></script>
 <script src="js/configurator.js?v=5"></script>
 
 <!-- ─── biz_thick 去背：改由後端 Python GPU API 處理，不再使用前端 CDN 模型 ─── -->

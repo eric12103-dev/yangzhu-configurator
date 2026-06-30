@@ -131,8 +131,8 @@ async function _callPreviewDie(imageBlob, marginMm, onProgress) {
     formData.append('image', imageBlob, 'rembg_result.png');
     formData.append('max_size_mm', '50');
     formData.append('margin_mm', String(marginMm || 3));
-    formData.append('hole_diameter_mm', '3');
-    formData.append('hole_position', 'top');
+    formData.append('hole_diameter_mm', '8');
+    formData.append('hole_position', 'none');
 
     var resp = await fetch(REMBG_API_BASE + '/api/preview_die', {
       method: 'POST',
@@ -163,24 +163,113 @@ async function _callPreviewDie(imageBlob, marginMm, onProgress) {
 // ── 相容性函式：_refreshDiecutPreview（改為顯示後端圖片）─────────────────
 // configurator.js 中 initDieCutStep 與 regenDieCut 會呼叫此函式
 
+let _keyholePos = { x: 0.8, y: 0.15 }; // 預設在右上角
+
+function _updateKeyholeLayout() {
+  var img = document.getElementById('diecut-preview-img');
+  var kh  = document.getElementById('diecut-keyhole');
+  var inner = document.getElementById('diecut-keyhole-inner');
+  if (!img || !kh || img.clientWidth === 0) return;
+
+  var w = img.clientWidth;
+  var h = img.clientHeight;
+  var pxPerMm = w / 158.7;
+  var outerPx = Math.max(22, Math.round(8 * pxPerMm));
+  var innerPx = Math.max(8, Math.round(3 * pxPerMm));
+
+  kh.style.width = outerPx + 'px';
+  kh.style.height = outerPx + 'px';
+  if (inner) {
+    inner.style.width = innerPx + 'px';
+    inner.style.height = innerPx + 'px';
+  }
+
+  var left = Math.round(_keyholePos.x * w - outerPx / 2);
+  var top  = Math.round(_keyholePos.y * h - outerPx / 2);
+  left = Math.max(0, Math.min(w - outerPx, left));
+  top  = Math.max(0, Math.min(h - outerPx, top));
+
+  kh.style.left = left + 'px';
+  kh.style.top  = top + 'px';
+}
+
 function _refreshDiecutPreview() {
   var img       = document.getElementById('diecut-preview-img');
   var noPreview = document.getElementById('diecut-no-preview');
+  var kh        = document.getElementById('diecut-keyhole');
+  var khInfo    = document.getElementById('keyhole-info');
   if (!img) return;
+
+  var showImg = function() {
+    img.style.display = '';
+    if (noPreview) noPreview.style.display = 'none';
+    if (kh) kh.style.display = '';
+    if (khInfo) khInfo.style.display = '';
+    setTimeout(_updateKeyholeLayout, 50);
+  };
+
+  img.onload = showImg;
 
   if (_thickDieCutOverlayURL) {
     img.src = _thickDieCutOverlayURL;
-    img.style.display = '';
-    if (noPreview) noPreview.style.display = 'none';
   } else if (_lastRembgDataURL) {
     img.src = _lastRembgDataURL;
-    img.style.display = '';
-    if (noPreview) noPreview.style.display = 'none';
   } else {
     img.style.display = 'none';
     if (noPreview) noPreview.style.display = '';
+    if (kh) kh.style.display = 'none';
+    if (khInfo) khInfo.style.display = 'none';
   }
 }
+
+// 綁定鑰匙孔拖曳事件 (嚴格限制在 SVG 長寬範圍內)
+var _isKeyholeDragging = false;
+var _khDragOffset = { x: 0, y: 0 };
+
+setTimeout(function() {
+  window.addEventListener('mousedown', function(e) {
+    var kh = document.getElementById('diecut-keyhole');
+    if (kh && (e.target === kh || kh.contains(e.target))) {
+      _isKeyholeDragging = true;
+      var rect = kh.getBoundingClientRect();
+      _khDragOffset.x = e.clientX - rect.left;
+      _khDragOffset.y = e.clientY - rect.top;
+      kh.style.cursor = 'grabbing';
+      e.preventDefault();
+    }
+  });
+  window.addEventListener('mousemove', function(e) {
+    if (!_isKeyholeDragging) return;
+    var img = document.getElementById('diecut-preview-img');
+    var kh  = document.getElementById('diecut-keyhole');
+    if (!img || !kh) return;
+
+    var wrapRect = img.getBoundingClientRect();
+    var left = e.clientX - wrapRect.left - _khDragOffset.x;
+    var top  = e.clientY - wrapRect.top - _khDragOffset.y;
+
+    var w = img.clientWidth;
+    var h = img.clientHeight;
+    var outerPx = kh.offsetWidth || 24;
+
+    left = Math.max(0, Math.min(w - outerPx, left));
+    top  = Math.max(0, Math.min(h - outerPx, top));
+
+    kh.style.left = left + 'px';
+    kh.style.top  = top + 'px';
+
+    _keyholePos.x = (left + outerPx / 2) / w;
+    _keyholePos.y = (top + outerPx / 2) / h;
+  });
+  window.addEventListener('mouseup', function() {
+    if (_isKeyholeDragging) {
+      _isKeyholeDragging = false;
+      var kh = document.getElementById('diecut-keyhole');
+      if (kh) kh.style.cursor = 'grab';
+    }
+  });
+  window.addEventListener('resize', _updateKeyholeLayout);
+}, 500);
 
 // ── 相容性函式：_overlayThickDiecut（改為直接回傳後端刀模預覽圖）──────────
 // configurator.js 中的步驟5確認預覽會呼叫此函式
