@@ -134,12 +134,22 @@ function init2DCanvas(productId) {
 
   const wrap = document.getElementById('canvas-2d-wrap');
   if (wrap) {
-    if (isThick) {
-      wrap.style.backgroundImage = 'linear-gradient(45deg, #e0e0e0 25%, transparent 25%), linear-gradient(-45deg, #e0e0e0 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #e0e0e0 75%), linear-gradient(-45deg, transparent 75%, #e0e0e0 75%)';
-      wrap.style.backgroundSize = '20px 20px';
-      wrap.style.backgroundPosition = '0 0, 0 10px, 10px -10px, -10px 0';
-      wrap.style.backgroundColor = '#ffffff';
+    if (isThick && canvas2d && canvas2d.wrapperEl) {
+      canvas2d.wrapperEl.style.backgroundImage = 'linear-gradient(45deg, #e4e4e4 25%, transparent 25%), linear-gradient(-45deg, #e4e4e4 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #e4e4e4 75%), linear-gradient(-45deg, transparent 75%, #e4e4e4 75%)';
+      canvas2d.wrapperEl.style.backgroundSize = '20px 20px';
+      canvas2d.wrapperEl.style.backgroundPosition = '0 0, 0 10px, 10px -10px, -10px 0';
+      canvas2d.wrapperEl.style.backgroundColor = '#ffffff';
+      canvas2d.wrapperEl.style.borderRadius = '12px';
+      canvas2d.wrapperEl.style.boxShadow = '0 4px 24px rgba(0,0,0,0.12)';
+      wrap.style.backgroundImage = '';
+      wrap.style.backgroundColor = '';
     } else {
+      if (canvas2d && canvas2d.wrapperEl) {
+        canvas2d.wrapperEl.style.backgroundImage = '';
+        canvas2d.wrapperEl.style.backgroundColor = '';
+        canvas2d.wrapperEl.style.borderRadius = '';
+        canvas2d.wrapperEl.style.boxShadow = '';
+      }
       wrap.style.backgroundImage = '';
       wrap.style.backgroundColor = '';
     }
@@ -386,6 +396,7 @@ function init2DCanvas(productId) {
 
     // 虛線框（隨行杯僅選取時顯示）
     if (isThermosLike && !_showLabelBorder) return;
+    if (currentProduct.id === 'biz_thick') return;
 
     ctx.save();
     ctx.setLineDash([10, 5]);
