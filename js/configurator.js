@@ -151,9 +151,12 @@ async function regenDieCut() {
   if (status) status.textContent = '連線後端 GPU 引擎中…';
 
   try {
+    const holePosEl  = document.getElementById('diecut-hole-pos');
+    const holePosVal = holePosEl ? holePosEl.value : '0.5';
+
     if (typeof _lastRembgDataURL !== 'undefined' && _lastRembgDataURL) {
-      // 已有去背結果：只重算刀模外框（呼叫後端 /api/preview_die）
-      const data = await calcContourOnlyClient(_lastRembgDataURL, marginPx);
+      // 已有去背結果：只重算刀模外框與打孔耳朵（呼叫後端 /api/preview_die）
+      const data = await calcContourOnlyClient(_lastRembgDataURL, marginPx, holePosVal);
       if (!data.success) throw new Error(data.error);
       _refreshDiecutPreview();
       if (status) status.textContent = '✅ 刀模已更新！';

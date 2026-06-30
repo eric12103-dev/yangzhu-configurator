@@ -287,29 +287,30 @@
                      oninput="document.getElementById('diecut-margin-val').textContent=this.value+'px'">
               <span id="diecut-margin-val" style="font-size:12px;color:var(--gray-400);min-width:28px;">15px</span>
             </div>
+
+            <h4 style="margin-top:14px;">打孔位置 (左右滑動)</h4>
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;">
+              <input type="range" id="diecut-hole-pos" min="0.1" max="0.9" step="0.02" value="0.5"
+                     style="flex:1;accent-color:var(--green);"
+                     oninput="var v=parseFloat(this.value);document.getElementById('diecut-hole-pos-val').textContent=(v<0.4?'偏左':(v>0.6?'偏右':'置中'))"
+                     onchange="regenDieCut()">
+              <span id="diecut-hole-pos-val" style="font-size:12px;color:var(--gray-400);min-width:32px;text-align:right;">置中</span>
+            </div>
+
             <button id="btn-regen-diecut" class="btn btn-secondary btn-sm" style="width:100%;" onclick="regenDieCut()">
               ↻ 重新計算刀模
             </button>
             <p id="diecut-status" style="font-size:12px;color:var(--gray-400);margin-top:8px;min-height:16px;"></p>
             <div style="margin-top:8px;padding:10px;background:var(--gray-100);border-radius:8px;font-size:11px;color:var(--gray-400);">
-              💡 紅色虛線為刀模輪廓，調整邊距後點「重新計算」更新
+              💡 調整「邊距」或「打孔位置」後可點擊重新計算，由後端 AI 引擎生成與本體無縫融合的 8mm/3mm 耳狀孔。
             </div>
           </div>
         </div>
 
-        <!-- 預覽圖與可拖曳打孔標記 -->
+        <!-- 預覽圖 -->
         <div style="flex:1;min-width:280px;text-align:center;">
-          <div id="diecut-preview-wrap" style="position:relative;display:inline-block;max-width:320px;user-select:none;">
-            <img id="diecut-preview-img" style="max-width:320px;max-height:480px;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.12);display:block;">
-            <!-- 互動式鑰匙孔 (外徑 8mm, 內圓 3mm) -->
-            <div id="diecut-keyhole" title="按住拖曳調整打孔位置" style="display:none;position:absolute;border-radius:50%;border:2px solid #2563eb;background:rgba(59,130,246,0.2);cursor:grab;box-shadow:0 0 0 1px #ffffff, 0 2px 6px rgba(0,0,0,0.25);z-index:20;box-sizing:border-box;">
-              <div id="diecut-keyhole-inner" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);border-radius:50%;border:1.5px solid #2563eb;background:#ffffff;box-shadow:0 0 2px rgba(0,0,0,0.3);"></div>
-            </div>
-          </div>
+          <img id="diecut-preview-img" style="max-width:320px;max-height:480px;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.12);">
           <p id="diecut-no-preview" style="font-size:13px;color:var(--gray-400);margin-top:16px;display:none;">請先在步驟三上傳圖片並執行去背</p>
-          <div id="keyhole-info" style="font-size:12px;color:#2563eb;margin-top:8px;font-weight:600;display:none;">
-            🔵 藍色打孔標記 (外 8mm / 內 3mm)，可直接按住用滑鼠自由拖曳位置
-          </div>
         </div>
       </div>
 
@@ -374,8 +375,8 @@
 <script src="js/products.js"></script>
 <script src="js/preview2d.js?v=11"></script>
 <script src="js/mockup.js"></script>
-<script src="js/rembg_client.js?v=3"></script>
-<script src="js/configurator.js?v=5"></script>
+<script src="js/rembg_client.js?v=4"></script>
+<script src="js/configurator.js?v=6"></script>
 
 <!-- ─── biz_thick 去背：改由後端 Python GPU API 處理，不再使用前端 CDN 模型 ─── -->
 
