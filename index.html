@@ -168,9 +168,10 @@
             <!-- 進階手動修正 (可選) -->
             <div id="manual-adjust-wrap" style="margin-top:14px;border-top:1px dashed var(--gray-200);padding-top:12px;">
               <h5 style="font-size:13px;color:var(--gray-700);margin-bottom:8px;font-weight:700;">進階手動修正 (可選)</h5>
-              <div style="display:flex;gap:8px;margin-bottom:8px;">
-                <button id="btn-brush-erase" class="btn btn-secondary btn-sm" style="flex:1;justify-content:center;" onclick="toggleBrushMode('erase')">🧹 擦除</button>
-                <button id="btn-brush-restore" class="btn btn-secondary btn-sm" style="flex:1;justify-content:center;" onclick="toggleBrushMode('restore')">🖌 還原</button>
+              <div style="display:flex;gap:6px;margin-bottom:8px;">
+                <button id="btn-brush-erase" class="btn btn-secondary btn-sm" style="flex:1;justify-content:center;padding:6px 4px;" onclick="toggleBrushMode('erase')">🧹 擦除</button>
+                <button id="btn-brush-restore" class="btn btn-secondary btn-sm" style="flex:1;justify-content:center;padding:6px 4px;" onclick="toggleBrushMode('restore')">🖌 還原</button>
+                <button id="btn-brush-move" class="btn btn-secondary btn-sm" style="flex:1;justify-content:center;padding:6px 4px;" onclick="toggleBrushMode('move')">✋ 拖曳</button>
               </div>
               <div id="brush-size-wrap" style="display:none;margin-bottom:4px;">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
@@ -362,7 +363,7 @@
 
 <!-- ─── Scripts ──────────────────────────── -->
 <script src="js/products.js"></script>
-<script src="js/preview2d.js?v=10"></script>
+<script src="js/preview2d.js?v=11"></script>
 <script src="js/mockup.js"></script>
 <script src="js/rembg_client.js?v=2"></script>
 <script src="js/configurator.js?v=5"></script>

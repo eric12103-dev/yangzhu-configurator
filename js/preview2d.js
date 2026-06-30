@@ -363,20 +363,20 @@ function init2DCanvas(productId) {
 
   // ── 手動微調筆刷事件監聽 ──
   canvas2d.on('mouse:down', function(e) {
-    if (typeof _brushMode !== 'undefined' && _brushMode) {
+    if (typeof _brushMode !== 'undefined' && (_brushMode === 'erase' || _brushMode === 'restore') && (typeof _spacePressed === 'undefined' || !_spacePressed)) {
       _isBrushing = true;
       const pointer = canvas2d.getPointer(e.e);
       if (typeof _applyBrushAtPointer === 'function') _applyBrushAtPointer(pointer);
     }
   });
   canvas2d.on('mouse:move', function(e) {
-    if (typeof _brushMode !== 'undefined' && _brushMode && typeof _isBrushing !== 'undefined' && _isBrushing) {
+    if (typeof _brushMode !== 'undefined' && (_brushMode === 'erase' || _brushMode === 'restore') && (typeof _spacePressed === 'undefined' || !_spacePressed) && typeof _isBrushing !== 'undefined' && _isBrushing) {
       const pointer = canvas2d.getPointer(e.e);
       if (typeof _applyBrushAtPointer === 'function') _applyBrushAtPointer(pointer);
     }
   });
   canvas2d.on('mouse:up', function() {
-    if (typeof _brushMode !== 'undefined' && _brushMode && typeof _isBrushing !== 'undefined' && _isBrushing) {
+    if (typeof _brushMode !== 'undefined' && (_brushMode === 'erase' || _brushMode === 'restore') && typeof _isBrushing !== 'undefined' && _isBrushing) {
       _isBrushing = false;
       if (typeof _saveHistory === 'function') _saveHistory();
     }
@@ -2196,10 +2196,11 @@ async function removeBgThick() {
 }
 
 // ─── 手動修正背景（擦除與還原筆刷） ─────────────────────────
-let _brushMode = null; // null | 'erase' | 'restore'
+let _brushMode = null; // null | 'erase' | 'restore' | 'move'
 let _brushSize = 20;
 let _origUploadImageElement = null;
 let _isBrushing = false;
+let _spacePressed = false;
 
 function toggleBrushMode(mode) {
   if (_brushMode === mode) {
@@ -2210,6 +2211,7 @@ function toggleBrushMode(mode) {
 
   const btnE = document.getElementById('btn-brush-erase');
   const btnR = document.getElementById('btn-brush-restore');
+  const btnM = document.getElementById('btn-brush-move');
   const sizeWrap = document.getElementById('brush-size-wrap');
 
   if (btnE) {
@@ -2220,22 +2222,28 @@ function toggleBrushMode(mode) {
     btnR.style.background = (_brushMode === 'restore') ? 'var(--green)' : '';
     btnR.style.color = (_brushMode === 'restore') ? 'white' : '';
   }
-  if (sizeWrap) sizeWrap.style.display = _brushMode ? '' : 'none';
+  if (btnM) {
+    btnM.style.background = (_brushMode === 'move') ? 'var(--green)' : '';
+    btnM.style.color = (_brushMode === 'move') ? 'white' : '';
+  }
+  if (sizeWrap) sizeWrap.style.display = (_brushMode === 'erase' || _brushMode === 'restore') ? '' : 'none';
 
   if (!canvas2d) return;
   const imgObj = canvas2d.getObjects().find(o => o.type === 'image');
+  const isMove = (_brushMode === 'move' || _spacePressed);
+
   if (imgObj) {
     if (currentProduct && currentProduct.id === 'biz_thick') {
-      imgObj.lockMovementX = true;
-      imgObj.lockMovementY = true;
+      imgObj.lockMovementX = !isMove;
+      imgObj.lockMovementY = !isMove;
       imgObj.lockRotation = true;
       imgObj.hasControls = false;
       imgObj.hasBorders = false;
     }
-    imgObj.selectable = !_brushMode;
+    imgObj.selectable = isMove || !_brushMode;
     imgObj.evented = true;
   }
-  canvas2d.selection = !_brushMode;
+  canvas2d.selection = isMove || !_brushMode;
   _updateBrushCursor();
   canvas2d.requestRenderAll();
 }
@@ -2250,10 +2258,12 @@ function onBrushSizeChange(val) {
 function _updateBrushCursor() {
   if (!canvas2d) return;
   const imgObj = canvas2d.getObjects().find(o => o.type === 'image');
-  if (!_brushMode) {
-    canvas2d.defaultCursor = 'default';
-    canvas2d.hoverCursor = 'move';
-    if (imgObj) imgObj.hoverCursor = 'move';
+  const isMove = (_brushMode === 'move' || _spacePressed);
+
+  if (isMove || !_brushMode) {
+    canvas2d.defaultCursor = isMove ? 'grab' : 'default';
+    canvas2d.hoverCursor = isMove ? 'grab' : 'move';
+    if (imgObj) imgObj.hoverCursor = isMove ? 'grab' : 'move';
     return;
   }
   const r = Math.max(4, Math.round(_brushSize / 2));
@@ -2281,7 +2291,7 @@ function _ensureImgIsCanvas(imgObj) {
 }
 
 function _applyBrushAtPointer(pointer) {
-  if (!_brushMode || !canvas2d) return;
+  if ((_brushMode !== 'erase' && _brushMode !== 'restore') || !canvas2d || _spacePressed) return;
   const imgObj = canvas2d.getObjects().find(o => o.type === 'image');
   if (!imgObj) return;
   const c = _ensureImgIsCanvas(imgObj);
@@ -2311,4 +2321,36 @@ function _applyBrushAtPointer(pointer) {
   imgObj.dirty = true;
   canvas2d.requestRenderAll();
 }
+
+// ─── 支援按住空白鍵 (Space) 快捷暫時啟用平移拖曳 ───────────
+window.addEventListener('keydown', function(e) {
+  if (e.code === 'Space' && !e.target.matches('input, textarea') && !_spacePressed) {
+    _spacePressed = true;
+    if (typeof _updateBrushCursor === 'function') _updateBrushCursor();
+    if (canvas2d) {
+      const imgObj = canvas2d.getObjects().find(o => o.type === 'image');
+      if (imgObj && currentProduct && currentProduct.id === 'biz_thick') {
+        imgObj.lockMovementX = false;
+        imgObj.lockMovementY = false;
+        imgObj.selectable = true;
+      }
+    }
+  }
+});
+window.addEventListener('keyup', function(e) {
+  if (e.code === 'Space') {
+    _spacePressed = false;
+    if (typeof _updateBrushCursor === 'function') _updateBrushCursor();
+    if (canvas2d) {
+      const imgObj = canvas2d.getObjects().find(o => o.type === 'image');
+      const isMove = (_brushMode === 'move');
+      if (imgObj && currentProduct && currentProduct.id === 'biz_thick') {
+        imgObj.lockMovementX = !isMove;
+        imgObj.lockMovementY = !isMove;
+        imgObj.selectable = isMove || !_brushMode;
+      }
+    }
+  }
+});
+
 
