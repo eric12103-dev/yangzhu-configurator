@@ -126,10 +126,24 @@ function init2DCanvas(productId) {
   el.width  = cw;
   el.height = ch;
 
+  const isThick = currentProduct && currentProduct.id === 'biz_thick';
   canvas2d = new fabric.Canvas('canvas-2d', {
     width: cw, height: ch,
-    backgroundColor: isThermosLike ? '#f0ece6' : '#ffffff'
+    backgroundColor: isThermosLike ? '#f0ece6' : (isThick ? null : '#ffffff')
   });
+
+  const wrap = document.getElementById('canvas-2d-wrap');
+  if (wrap) {
+    if (isThick) {
+      wrap.style.backgroundImage = 'linear-gradient(45deg, #e0e0e0 25%, transparent 25%), linear-gradient(-45deg, #e0e0e0 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #e0e0e0 75%), linear-gradient(-45deg, transparent 75%, #e0e0e0 75%)';
+      wrap.style.backgroundSize = '20px 20px';
+      wrap.style.backgroundPosition = '0 0, 0 10px, 10px -10px, -10px 0';
+      wrap.style.backgroundColor = '#ffffff';
+    } else {
+      wrap.style.backgroundImage = '';
+      wrap.style.backgroundColor = '';
+    }
+  }
 
   // ── 手機觸控優化 ──────────────────────────
   fabric.Object.prototype.cornerSize          = 14;

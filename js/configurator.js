@@ -551,7 +551,7 @@ function initDesignStep() {
     });
   }
   const bgSection = document.getElementById('bg-color-section');
-  if (bgSection) bgSection.style.display = (isThermos || isUploadOnly) ? 'none' : '';
+  if (bgSection) bgSection.style.display = (isThermos || isUploadOnly || STATE.productId === 'biz_thick') ? 'none' : '';
 
   // canvas 下方說明文字
   const canvasNote = document.getElementById('canvas-note');
