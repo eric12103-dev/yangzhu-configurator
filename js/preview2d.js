@@ -781,12 +781,12 @@ function uploadImage2D(file) {
         if (_s2) _s2.value = 100;
         if (_d2) _d2.textContent = '100%';
       } else if (_isThick) {
-        // 厚切電子票證：裁切到圓角框範圍（viewBox 158.7×248.3，框邊 x=2.8,y=2.8）
+        // 厚切電子票證：裁切到圓角框範圍（viewBox 158.7×248.3，框邊 x=2.8,y=2.8，圓角半徑 ~9.3）
         const _tx  = w * (2.8 / 158.7);
         const _ty  = h * (2.8 / 248.3);
         const _tw  = w * (153.1 / 158.7);
         const _th  = h * (242.7 / 248.3);
-        const scale = Math.max(_tw / img.width, _th / img.height);
+        const scale = Math.min(_tw / img.width, _th / img.height);
         _uploadBaseScale = scale;
         img.set({
           left: w / 2, top: h / 2,
@@ -796,6 +796,8 @@ function uploadImage2D(file) {
         img.clipPath = new fabric.Rect({
           left: _tx, top: _ty,
           width: _tw, height: _th,
+          rx: w * (9.3 / 158.7),
+          ry: h * (9.3 / 248.3),
           absolutePositioned: true
         });
         const _s = document.getElementById('zoom-slider');
