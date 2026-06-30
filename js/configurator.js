@@ -1075,8 +1075,14 @@ async function submitThickDesign(filename) {
   const useAi = chk ? chk.checked : false;
 
   const formData = new FormData();
-  if (window._currentCutoutBlob) {
-    formData.append('image', window._currentCutoutBlob, 'cutout.png');
+  if (typeof _lastRembgBlob !== 'undefined' && _lastRembgBlob) {
+    formData.append('image', _lastRembgBlob, 'cutout.png');
+  } else if (typeof _lastRembgDataURL !== 'undefined' && _lastRembgDataURL) {
+    const res = await fetch(_lastRembgDataURL);
+    const blob = await res.blob();
+    formData.append('image', blob, 'cutout.png');
+  } else if (typeof _lastUploadedFile !== 'undefined' && _lastUploadedFile) {
+    formData.append('image', _lastUploadedFile, _lastUploadedFile.name || 'cutout.png');
   } else if (STATE.designDataURL) {
     const res = await fetch(STATE.designDataURL);
     const blob = await res.blob();
@@ -1100,7 +1106,8 @@ async function submitThickDesign(filename) {
   formData.append('use_ai_render', useAi ? 'true' : 'false');
 
   try {
-    const res = await fetch('http://localhost:8000/api/submit', { method: 'POST', body: formData });
+    const apiBase = (typeof REMBG_API_BASE !== 'undefined' && REMBG_API_BASE) ? REMBG_API_BASE : '';
+    const res = await fetch(apiBase + '/api/submit', { method: 'POST', body: formData });
     const data = await res.json();
     if (data.success) {
       if (imgEl) {
