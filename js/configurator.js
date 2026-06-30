@@ -791,9 +791,6 @@ function initPreviewStep() {
     (['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId) && STATE.orientationId === 'landscape') ||
     (['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId) && STATE.orientationId === 'portrait')
   ));
-  const flatEl    = document.getElementById('preview-flat');
-  const mockupDiv = document.getElementById('preview-mockup');
-  const btnMockup = document.getElementById('btn-download-mockup');
   const dataURL   = get2DDataURL();
   if (dataURL) STATE.designDataURL = dataURL;
 
