@@ -764,6 +764,28 @@ function applyBgPreset(color) {
 
 // ─── Step 4：預覽 ──────────────────────────────────────────
 function initPreviewStep() {
+  const titleEl = document.getElementById('step4-title');
+  const descEl  = document.getElementById('step4-desc');
+  const thickPanel = document.getElementById('thick-submit-panel');
+  const flatEl    = document.getElementById('preview-flat');
+  const mockupDiv = document.getElementById('preview-mockup');
+  const btnMockup = document.getElementById('btn-download-mockup');
+
+  if (STATE.productId === 'biz_thick') {
+    if (titleEl) titleEl.textContent = '設計確認與檔案輸出';
+    if (descEl)  descEl.textContent  = '確認後將自動產生 3D 打樣圖及 SVG 打印刀模圖，並存入本地資料夾。';
+    if (thickPanel) thickPanel.style.display = 'block';
+    if (flatEl)    flatEl.style.display    = 'none';
+    if (mockupDiv) mockupDiv.style.display = 'none';
+    if (btnMockup) { btnMockup.style.display = ''; btnMockup.innerHTML = '✉ 設計稿確認送出'; btnMockup.disabled = false; }
+    return;
+  } else {
+    if (titleEl) titleEl.textContent = '設計確認';
+    if (descEl)  descEl.textContent  = '確認無誤後送出並序號截圖';
+    if (thickPanel) thickPanel.style.display = 'none';
+    if (flatEl)    flatEl.style.display    = '';
+  }
+
   const isThermosLike = ['thermos', 'mug', 'power_bank'].includes(STATE.productId);
   const isUploadOnly = STATE.productId === 'biz_leather_round' || STATE.productId === 'biz_leather_omamori' || STATE.productId === 'biz_lightbox' || STATE.productId === 'biz_thick' || STATE.productId === 'biz_acrylic' || (STATE.productId === 'biz_card' && (
     (['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId) && STATE.orientationId === 'landscape') ||
@@ -906,6 +928,10 @@ async function submitDesign() {
 
   const filename = `${p.name}-${mat.name}-${dateStr}-${seqStr}`;
 
+  if (STATE.productId === 'biz_thick') {
+    return await submitThickDesign(filename);
+  }
+
   const btn = document.getElementById('btn-download-mockup');
   if (btn) { btn.innerHTML = '⏳ 產生中...'; btn.disabled = true; }
 
@@ -1021,6 +1047,90 @@ function _updateColorPreview(p) {
     wrap.style.display = 'block';
   } else {
     wrap.style.display = 'none';
+  }
+}
+
+// ─── 厚切專屬：AI 渲染開關與送出函式 (嚴格商品隔離) ──────────────────────
+function updateThickToggle(chk) {
+  const slider = document.getElementById('thick-toggle-slider');
+  const knob   = document.getElementById('thick-toggle-knob');
+  if (chk.checked) {
+    slider.style.backgroundColor = 'var(--green)';
+    knob.style.transform = 'translateX(22px)';
+  } else {
+    slider.style.backgroundColor = '#ccc';
+    knob.style.transform = 'translateX(0)';
+  }
+}
+
+async function submitThickDesign(filename) {
+  const btn = document.getElementById('btn-download-mockup');
+  if (btn) { btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 渲染中 (約需 5-10 秒)...'; btn.disabled = true; }
+
+  const placeholder = document.getElementById('thick-mockup-placeholder');
+  const imgEl       = document.getElementById('thick-final-mockup');
+  const successBox  = document.getElementById('thick-save-success');
+  if (placeholder) placeholder.style.display = 'none';
+  if (imgEl) imgEl.style.display = 'none';
+  if (successBox) successBox.style.display = 'none';
+
+  const chk = document.getElementById('thick-use-ai');
+  const useAi = chk ? chk.checked : false;
+
+  const formData = new FormData();
+  if (window._currentCutoutBlob) {
+    formData.append('image', window._currentCutoutBlob, 'cutout.png');
+  } else if (STATE.designDataURL) {
+    const res = await fetch(STATE.designDataURL);
+    const blob = await res.blob();
+    formData.append('image', blob, 'cutout.png');
+  } else {
+    alert('找不到去背圖，請返回上一步重新建立');
+    if (btn) { btn.innerHTML = '✉ 設計稿確認送出'; btn.disabled = false; }
+    return;
+  }
+
+  const maxSizeSlider = document.getElementById('diecut-max-size');
+  const marginSlider  = document.getElementById('diecut-margin');
+  const holePosSlider = document.getElementById('diecut-hole-pos');
+
+  formData.append('customer_name', filename);
+  formData.append('max_size_mm', maxSizeSlider ? maxSizeSlider.value : '50');
+  formData.append('margin_mm', marginSlider ? marginSlider.value : '3.5');
+  formData.append('hole_diameter_mm', '3');
+  formData.append('hole_position', holePosSlider ? holePosSlider.value : '0.5');
+  formData.append('clasp_type', window._thickSelectedClasp || 'lobster_gold');
+  formData.append('use_ai_render', useAi ? 'true' : 'false');
+
+  try {
+    const res = await fetch('http://localhost:8000/api/submit', { method: 'POST', body: formData });
+    const data = await res.json();
+    if (data.success) {
+      if (imgEl) {
+        imgEl.src = data.mockup_b64;
+        imgEl.style.display = 'block';
+      }
+      if (successBox) {
+        successBox.innerHTML = '✅ 檔案成功儲存至：\n' +
+          data.message.replace('Files saved successfully to:\n', '').trim();
+        successBox.style.display = 'block';
+      }
+      STATE.submittedFilename = filename;
+      const nameEl = document.getElementById('submit-order-name');
+      if (nameEl) nameEl.textContent = filename;
+      const resultDiv = document.getElementById('submit-result');
+      if (resultDiv) resultDiv.style.display = '';
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    } else {
+      alert('生成失敗: ' + (data.error || '未知錯誤'));
+      if (placeholder) placeholder.style.display = 'block';
+    }
+  } catch (err) {
+    console.error('[submitThickDesign]', err);
+    alert('無法連接到後端 API，請確認後端服務運行狀態');
+    if (placeholder) placeholder.style.display = 'block';
+  } finally {
+    if (btn) { btn.innerHTML = '✉ 設計稿確認送出'; btn.disabled = false; }
   }
 }
 

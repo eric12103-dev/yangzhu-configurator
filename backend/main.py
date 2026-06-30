@@ -95,20 +95,16 @@ async def api_submit(
         )
 
         # 3. 儲存檔案
-        timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M")
-        safe_name = customer_name.strip() if customer_name.strip() else "Guest"
-        base_filename = f"{timestamp}{safe_name}"
+        safe_name = customer_name.strip() if customer_name.strip() else f"厚切電子票證-{datetime.datetime.now().strftime('%Y%m%d')}-001"
+        base_filename = safe_name
 
-        # 儲存到專案內的 output 目錄
+        # 儲存到「頌禮-企業禮贈品客製化服務/打樣檔案下載」目錄
         base_dir = os.path.dirname(os.path.dirname(__file__))
-        mockup_dir = os.path.join(base_dir, "output", "快速打樣")
-        die_dir    = os.path.join(base_dir, "output", "打印刀模圖")
+        target_dir = os.path.abspath(os.path.join(base_dir, "..", "打樣檔案下載"))
+        os.makedirs(target_dir, exist_ok=True)
 
-        os.makedirs(mockup_dir, exist_ok=True)
-        os.makedirs(die_dir, exist_ok=True)
-
-        mockup_path = os.path.join(mockup_dir, f"{base_filename}.jpg")
-        svg_path    = os.path.join(die_dir, f"{base_filename}.svg")
+        mockup_path = os.path.join(target_dir, f"{base_filename}.PNG")
+        svg_path    = os.path.join(target_dir, f"{base_filename}.SVG")
 
         with open(mockup_path, "wb") as f:
             f.write(mockup_bytes)
@@ -119,8 +115,8 @@ async def api_submit(
 
         return JSONResponse({
             "success": True,
-            "message": f"檔案已儲存至：\n{mockup_path}\n{svg_path}",
-            "mockup_b64": f"data:image/jpeg;base64,{mockup_b64}"
+            "message": f"Files saved successfully to:\n{mockup_path}\n{svg_path}",
+            "mockup_b64": f"data:image/png;base64,{mockup_b64}"
         })
     except Exception as e:
         return JSONResponse({"success": False, "error": str(e)}, status_code=500)

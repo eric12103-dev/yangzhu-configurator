@@ -425,10 +425,10 @@ def render_3d_mockup(img_bytes, shape_info, clasp_type="none", bg_bytes=None):
     draw_dim.text((sx_start + (sx_end-sx_start)//2 - tw_s/2, sy + 20), text_s, font=font, fill=lc, stroke_width=3, stroke_fill=(0,0,0,200))
 
     out_io = io.BytesIO()
-    # Save as JPG
+    # Save as PNG with solid dark background
     solid_bg = Image.new("RGB", final_mockup.size, (30, 30, 30))
     solid_bg.paste(final_mockup, mask=final_mockup.split()[3])
-    final_mockup.convert('RGB').save(out_io, format="JPEG", quality=95)
+    solid_bg.save(out_io, format="PNG")
     
     mask_io = io.BytesIO()
     # Dilate mask slightly to ensure AI has context around the metal

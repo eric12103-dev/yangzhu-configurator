@@ -326,8 +326,38 @@
   <!-- ══════════════════════════════════════ -->
   <div class="step-panel hidden" data-step="4">
     <div class="card">
-      <h2 style="font-size:18px;margin-bottom:8px;">設計確認</h2>
-      <p style="font-size:13px;color:var(--gray-400);margin-bottom:20px;">確認無誤後送出並序號截圖</p>
+      <h2 id="step4-title" style="font-size:18px;margin-bottom:8px;">設計確認</h2>
+      <p id="step4-desc" style="font-size:13px;color:var(--gray-400);margin-bottom:20px;">確認無誤後送出並序號截圖</p>
+
+      <!-- 厚切專屬面板：AI Inpainting 與 渲染預覽 (biz_thick 專用隔離) -->
+      <div id="thick-submit-panel" style="display:none;margin-bottom:24px;width:100%;">
+        <div style="border:1px solid var(--gray-200);border-radius:12px;padding:16px;background:var(--gray-100);max-width:600px;margin:0 auto 20px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="text-align:left;">
+              <div style="font-size:14px;font-weight:700;color:var(--gray-800);">極致畫質渲染 (AI Inpainting)</div>
+              <div style="font-size:12px;color:var(--gray-400);">使用 "高速GPU" 重新計算金屬光影與物理透視 (約需 5-10 秒)</div>
+            </div>
+            <label style="position:relative;display:inline-block;width:48px;height:26px;cursor:pointer;">
+              <input type="checkbox" id="thick-use-ai" style="opacity:0;width:0;height:0;" onchange="updateThickToggle(this)">
+              <span id="thick-toggle-slider" style="position:absolute;top:0;left:0;right:0;bottom:0;background-color:#ccc;border-radius:26px;transition:.3s;">
+                <span id="thick-toggle-knob" style="position:absolute;height:20px;width:20px;left:3px;bottom:3px;background-color:white;border-radius:50%;transition:.3s;"></span>
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <!-- 渲染圖片預覽區 -->
+        <div id="thick-mockup-wrap" style="text-align:center;margin-bottom:20px;">
+          <img id="thick-final-mockup" style="max-width:100%;max-height:500px;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.15);display:none;margin:0 auto;">
+          <div id="thick-mockup-placeholder" style="color:var(--gray-400);padding:60px 20px;border:2px dashed var(--gray-300);border-radius:12px;max-width:600px;margin:0 auto;">
+            點擊下方「設計稿確認送出」按鈕開始生成 3D 雙視角打樣圖與 SVG 檔案...
+          </div>
+        </div>
+
+        <!-- 綠色成功提示框 -->
+        <div id="thick-save-success" style="display:none;max-width:600px;margin:0 auto 20px;padding:16px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;color:#15803d;font-size:13px;line-height:1.6;white-space:pre-line;text-align:center;">
+        </div>
+      </div>
 
       <!-- 效果圖（保溫杯）/ 平面圖（其他產品） -->
       <div id="preview-flat" style="text-align:center;margin-bottom:24px;"></div>
