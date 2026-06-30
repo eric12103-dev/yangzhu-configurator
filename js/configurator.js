@@ -467,7 +467,7 @@ function initDesignStep() {
   if (isUploadOnly && typeof canvas2d !== 'undefined' && canvas2d) {
     canvas2d.off('after:render');
 
-    if (STATE.productId === 'biz_thick') {
+    if (STATE.productId === 'biz_thick' || STATE.productId === 'biz_acrylic') {
       canvas2d.backgroundColor = null;
       if (canvas2d.wrapperEl) {
         canvas2d.wrapperEl.style.backgroundImage = 'linear-gradient(45deg, #e4e4e4 25%, transparent 25%), linear-gradient(-45deg, #e4e4e4 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #e4e4e4 75%), linear-gradient(-45deg, transparent 75%, #e4e4e4 75%)';
@@ -531,7 +531,7 @@ function initDesignStep() {
 
   // 去背按鈕（僅 biz_thick 顯示）
   const rmbgSection = document.getElementById('rmbg-section');
-  if (rmbgSection) rmbgSection.style.display = STATE.productId === 'biz_thick' ? '' : 'none';
+  if (rmbgSection) rmbgSection.style.display = (STATE.productId === 'biz_thick' || STATE.productId === 'biz_acrylic') ? '' : 'none';
 
   // 鏡射／複製按鈕（僅 biz_lightbox 顯示）
   const mirrorBtn = document.getElementById('btn-mirror-lightbox');
@@ -541,7 +541,7 @@ function initDesignStep() {
 
   // 旋轉滑桿（僅 biz_lightbox 顯示）
   const rotateSection = document.getElementById('rotate-slider-section');
-  if (rotateSection) rotateSection.style.display = isUploadOnly ? '' : 'none';
+  if (rotateSection) rotateSection.style.display = (isUploadOnly && STATE.productId !== 'biz_thick') ? '' : 'none';
   const rotateSlider = document.getElementById('rotate-slider');
   const rotateDisplay = document.getElementById('rotate-value-display');
   if (rotateSlider) rotateSlider.value = 0;
@@ -673,7 +673,7 @@ function _syncTextPropsPanel(obj) {
   const isText = obj && obj.type === 'textbox';
 
   // 上傳模式：不顯示任何文字功能
-  const isUploadOnly = STATE.productId === 'biz_leather_round' || STATE.productId === 'biz_leather_omamori' || STATE.productId === 'biz_lightbox' || STATE.productId === 'biz_thick' || (STATE.productId === 'biz_card' && (
+  const isUploadOnly = STATE.productId === 'biz_leather_round' || STATE.productId === 'biz_leather_omamori' || STATE.productId === 'biz_lightbox' || STATE.productId === 'biz_thick' || STATE.productId === 'biz_acrylic' || (STATE.productId === 'biz_card' && (
     (['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId) && STATE.orientationId === 'landscape') ||
     (['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId) && STATE.orientationId === 'portrait')
   ));
@@ -762,7 +762,7 @@ function applyBgPreset(color) {
 // ─── Step 4：預覽 ──────────────────────────────────────────
 function initPreviewStep() {
   const isThermosLike = ['thermos', 'mug', 'power_bank'].includes(STATE.productId);
-  const isUploadOnly = STATE.productId === 'biz_leather_round' || STATE.productId === 'biz_leather_omamori' || STATE.productId === 'biz_lightbox' || STATE.productId === 'biz_thick' || (STATE.productId === 'biz_card' && (
+  const isUploadOnly = STATE.productId === 'biz_leather_round' || STATE.productId === 'biz_leather_omamori' || STATE.productId === 'biz_lightbox' || STATE.productId === 'biz_thick' || STATE.productId === 'biz_acrylic' || (STATE.productId === 'biz_card' && (
     (['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId) && STATE.orientationId === 'landscape') ||
     (['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId) && STATE.orientationId === 'portrait')
   ));
@@ -799,8 +799,8 @@ function initPreviewStep() {
     if (btnMockup) btnMockup.style.display = '';
     if (flatEl) flatEl.innerHTML = '<p style="color:var(--gray-400);">載入中...</p>';
     get2DDataURLWithFrame().then(async (frameURL) => {
-      // 厚切票證：疊加刀模輪廓到確認預覽圖上
-      if (frameURL && STATE.productId === 'biz_thick') {
+      // 厚切／壓克力票證：疊加刀模輪廓到確認預覽圖上
+      if (frameURL && (STATE.productId === 'biz_thick' || STATE.productId === 'biz_acrylic')) {
         frameURL = await _overlayThickDiecut(frameURL);
       }
       if (frameURL) STATE.designDataURL = frameURL;
@@ -810,7 +810,7 @@ function initPreviewStep() {
           _imgStyle = 'max-width:320px;width:100%;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.12);';
         } else if (STATE.productId === 'biz_lightbox') {
           _imgStyle = 'max-width:480px;width:100%;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.12);';
-        } else if (STATE.productId === 'biz_thick') {
+        } else if (STATE.productId === 'biz_thick' || STATE.productId === 'biz_acrylic') {
           _imgStyle = 'max-width:280px;width:100%;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.12);';
         } else {
           const _isPortrait = STATE.orientationId === 'portrait';
@@ -909,7 +909,7 @@ async function submitDesign() {
   try {
     let svg = null;
     // 卡片橫式上傳模式：優先呼叫 preview2d.js 的專屬函式（照片+向量框線，不走 canvas 渲染）
-    const _isUploadOnly = STATE.productId === 'biz_leather_round' || STATE.productId === 'biz_leather_omamori' || STATE.productId === 'biz_lightbox' || STATE.productId === 'biz_thick' || (STATE.productId === 'biz_card' && (
+    const _isUploadOnly = STATE.productId === 'biz_leather_round' || STATE.productId === 'biz_leather_omamori' || STATE.productId === 'biz_lightbox' || STATE.productId === 'biz_thick' || STATE.productId === 'biz_acrylic' || (STATE.productId === 'biz_card' && (
       (['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId) && STATE.orientationId === 'landscape') ||
       (['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId) && STATE.orientationId === 'portrait')
     ));
@@ -922,6 +922,8 @@ async function submitDesign() {
         svg = await getUploadOnlyLightboxSVG();
       } else if (STATE.productId === 'biz_thick' && typeof getUploadOnlyThickSVG === 'function') {
         svg = getUploadOnlyThickSVG();
+      } else if (STATE.productId === 'biz_acrylic' && typeof getUploadOnlyAcrylicSVG === 'function') {
+        svg = getUploadOnlyAcrylicSVG();
       } else if (typeof getUploadOnlySVG === 'function') {
         svg = getUploadOnlySVG();
       }

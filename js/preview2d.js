@@ -112,7 +112,8 @@ function init2DCanvas(productId) {
     const ratio = currentProduct.size.h / currentProduct.size.w;
     const _isPortraitCard = (currentProduct.id === 'biz_card'
       && typeof STATE !== 'undefined' && STATE.orientationId === 'portrait')
-      || currentProduct.id === 'biz_thick';
+      || currentProduct.id === 'biz_thick'
+      || currentProduct.id === 'biz_acrylic';
     if (_isPortraitCard) {
       // 直式卡：以高度為基準（與橫式 canvas 長邊相同）
       ch = Math.min(containerW - 40, 480);
@@ -126,7 +127,7 @@ function init2DCanvas(productId) {
   el.width  = cw;
   el.height = ch;
 
-  const isThick = currentProduct && currentProduct.id === 'biz_thick';
+  const isThick = currentProduct && (currentProduct.id === 'biz_thick' || currentProduct.id === 'biz_acrylic');
   canvas2d = new fabric.Canvas('canvas-2d', {
     width: cw, height: ch,
     backgroundColor: isThermosLike ? '#f0ece6' : (isThick ? null : '#ffffff')
@@ -417,7 +418,7 @@ function init2DCanvas(productId) {
 
     // 虛線框（隨行杯僅選取時顯示）
     if (isThermosLike && !_showLabelBorder) return;
-    if (currentProduct.id === 'biz_thick') return;
+    if (currentProduct.id === 'biz_thick' || currentProduct.id === 'biz_acrylic') return;
 
     ctx.save();
     ctx.setLineDash([10, 5]);
@@ -719,7 +720,7 @@ function uploadImage2D(file) {
       const _isLeatherRound = typeof STATE !== 'undefined' && STATE.productId === 'biz_leather_round';
       const _isLeatherOmamori = typeof STATE !== 'undefined' && STATE.productId === 'biz_leather_omamori';
       const _isLightbox = typeof STATE !== 'undefined' && STATE.productId === 'biz_lightbox';
-      const _isThick = typeof STATE !== 'undefined' && STATE.productId === 'biz_thick';
+      const _isThick = typeof STATE !== 'undefined' && (STATE.productId === 'biz_thick' || STATE.productId === 'biz_acrylic');
       // 卡片上傳模式：圖片填滿虛線框，並裁切在框線範圍內
       const _isUploadOnly = typeof STATE !== 'undefined'
         && STATE.productId === 'biz_card' && (
@@ -837,7 +838,9 @@ function uploadImage2D(file) {
         img.set({
           left: w / 2, top: h / 2,
           originX: 'center', originY: 'center',
-          scaleX: scale, scaleY: scale
+          scaleX: scale, scaleY: scale,
+          lockMovementX: true, lockMovementY: true, lockRotation: true,
+          hasControls: false, hasBorders: false
         });
         img.clipPath = new fabric.Rect({
           left: _tx, top: _ty,
@@ -1053,6 +1056,7 @@ let _cachedLeatherOmamoriEasycardFrameImg = null;
 let _cachedLeatherOmamoriIpassFrameImg = null;
 let _cachedLightboxFrameImg = null;
 let _cachedThickFrameImg = null;
+let _cachedAcrylicFrameImg = null;
 var _thickDieCutContour = null;   // 刀模正規化輪廓 [[nx,ny],...]
 var _lastRembgDataURL   = null;   // 去背後的 canvas 圖片（含 FIXED_PAD 白邊，只設一次）
 var _lastUploadedDataURL = null;
@@ -1486,6 +1490,23 @@ ${_diecutPath}
 </svg>`;
 }
 
+// 壓克力電子票證上傳模式：高解析 canvas 截圖裁切到圓角框，疊加刀模線、紅框（無晶片圓）
+// viewBox 158.7×248.3 pt = 54×85.6mm（直式）
+function getUploadOnlyAcrylicSVG() {
+  if (!canvas2d) return null;
+  const _canvasDataURL = get2DDataURL(9) || _lastUploadedDataURL;
+  if (!_canvasDataURL) return null;
+  const _diecutPath = _thickDiecutToSVGPath();
+  return `<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 158.7 248.3" width="54mm" height="85.6mm">
+<style type="text/css">.st0{fill:none;stroke:#E60012;stroke-miterlimit:10;}</style>
+<defs><clipPath id="acrylic-clip"><path d="M12.1,245.5c-5.2,0-9.3-4.2-9.3-9.3v-224c0-5.2,4.2-9.3,9.3-9.3h134.5c5.2,0,9.3,4.2,9.3,9.3v224c0,5.2-4.2,9.3-9.3,9.3H12.1z"/></clipPath></defs>
+<image xlink:href="${_canvasDataURL}" x="0" y="0" width="158.7" height="248.3" preserveAspectRatio="none" clip-path="url(#acrylic-clip)"/>
+${_diecutPath}
+<path class="st0" d="M12.1,245.5c-5.2,0-9.3-4.2-9.3-9.3v-224c0-5.2,4.2-9.3,9.3-9.3h134.5c5.2,0,9.3,4.2,9.3,9.3v224c0,5.2-4.2,9.3-9.3,9.3H12.1z"/>
+</svg>`;
+}
+
 function _addLabelAreaFrame(base) {
   if (!canvas2d || !currentProduct || !currentProduct.labelArea) return Promise.resolve(base);
   const la = currentProduct.labelArea;
@@ -1541,7 +1562,8 @@ function get2DDataURLWithFrame() {
   const _isLeatherOmamori = typeof STATE !== 'undefined' && STATE.productId === 'biz_leather_omamori';
   const _isLightboxFrame = typeof STATE !== 'undefined' && STATE.productId === 'biz_lightbox';
   const _isThickFrame = typeof STATE !== 'undefined' && STATE.productId === 'biz_thick';
-  const _isPortraitFrame = !_isLeatherRound && !_isLeatherOmamori && !_isLightboxFrame && !_isThickFrame && typeof STATE !== 'undefined' && STATE.orientationId === 'portrait';
+  const _isAcrylicFrame = typeof STATE !== 'undefined' && STATE.productId === 'biz_acrylic';
+  const _isPortraitFrame = !_isLeatherRound && !_isLeatherOmamori && !_isLightboxFrame && !_isThickFrame && !_isAcrylicFrame && typeof STATE !== 'undefined' && STATE.orientationId === 'portrait';
   const _lrMatId = _isLeatherRound && typeof STATE !== 'undefined' ? STATE.materialId : null;
   let _frameSrc, _cachedFrame;
   if (_isLeatherRound) {
@@ -1561,6 +1583,9 @@ function get2DDataURLWithFrame() {
   } else if (_isThickFrame) {
     _frameSrc = 'assets/thick_frame.svg';
     _cachedFrame = _cachedThickFrameImg;
+  } else if (_isAcrylicFrame) {
+    _frameSrc = 'assets/acrylic_frame.svg';
+    _cachedFrame = _cachedAcrylicFrameImg;
   } else {
     _frameSrc = _isPortraitFrame ? 'assets/card_portrait_frame.svg' : 'assets/card_landscape_frame.svg';
     _cachedFrame = _isPortraitFrame ? _cachedCardPortraitFrameImg : _cachedCardFrameImg;
@@ -1580,6 +1605,7 @@ function get2DDataURLWithFrame() {
         else _cachedLeatherOmamoriEasycardFrameImg = frameImg;
       } else if (_isLightboxFrame) _cachedLightboxFrameImg = frameImg;
       else if (_isThickFrame) _cachedThickFrameImg = frameImg;
+      else if (_isAcrylicFrame) _cachedAcrylicFrameImg = frameImg;
       else if (_isPortraitFrame) _cachedCardPortraitFrameImg = frameImg;
       else _cachedCardFrameImg = frameImg;
       doComposite(frameImg).then(resolve);
@@ -2130,11 +2156,13 @@ async function removeBgThick() {
       const scaleX = obj.scaleX * (obj.width  / newImg.width);
       const scaleY = obj.scaleY * (obj.height / newImg.height);
       newImg.set({
-        left: obj.left, top: obj.top,
+        left: canvas2d.getWidth() / 2, top: canvas2d.getHeight() / 2,
         scaleX, scaleY,
-        originX:  obj.originX,  originY: obj.originY,
+        originX: 'center', originY: 'center',
         clipPath: obj.clipPath,
-        selectable: true
+        selectable: true,
+        lockMovementX: true, lockMovementY: true, lockRotation: true,
+        hasControls: false, hasBorders: false
       });
       canvas2d.remove(obj);
       canvas2d.add(newImg);
@@ -2192,6 +2220,13 @@ function toggleBrushMode(mode) {
   if (!canvas2d) return;
   const imgObj = canvas2d.getObjects().find(o => o.type === 'image');
   if (imgObj) {
+    if (currentProduct && currentProduct.id === 'biz_thick') {
+      imgObj.lockMovementX = true;
+      imgObj.lockMovementY = true;
+      imgObj.lockRotation = true;
+      imgObj.hasControls = false;
+      imgObj.hasBorders = false;
+    }
     imgObj.selectable = !_brushMode;
     imgObj.evented = true;
   }
