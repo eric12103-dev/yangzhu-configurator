@@ -24,11 +24,11 @@ const STATE = {
 
 // ─── 步驟導覽 ──────────────────────────────────────────────
 function getTotalSteps() {
-  return STATE.productId === 'biz_thick' ? 5 : 4;
+  return (STATE.productId === 'biz_thick' || STATE.productId === 'biz_acrylic') ? 5 : 4;
 }
 
 function renderStepIndicator() {
-  const isThick = STATE.productId === 'biz_thick';
+  const isThick = STATE.productId === 'biz_thick' || STATE.productId === 'biz_acrylic';
   const labels = isThick
     ? ['選商品', '選規格', '去背編輯', '生產刀模', '確認送出']
     : ['選商品', '選規格', '編輯', '確認送出'];
@@ -50,7 +50,7 @@ function goStep(n) {
   if (n > 2 && !STATE.materialId) { alert('請先完成規格選擇'); return; }
 
   // 離開設計步驟前快照
-  if (STATE.step === 3 || (STATE.productId === 'biz_thick' && STATE.step === 4)) {
+  if (STATE.step === 3 || ((STATE.productId === 'biz_thick' || STATE.productId === 'biz_acrylic') && STATE.step === 4)) {
     STATE.designDataURL = (typeof get2DDataURL === 'function') ? get2DDataURL() : null;
     if (['thermos', 'mug', 'power_bank'].includes(STATE.productId) && typeof canvas2d !== 'undefined' && canvas2d) {
       STATE.canvasJSON = canvas2d.toJSON(['name', 'padding', 'lineHeight']);
@@ -67,7 +67,7 @@ function prevStep() { goStep(STATE.step - 1); }
 function renderStep() {
   renderStepIndicator();
 
-  const isThick = STATE.productId === 'biz_thick';
+  const isThick = STATE.productId === 'biz_thick' || STATE.productId === 'biz_acrylic';
   const diecutPanel = document.getElementById('panel-diecut');
 
   // 顯示對應面板
@@ -339,6 +339,8 @@ function _preloadProductAssets(productId) {
     urls.push('assets/lightbox_frame.svg');
   } else if (productId === 'biz_thick') {
     urls.push('assets/thick_frame.svg');
+  } else if (productId === 'biz_acrylic') {
+    urls.push('assets/acrylic_frame.svg');
   }
 
   urls.forEach(url => { const i = new Image(); i.src = url; });
@@ -429,12 +431,12 @@ const _TEXT_COLORS = [
 function initDesignStep() {
   // 步驟3下一步按鈕文字（biz_thick 下一步是生產刀模）
   const nextBtn = document.getElementById('btn-step3-next');
-  if (nextBtn) nextBtn.textContent = STATE.productId === 'biz_thick' ? '前往生產刀模 →' : '前往確認 →';
+  if (nextBtn) nextBtn.textContent = (STATE.productId === 'biz_thick' || STATE.productId === 'biz_acrylic') ? '前往生產刀模 →' : '前往確認 →';
 
   const isThermos = STATE.productId === 'thermos' || STATE.productId === 'mug' || STATE.productId === 'power_bank';
 
-  // 上傳框線模式：biz_card（橫式／直式）、biz_leather_round、biz_leather_omamori、biz_lightbox 或 biz_thick
-  const isUploadOnly = STATE.productId === 'biz_leather_round' || STATE.productId === 'biz_leather_omamori' || STATE.productId === 'biz_lightbox' || STATE.productId === 'biz_thick' || (STATE.productId === 'biz_card' && (
+  // 上傳框線模式：biz_card（橫式／直式）、biz_leather_round、biz_leather_omamori、biz_lightbox、biz_thick 或 biz_acrylic
+  const isUploadOnly = STATE.productId === 'biz_leather_round' || STATE.productId === 'biz_leather_omamori' || STATE.productId === 'biz_lightbox' || STATE.productId === 'biz_thick' || STATE.productId === 'biz_acrylic' || (STATE.productId === 'biz_card' && (
     (['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId) && STATE.orientationId === 'landscape') ||
     (['easycard', 'ipass', 'super_easycard'].includes(STATE.materialId) && STATE.orientationId === 'portrait')
   ));
@@ -464,32 +466,44 @@ function initDesignStep() {
   // SVG 框線載入（上傳模式：框線畫在圖片上方，圖片裁切在黑色虛線框內）
   if (isUploadOnly && typeof canvas2d !== 'undefined' && canvas2d) {
     canvas2d.off('after:render');
-    canvas2d.backgroundColor = '#ffffff';
-    // 載入 SVG 框線圖，在 after:render 疊加於所有物件上方（不受 clipPath 影響）
-    const _svgFrame = new Image();
-    _svgFrame.onload = function() {
-      canvas2d.on('after:render', function() {
-        if (_suppressOverlay) return;
-        canvas2d.contextContainer.drawImage(_svgFrame, 0, 0, canvas2d.getWidth(), canvas2d.getHeight());
-      });
+
+    if (STATE.productId === 'biz_thick') {
+      canvas2d.backgroundColor = null;
+      if (canvas2d.wrapperEl) {
+        canvas2d.wrapperEl.style.backgroundImage = 'linear-gradient(45deg, #e4e4e4 25%, transparent 25%), linear-gradient(-45deg, #e4e4e4 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #e4e4e4 75%), linear-gradient(-45deg, transparent 75%, #e4e4e4 75%)';
+        canvas2d.wrapperEl.style.backgroundSize = '20px 20px';
+        canvas2d.wrapperEl.style.backgroundPosition = '0 0, 0 10px, 10px -10px, -10px 0';
+        canvas2d.wrapperEl.style.backgroundColor = '#ffffff';
+        canvas2d.wrapperEl.style.borderRadius = '12px';
+        canvas2d.wrapperEl.style.boxShadow = '0 4px 24px rgba(0,0,0,0.12)';
+      }
       canvas2d.renderAll();
-    };
-    if (STATE.productId === 'biz_leather_round') {
-      _svgFrame.src = STATE.materialId === 'ipass'
-        ? 'assets/leather_round_ipass_frame.svg'
-        : 'assets/leather_round_easycard_frame.svg';
-    } else if (STATE.productId === 'biz_leather_omamori') {
-      _svgFrame.src = STATE.materialId === 'ipass'
-        ? 'assets/leather_omamori_ipass_frame.svg'
-        : 'assets/leather_omamori_easycard_frame.svg';
-    } else if (STATE.productId === 'biz_lightbox') {
-      _svgFrame.src = 'assets/lightbox_frame.svg';
-    } else if (STATE.productId === 'biz_thick') {
-      _svgFrame.src = 'assets/thick_frame.svg';
     } else {
-      _svgFrame.src = STATE.orientationId === 'portrait'
-        ? 'assets/card_portrait_frame.svg'
-        : 'assets/card_landscape_frame.svg';
+      canvas2d.backgroundColor = '#ffffff';
+      // 載入 SVG 框線圖，在 after:render 疊加於所有物件上方（不受 clipPath 影響）
+      const _svgFrame = new Image();
+      _svgFrame.onload = function() {
+        canvas2d.on('after:render', function() {
+          if (_suppressOverlay) return;
+          canvas2d.contextContainer.drawImage(_svgFrame, 0, 0, canvas2d.getWidth(), canvas2d.getHeight());
+        });
+        canvas2d.renderAll();
+      };
+      if (STATE.productId === 'biz_leather_round') {
+        _svgFrame.src = STATE.materialId === 'ipass'
+          ? 'assets/leather_round_ipass_frame.svg'
+          : 'assets/leather_round_easycard_frame.svg';
+      } else if (STATE.productId === 'biz_leather_omamori') {
+        _svgFrame.src = STATE.materialId === 'ipass'
+          ? 'assets/leather_omamori_ipass_frame.svg'
+          : 'assets/leather_omamori_easycard_frame.svg';
+      } else if (STATE.productId === 'biz_lightbox') {
+        _svgFrame.src = 'assets/lightbox_frame.svg';
+      } else {
+        _svgFrame.src = STATE.orientationId === 'portrait'
+          ? 'assets/card_portrait_frame.svg'
+          : 'assets/card_landscape_frame.svg';
+      }
     }
   }
 

@@ -1014,6 +1014,7 @@ function copyLightboxImage() {
 // ─── 背景色 ──────────────────────────────────────────────
 function setBackground2D(color) {
   if (!canvas2d) return;
+  if (currentProduct && currentProduct.id === 'biz_thick') return;
   canvas2d.setBackgroundColor(color, canvas2d.renderAll.bind(canvas2d));
 }
 
