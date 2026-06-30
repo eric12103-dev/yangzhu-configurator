@@ -164,6 +164,25 @@
             </div>
             <p id="rmbg-status" style="font-size:12px;color:var(--gray-400);margin-top:6px;min-height:16px;"></p>
             <p style="font-size:11px;color:var(--gray-300);margin-top:4px;line-height:1.4;">首次使用會自動下載 AI 模型（約 30MB），請稍候。</p>
+
+            <!-- 進階手動修正 (可選) -->
+            <div id="manual-adjust-wrap" style="margin-top:14px;border-top:1px dashed var(--gray-200);padding-top:12px;">
+              <h5 style="font-size:13px;color:var(--gray-700);margin-bottom:8px;font-weight:700;">進階手動修正 (可選)</h5>
+              <div style="display:flex;gap:8px;margin-bottom:8px;">
+                <button id="btn-brush-erase" class="btn btn-secondary btn-sm" style="flex:1;justify-content:center;" onclick="toggleBrushMode('erase')">🧹 擦除</button>
+                <button id="btn-brush-restore" class="btn btn-secondary btn-sm" style="flex:1;justify-content:center;" onclick="toggleBrushMode('restore')">🖌 還原</button>
+              </div>
+              <div id="brush-size-wrap" style="display:none;margin-bottom:4px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                  <span style="font-size:12px;color:var(--gray-700);">筆刷大小</span>
+                  <span id="brush-size-display" style="font-size:12px;color:var(--gray-400);">20px</span>
+                </div>
+                <input type="range" id="brush-size-slider" min="10" max="80" step="2" value="20"
+                       style="width:100%;cursor:pointer;accent-color:var(--green);"
+                       oninput="onBrushSizeChange(this.value)">
+                <p style="font-size:11px;color:var(--gray-400);margin-top:6px;line-height:1.4;">直接在右側圖片上拖曳滑鼠來手動微調邊緣。</p>
+              </div>
+            </div>
           </div>
 
           <!-- 背景底色（隨行杯隱藏） -->
@@ -343,7 +362,7 @@
 
 <!-- ─── Scripts ──────────────────────────── -->
 <script src="js/products.js"></script>
-<script src="js/preview2d.js?v=6"></script>
+<script src="js/preview2d.js?v=7"></script>
 <script src="js/mockup.js"></script>
 <script src="js/rembg_client.js?v=2"></script>
 <script src="js/configurator.js?v=3"></script>

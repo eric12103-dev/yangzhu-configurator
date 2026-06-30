@@ -360,6 +360,27 @@ function init2DCanvas(productId) {
     _updateTextOpacity();
   });
 
+  // ── 手動微調筆刷事件監聽 ──
+  canvas2d.on('mouse:down', function(e) {
+    if (typeof _brushMode !== 'undefined' && _brushMode) {
+      _isBrushing = true;
+      const pointer = canvas2d.getPointer(e.e);
+      if (typeof _applyBrushAtPointer === 'function') _applyBrushAtPointer(pointer);
+    }
+  });
+  canvas2d.on('mouse:move', function(e) {
+    if (typeof _brushMode !== 'undefined' && _brushMode && typeof _isBrushing !== 'undefined' && _isBrushing) {
+      const pointer = canvas2d.getPointer(e.e);
+      if (typeof _applyBrushAtPointer === 'function') _applyBrushAtPointer(pointer);
+    }
+  });
+  canvas2d.on('mouse:up', function() {
+    if (typeof _brushMode !== 'undefined' && _brushMode && typeof _isBrushing !== 'undefined' && _isBrushing) {
+      _isBrushing = false;
+      if (typeof _saveHistory === 'function') _saveHistory();
+    }
+  });
+
   // 隨行杯：拖曳結束後隱藏咖啡色虛線
   if (isThermosLike) {
     canvas2d.on('mouse:up', () => {
@@ -2093,6 +2114,7 @@ async function removeBgThick() {
     tmp.width  = el.naturalWidth  || el.width;
     tmp.height = el.naturalHeight || el.height;
     tmp.getContext('2d').drawImage(el, 0, 0);
+    _origUploadImageElement = tmp;
     const dataURL = tmp.toDataURL('image/png');
 
     // 呼叫後端 API 去背 + 刀模計算（定義於 rembg_client.js）
@@ -2138,3 +2160,114 @@ async function removeBgThick() {
     if (btn) btn.disabled = false;
   }
 }
+
+// ─── 手動修正背景（擦除與還原筆刷） ─────────────────────────
+let _brushMode = null; // null | 'erase' | 'restore'
+let _brushSize = 20;
+let _origUploadImageElement = null;
+let _isBrushing = false;
+
+function toggleBrushMode(mode) {
+  if (_brushMode === mode) {
+    _brushMode = null;
+  } else {
+    _brushMode = mode;
+  }
+
+  const btnE = document.getElementById('btn-brush-erase');
+  const btnR = document.getElementById('btn-brush-restore');
+  const sizeWrap = document.getElementById('brush-size-wrap');
+
+  if (btnE) {
+    btnE.style.background = (_brushMode === 'erase') ? 'var(--green)' : '';
+    btnE.style.color = (_brushMode === 'erase') ? 'white' : '';
+  }
+  if (btnR) {
+    btnR.style.background = (_brushMode === 'restore') ? 'var(--green)' : '';
+    btnR.style.color = (_brushMode === 'restore') ? 'white' : '';
+  }
+  if (sizeWrap) sizeWrap.style.display = _brushMode ? '' : 'none';
+
+  if (!canvas2d) return;
+  const imgObj = canvas2d.getObjects().find(o => o.type === 'image');
+  if (imgObj) {
+    imgObj.selectable = !_brushMode;
+    imgObj.evented = true;
+  }
+  canvas2d.selection = !_brushMode;
+  _updateBrushCursor();
+  canvas2d.requestRenderAll();
+}
+
+function onBrushSizeChange(val) {
+  _brushSize = parseInt(val, 10) || 20;
+  const disp = document.getElementById('brush-size-display');
+  if (disp) disp.textContent = _brushSize + 'px';
+  _updateBrushCursor();
+}
+
+function _updateBrushCursor() {
+  if (!canvas2d) return;
+  const imgObj = canvas2d.getObjects().find(o => o.type === 'image');
+  if (!_brushMode) {
+    canvas2d.defaultCursor = 'default';
+    canvas2d.hoverCursor = 'move';
+    if (imgObj) imgObj.hoverCursor = 'move';
+    return;
+  }
+  const r = Math.max(4, Math.round(_brushSize / 2));
+  const d = r * 2;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${d}" height="${d}" viewBox="0 0 ${d} ${d}"><circle cx="${r}" cy="${r}" r="${r - 1.5}" fill="rgba(255,255,255,0.25)" stroke="${_brushMode === 'erase' ? '#ef4444' : '#3b82f6'}" stroke-width="1.8"/></svg>`;
+  const cursorUrl = 'data:image/svg+xml;base64,' + btoa(svg);
+  const curStr = `url(${cursorUrl}) ${r} ${r}, crosshair`;
+  canvas2d.defaultCursor = curStr;
+  canvas2d.hoverCursor = curStr;
+  if (imgObj) imgObj.hoverCursor = curStr;
+}
+
+function _ensureImgIsCanvas(imgObj) {
+  if (!imgObj || !imgObj._element) return null;
+  if (imgObj._element.nodeName.toLowerCase() !== 'canvas') {
+    const el = imgObj._element;
+    const c = document.createElement('canvas');
+    c.width = el.naturalWidth || el.width;
+    c.height = el.naturalHeight || el.height;
+    const ctx = c.getContext('2d');
+    ctx.drawImage(el, 0, 0);
+    imgObj._element = c;
+  }
+  return imgObj._element;
+}
+
+function _applyBrushAtPointer(pointer) {
+  if (!_brushMode || !canvas2d) return;
+  const imgObj = canvas2d.getObjects().find(o => o.type === 'image');
+  if (!imgObj) return;
+  const c = _ensureImgIsCanvas(imgObj);
+  if (!c) return;
+
+  const left = imgObj.originX === 'center' ? imgObj.left - (imgObj.width * imgObj.scaleX) / 2 : imgObj.left;
+  const top  = imgObj.originY === 'center' ? imgObj.top  - (imgObj.height * imgObj.scaleY) / 2 : imgObj.top;
+  const ix = (pointer.x - left) / imgObj.scaleX;
+  const iy = (pointer.y - top) / imgObj.scaleY;
+  const r = (_brushSize / imgObj.scaleX) / 2;
+
+  const ctx = c.getContext('2d');
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(ix, iy, r, 0, Math.PI * 2);
+  ctx.clip();
+
+  if (_brushMode === 'erase') {
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.fill();
+  } else if (_brushMode === 'restore' && _origUploadImageElement) {
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.drawImage(_origUploadImageElement, 0, 0, c.width, c.height);
+  }
+  ctx.restore();
+
+  imgObj.dirty = true;
+  canvas2d.requestRenderAll();
+}
+
