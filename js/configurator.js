@@ -1097,9 +1097,12 @@ async function submitThickDesign(filename) {
   const marginSlider  = document.getElementById('diecut-margin');
   const holePosSlider = document.getElementById('diecut-hole-pos');
 
+  const marginPx = marginSlider ? parseFloat(marginSlider.value) : 15;
+  const marginMm = Math.max(1, Math.round(marginPx / 5));
+
   formData.append('customer_name', filename);
   formData.append('max_size_mm', maxSizeSlider ? maxSizeSlider.value : '50');
-  formData.append('margin_mm', marginSlider ? marginSlider.value : '3.5');
+  formData.append('margin_mm', String(marginMm));
   formData.append('hole_diameter_mm', '3');
   formData.append('hole_position', holePosSlider ? holePosSlider.value : '0.5');
   formData.append('clasp_type', window._thickSelectedClasp || 'lobster_gold');
