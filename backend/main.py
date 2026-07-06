@@ -40,11 +40,12 @@ async def api_preview_die(
     max_size_mm: float = Form(50.0),
     margin_mm: float = Form(3.0),
     hole_diameter_mm: float = Form(3.0),
-    hole_position: str = Form("top")
+    hole_position: str = Form("top"),
+    product_id: str = Form("biz_thick")
 ):
     try:
         img_bytes = await image.read()
-        shape_info = get_acrylic_shape(img_bytes, max_size_mm, margin_mm, hole_diameter_mm, hole_position)
+        shape_info = get_acrylic_shape(img_bytes, max_size_mm, margin_mm, hole_diameter_mm, hole_position, product_id)
         preview_bytes = draw_preview_die(shape_info, img_bytes)
 
         b64 = base64.b64encode(preview_bytes).decode("utf-8")
@@ -62,11 +63,12 @@ async def api_submit(
     hole_position: str = Form("top"),
     clasp_type: str = Form("gold_clasp"),
     bg_image: UploadFile = File(None),
-    use_ai_render: bool = Form(False)
+    use_ai_render: bool = Form(False),
+    product_id: str = Form("biz_thick")
 ):
     try:
         img_bytes = await image.read()
-        shape_info = get_acrylic_shape(img_bytes, max_size_mm, margin_mm, hole_diameter_mm, hole_position)
+        shape_info = get_acrylic_shape(img_bytes, max_size_mm, margin_mm, hole_diameter_mm, hole_position, product_id)
 
         bg_bytes = None
         if bg_image is not None and bg_image.filename:

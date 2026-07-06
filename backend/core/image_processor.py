@@ -22,7 +22,7 @@ def remove_background(img_bytes: bytes) -> bytes:
     except Exception as e:
         raise ValueError(f"Background removal failed: {str(e)}")
 
-def get_acrylic_shape(img_bytes: bytes, max_size_mm: float, margin_mm: float, hole_diameter_mm: float, hole_position: str = "center"):
+def get_acrylic_shape(img_bytes: bytes, max_size_mm: float, margin_mm: float, hole_diameter_mm: float, hole_position: str = "center", product_id: str = "biz_thick"):
     """
     Analyzes transparent PNG, calculates scale, and returns the path in pixels and mm.
     """
@@ -52,7 +52,46 @@ def get_acrylic_shape(img_bytes: bytes, max_size_mm: float, margin_mm: float, ho
     
     margin_px = margin_mm / scale
     buffered_poly = poly.buffer(margin_px, join_style=1)
-    simplified_poly = buffered_poly.simplify(1.0, preserve_topology=True)
+    
+    # ── 啟動 AI 智能刀模模型 (嚴格商品隔離：只針對 biz_thick 厚切商品) ──
+    ai_model = None
+    if product_id == "biz_thick":
+        try:
+            import json
+            import os
+            model_path = os.path.join(os.path.dirname(__file__), "songli_diecut_v1.model")
+            if os.path.exists(model_path):
+                with open(model_path, "r", encoding="utf-8") as mf:
+                    ai_model = json.load(mf)
+        except Exception as e:
+            print(f"[WARN] Failed to load AI diecut model: {e}")
+
+    if ai_model:
+        # 使用 AI 學習到的貝茲張力係數 (base_tension = 0.65+) 進行幾何曲線平滑過渡
+        # 先用微小容差去噪，避免直接 simplify(1.0) 造成生硬折角
+        simplified_poly = buffered_poly.simplify(0.25, preserve_topology=True)
+        if isinstance(simplified_poly, MultiPolygon):
+            simplified_poly = max(simplified_poly.geoms, key=lambda a: a.area)
+        
+        # 執行 Chaikin 曲線柔順化 (利用 AI 張力係數平滑折角)
+        tension = ai_model.get("base_tension", 0.65)
+        t = max(0.1, min(0.4, (1.0 - tension) / 2.0))
+        coords = list(simplified_poly.exterior.coords)
+        for _ in range(2):  # 迭代2次達成絲綢般滑順貝茲效果
+            new_coords = []
+            for i in range(len(coords) - 1):
+                p1, p2 = np.array(coords[i]), np.array(coords[i+1])
+                q = (1 - t) * p1 + t * p2
+                r = t * p1 + (1 - t) * p2
+                new_coords.extend([tuple(q), tuple(r)])
+            new_coords.append(new_coords[0])
+            coords = new_coords
+        from shapely.geometry import Polygon as ShapelyPoly
+        simplified_poly = ShapelyPoly(coords)
+        if not simplified_poly.is_valid:
+            simplified_poly = simplified_poly.buffer(0)
+    else:
+        simplified_poly = buffered_poly.simplify(1.0, preserve_topology=True)
     
     if isinstance(simplified_poly, MultiPolygon):
         simplified_poly = max(simplified_poly.geoms, key=lambda a: a.area)
@@ -77,9 +116,16 @@ def get_acrylic_shape(img_bytes: bytes, max_size_mm: float, margin_mm: float, ho
             else:
                 center_x = (min_x + max_x) / 2
     
-    hole_radius_mm = hole_diameter_mm / 2.0
+    if ai_model and hole_diameter_mm > 0:
+        # AI 模型學習自 18 筆美編標竿的黃金鑰匙孔半徑 (optimal_hole_radius_mm = 2.7mm)
+        hole_radius_mm = ai_model.get("optimal_hole_radius_mm", 2.7)
+        ear_border_mm = 4.5  # 搭配 2.7mm 孔洞的最佳過渡外圍
+    else:
+        hole_radius_mm = hole_diameter_mm / 2.0
+        ear_border_mm = 4.0
+
     hole_radius_px = hole_radius_mm / scale
-    ear_radius_px = hole_radius_px + (4.0 / scale) # Increased to 4.0mm border
+    ear_radius_px = hole_radius_px + (ear_border_mm / scale)
     
     # Find exact top edge at center_x
     vertical_line = LineString([(center_x, min_y - 100), (center_x, max_y + 100)])

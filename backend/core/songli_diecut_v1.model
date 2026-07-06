@@ -1,0 +1,12 @@
+{
+  "base_tension": 0.65,
+  "aspect_ratio_weight": 0.12,
+  "complexity_weight": 0.0005,
+  "optimal_hole_radius_mm": 2.7,
+  "optimal_hole_top_offset_mm": 61.55,
+  "min_hole_radius_mm": 1.35,
+  "max_hole_radius_mm": 3.62,
+  "training_samples_count": 18,
+  "model_version": "v1.0-alpha",
+  "trained_at": "2026-07-06T09:38:37.536487"
+}
