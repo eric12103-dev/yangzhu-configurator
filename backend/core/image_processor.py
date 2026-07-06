@@ -149,7 +149,19 @@ def get_acrylic_shape(img_bytes: bytes, max_size_mm: float, margin_mm: float, ho
         ear_shape = Point(ear_center_x, ear_center_y).buffer(ear_radius_px)
         final_acrylic_shape = unary_union([simplified_poly, ear_shape])
         if ai_model and isinstance(final_acrylic_shape, Polygon):
-            # 在耳朵與主體結合後，進行二次貝茲自適應平滑，將接合硬角過渡為流暢的 S 型反向圓弧！
+            # 1. 【工業級 CAD 形態學內倒角閉運算 (Fillet Bridging)】
+            # 透過 buffer(+R) -> buffer(-R) 消除所有尖銳內凹轉角（V-Notch），
+            # 讓耳朵與肩膀、下巴下緣、尾巴折角，自動過渡為美編藍色線般的防裂飽滿內角圓弧！
+            fillet_r_px = max(12.0, 4.0 / scale)  # 採用美編黃金標準 4.0 mm 倒角半徑
+            try:
+                closed_shape = final_acrylic_shape.buffer(fillet_r_px, join_style=1).buffer(-fillet_r_px, join_style=1)
+                if closed_shape.is_valid and not closed_shape.is_empty:
+                    final_acrylic_shape = closed_shape
+            except Exception:
+                pass
+
+            # 2. 【自適應貝茲 S 型柔化過渡】
+            # 將倒角後的邊界進行 2 次迭代自適應平滑，徹底將接合處的點過渡為絲滑如波浪的藍色線圓弧！
             tension = ai_model.get("base_tension", 0.65)
             t = max(0.1, min(0.35, (1.0 - tension) / 2.0))
             coords = list(final_acrylic_shape.exterior.coords)
