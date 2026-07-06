@@ -59,7 +59,7 @@ def generate_svg_bytes(dxf_path_mm, hole_center_mm, hole_radius_mm, img_bytes, i
         cy_mm = offset_y_mm + (img_height_mm / 2.0)
         frame_x = cx_mm - 27.0
         frame_y = cy_mm - 42.8
-        dwg.add(dwg.rect(insert=(f"{frame_x}mm", f"{frame_y}mm"), size=("54mm", "85.6mm"), rx="3.3mm", ry="3.3mm", fill="none", stroke="red", stroke_width=0.5, id="厚切電子票證最大範圍"))
+        dwg.add(dwg.rect(insert=(frame_x, frame_y), size=(54.0, 85.6), rx=3.3, ry=3.3, fill="none", stroke="red", stroke_width=0.5, id="厚切電子票證最大範圍"))
     
     # Draw cut path
     path_data = "M " + f"{dxf_path_mm[0][0]},{dxf_path_mm[0][1]} "

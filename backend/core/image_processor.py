@@ -194,8 +194,8 @@ def get_acrylic_shape(img_bytes: bytes, max_size_mm: float, margin_mm: float, ho
         max_h_px = 85.6 / scale
         radius_px = 3.3 / scale
         
-        cx = (min_x + max_x) / 2.0
-        cy = (min_y + max_y) / 2.0
+        cx = w / 2.0
+        cy = h / 2.0
         
         from shapely.geometry import box as ShapelyBox
         inner_box = ShapelyBox(
@@ -241,6 +241,19 @@ def draw_preview_die(shape_info, img_bytes):
     
     # Calculate padding needed to fit the die line
     min_x, min_y, max_x, max_y = shape_info["bounds_px"]
+    if shape_info.get("product_id") == "biz_thick":
+        scale = shape_info["scale"]
+        max_w_px = 54.0 / scale
+        max_h_px = 85.6 / scale
+        card_min_x = (pil_img.width / 2.0) - (max_w_px / 2.0)
+        card_min_y = (pil_img.height / 2.0) - (max_h_px / 2.0)
+        card_max_x = (pil_img.width / 2.0) + (max_w_px / 2.0)
+        card_max_y = (pil_img.height / 2.0) + (max_h_px / 2.0)
+        min_x = min(min_x, card_min_x)
+        min_y = min(min_y, card_min_y)
+        max_x = max(max_x, card_max_x)
+        max_y = max(max_y, card_max_y)
+        
     pad_left = int(max(0, -min_x + 20))
     pad_top = int(max(0, -min_y + 20))
     pad_right = int(max(0, max_x - pil_img.width + 20))
