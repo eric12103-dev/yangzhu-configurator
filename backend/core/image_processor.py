@@ -119,8 +119,8 @@ def get_acrylic_shape(img_bytes: bytes, max_size_mm: float, margin_mm: float, ho
     
     if ai_model and hole_diameter_mm > 0:
         # 嚴格落實美編黃金實測比例：內洞直徑 3.0mm (r=1.5mm) + 耳朵外徑 8.0mm (r=4.0mm)
-        hole_radius_mm = ai_model.get("optimal_hole_radius_mm", 1.5)
-        ear_border_mm = ai_model.get("optimal_ear_border_mm", 2.5)  # r=1.5 + 2.5 = 4.0mm (外徑 exactly 8mm)
+        hole_radius_mm = 1.5  # 鎖定為黃金標準 3.0mm 直徑 (半徑 1.5mm)
+        ear_border_mm = 2.5   # r=1.5 + 2.5 = 4.0mm (外徑 exactly 8mm)
     else:
         hole_radius_mm = hole_diameter_mm / 2.0
         ear_border_mm = 2.5
@@ -185,6 +185,34 @@ def get_acrylic_shape(img_bytes: bytes, max_size_mm: float, margin_mm: float, ho
     else:
         final_acrylic_shape = simplified_poly
         
+    # 3. 【嚴守商品隔離：只針對 biz_thick 厚切電子票證進行最大範圍限縮】
+    # 依據 Kiven 提供的「厚切電子票證最大範圍.svg」之物理極限規格：
+    # 最大極限尺寸 = 寬 54.0 mm × 高 85.6 mm，四角圓角半徑 = 3.3 mm。
+    # 以圖片正中心為基準，執行 Shapely 幾何交集限縮 (Intersection Clipping)，絕不超框！
+    try:
+        max_w_px = 54.0 / scale
+        max_h_px = 85.6 / scale
+        radius_px = 3.3 / scale
+        
+        cx = (min_x + max_x) / 2.0
+        cy = (min_y + max_y) / 2.0
+        
+        from shapely.geometry import box as ShapelyBox
+        inner_box = ShapelyBox(
+            cx - (max_w_px / 2.0) + radius_px,
+            cy - (max_h_px / 2.0) + radius_px,
+            cx + (max_w_px / 2.0) - radius_px,
+            cy + (max_h_px / 2.0) - radius_px
+        )
+        max_boundary_poly = inner_box.buffer(radius_px, join_style=1, resolution=32)
+        
+        if max_boundary_poly.is_valid and not max_boundary_poly.is_empty:
+            clipped_shape = final_acrylic_shape.intersection(max_boundary_poly)
+            if clipped_shape.is_valid and not clipped_shape.is_empty:
+                final_acrylic_shape = clipped_shape
+    except Exception:
+        pass
+
     if isinstance(final_acrylic_shape, MultiPolygon):
         final_acrylic_shape = max(final_acrylic_shape.geoms, key=lambda a: a.area)
         

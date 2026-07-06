@@ -2,7 +2,7 @@
   "base_tension": 0.65,
   "aspect_ratio_weight": 0.12,
   "complexity_weight": 0.0005,
-  "optimal_hole_radius_mm": 2.53,
+  "optimal_hole_radius_mm": 1.5,
   "optimal_hole_top_offset_mm": 59.79,
   "min_hole_radius_mm": 0.91,
   "max_hole_radius_mm": 3.84,
