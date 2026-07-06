@@ -38,7 +38,7 @@ async def api_remove_bg(image: UploadFile = File(...)):
 async def api_preview_die(
     image: UploadFile = File(...),
     max_size_mm: float = Form(50.0),
-    margin_mm: float = Form(4.4),
+    margin_mm: float = Form(2.0),
     hole_diameter_mm: float = Form(3.0),
     hole_position: str = Form("top"),
     product_id: str = Form("biz_thick")
@@ -58,7 +58,7 @@ async def api_submit(
     image: UploadFile = File(...),
     customer_name: str = Form(""),
     max_size_mm: float = Form(50.0),
-    margin_mm: float = Form(4.4),
+    margin_mm: float = Form(2.0),
     hole_diameter_mm: float = Form(3.0),
     hole_position: str = Form("top"),
     clasp_type: str = Form("gold_clasp"),

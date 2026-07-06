@@ -152,7 +152,7 @@ def get_acrylic_shape(img_bytes: bytes, max_size_mm: float, margin_mm: float, ho
             # 1. 【工業級 CAD 形態學內倒角閉運算 (Fillet Bridging)】
             # 透過 buffer(+R) -> buffer(-R) 消除所有尖銳內凹轉角（V-Notch），
             # 讓耳朵與肩膀、下巴下緣、尾巴折角，自動過渡為美編藍色線般的防裂飽滿內角圓弧！
-            fillet_r_px = max(12.0, 4.0 / scale)  # 採用美編黃金標準 4.0 mm 倒角半徑
+            fillet_r_px = max(9.0, 3.0 / scale)  # 採用美編實測外凸2mm/內凹3mm黃金標準
             try:
                 closed_shape = final_acrylic_shape.buffer(fillet_r_px, join_style=1).buffer(-fillet_r_px, join_style=1)
                 if closed_shape.is_valid and not closed_shape.is_empty:

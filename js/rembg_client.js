@@ -44,7 +44,7 @@ function _dataURLtoBlob(dataURL) {
 // 回傳：{ success: bool, imageDataURL: string, imageBlob: Blob, error: string }
 
 async function removeBgWithContourClient(imageFileOrDataURL, marginPx, onProgress) {
-  marginPx = marginPx || 22;
+  marginPx = marginPx || 10;
 
   // 建立 FormData
   var formData = new FormData();
@@ -136,7 +136,7 @@ async function _callPreviewDie(imageBlob, marginMm, onProgress, holePos) {
     var formData = new FormData();
     formData.append('image', imageBlob, 'rembg_result.png');
     formData.append('max_size_mm', '50');
-    formData.append('margin_mm', String(marginMm || 4.4));
+    formData.append('margin_mm', String(marginMm || 2.0));
     formData.append('hole_diameter_mm', '3');
     formData.append('hole_position', String(hp));
 
