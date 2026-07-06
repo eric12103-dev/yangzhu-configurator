@@ -163,6 +163,7 @@ def get_acrylic_shape(img_bytes: bytes, max_size_mm: float, margin_mm: float, ho
                 new_coords.append(new_coords[0])
                 coords = new_coords
             from shapely.geometry import Polygon as ShapelyPoly
+            smoothed_union = ShapelyPoly(coords)
             if smoothed_union.is_valid:
                 final_acrylic_shape = smoothed_union
     else:
