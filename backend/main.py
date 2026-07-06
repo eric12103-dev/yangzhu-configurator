@@ -107,17 +107,28 @@ async def api_submit(
 
         mockup_path = os.path.join(target_dir, f"{base_filename}.PNG")
         svg_path    = os.path.join(target_dir, f"{base_filename}.SVG")
+        print_path  = os.path.join(target_dir, f"{base_filename}_印刷圖稿_350dpi.PNG")
 
         with open(mockup_path, "wb") as f:
             f.write(mockup_bytes)
         with open(svg_path, "wb") as f:
             f.write(svg_bytes)
 
+        # 3.5. 保存 350 DPI 印刷專用去背圖稿 (供 UV 彩印機直接輸出)
+        try:
+            from PIL import Image as PILImage
+            import io as pil_io
+            pil_img = PILImage.open(pil_io.BytesIO(img_bytes))
+            pil_img.save(print_path, format="PNG", dpi=(350, 350))
+        except Exception as e:
+            with open(print_path, "wb") as f:
+                f.write(img_bytes)
+
         mockup_b64 = base64.b64encode(mockup_bytes).decode("utf-8")
 
         return JSONResponse({
             "success": True,
-            "message": f"Files saved successfully to:\n{mockup_path}\n{svg_path}",
+            "message": f"Files saved successfully to:\n{mockup_path}\n{svg_path}\n{print_path}",
             "mockup_b64": f"data:image/png;base64,{mockup_b64}"
         })
     except Exception as e:

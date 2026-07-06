@@ -154,8 +154,12 @@ def get_acrylic_shape(img_bytes: bytes, max_size_mm: float, margin_mm: float, ho
             # 讓耳朵與肩膀、下巴下緣、尾巴折角，自動過渡為美編藍色線般的防裂飽滿內角圓弧！
             fillet_r_px = max(9.0, 3.0 / scale)  # 採用美編實測外凸2mm/內凹3mm黃金標準
             try:
-                closed_shape = final_acrylic_shape.buffer(fillet_r_px, join_style=1).buffer(-fillet_r_px, join_style=1)
+                # 採用反向內縮外擴的「內倒角開運算 (Concave Fillet Opening)」，
+                # 精準將耳朵接縫與向內凹陷處過渡為半徑 3.0mm 的藍色線圓角！
+                closed_shape = final_acrylic_shape.buffer(-fillet_r_px, join_style=1).buffer(+fillet_r_px, join_style=1)
                 if closed_shape.is_valid and not closed_shape.is_empty:
+                    if isinstance(closed_shape, MultiPolygon):
+                        closed_shape = max(closed_shape.geoms, key=lambda a: a.area)
                     final_acrylic_shape = closed_shape
             except Exception:
                 pass
@@ -505,11 +509,11 @@ def render_3d_mockup(img_bytes, shape_info, clasp_type="none", bg_bytes=None):
     # Save as PNG with solid dark background
     solid_bg = Image.new("RGB", final_mockup.size, (30, 30, 30))
     solid_bg.paste(final_mockup, mask=final_mockup.split()[3])
-    solid_bg.save(out_io, format="PNG")
+    solid_bg.save(out_io, format="PNG", dpi=(350, 350))
     
     mask_io = io.BytesIO()
     # Dilate mask slightly to ensure AI has context around the metal
     ai_mask = ai_mask.filter(ImageFilter.MaxFilter(5)) 
-    ai_mask.save(mask_io, format="PNG")
+    ai_mask.save(mask_io, format="PNG", dpi=(350, 350))
     
     return out_io.getvalue(), mask_io.getvalue()
