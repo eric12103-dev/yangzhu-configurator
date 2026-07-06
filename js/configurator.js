@@ -779,9 +779,15 @@ function initPreviewStep() {
 
   if (STATE.productId === 'biz_thick') {
     if (titleEl) titleEl.textContent = '設計確認與檔案輸出';
-    if (descEl)  descEl.textContent  = '確認後將自動產生 3D 打樣圖及 SVG 打印刀模圖，並存入本地資料夾。';
-    if (thickPanel) thickPanel.style.display = 'block';
-    if (flatEl)    flatEl.style.display    = 'none';
+    if (descEl)  descEl.textContent  = '確認無誤後將自動產生 SVG 打印刀模圖，並存入本地資料夾。';
+    if (thickPanel) thickPanel.style.display = 'none';
+    if (flatEl) {
+      flatEl.style.display = '';
+      const previewImg = (typeof _thickDieCutOverlayURL !== 'undefined' && _thickDieCutOverlayURL) ? _thickDieCutOverlayURL : (STATE.designDataURL || '');
+      flatEl.innerHTML = previewImg
+        ? `<div style="margin-bottom:12px;font-size:14px;font-weight:700;color:var(--gray-700);">打印刀模圖預覽</div><img src="${previewImg}" style="max-width:320px;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.15);background:#fff;padding:16px;">`
+        : '<p style="color:var(--gray-400);">已準備好刀模數據，請點擊下方送出。</p>';
+    }
     if (mockupDiv) mockupDiv.style.display = 'none';
     if (btnMockup) { btnMockup.style.display = ''; btnMockup.innerHTML = '✉ 設計稿確認送出'; btnMockup.disabled = false; }
     return;
@@ -1068,7 +1074,7 @@ function updateThickToggle(chk) {
 
 async function submitThickDesign(filename) {
   const btn = document.getElementById('btn-download-mockup');
-  if (btn) { btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 渲染中 (約需 5-10 秒)...'; btn.disabled = true; }
+  if (btn) { btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 刀模檔案處理中...'; btn.disabled = true; }
 
   const placeholder = document.getElementById('thick-mockup-placeholder');
   const imgEl       = document.getElementById('thick-final-mockup');
@@ -1119,29 +1125,25 @@ async function submitThickDesign(filename) {
     const res = await fetch(apiBase + '/api/submit', { method: 'POST', body: formData });
     const data = await res.json();
     if (data.success) {
-      if (imgEl) {
-        imgEl.src = data.mockup_b64;
-        imgEl.style.display = 'block';
-      }
-      if (successBox) {
-        successBox.innerHTML = '✅ 檔案成功儲存至：\n' +
-          data.message.replace('Files saved successfully to:\n', '').trim();
-        successBox.style.display = 'block';
-      }
       STATE.submittedFilename = filename;
       const nameEl = document.getElementById('submit-order-name');
       if (nameEl) nameEl.textContent = filename;
+      const uploadStatus = document.getElementById('upload-status');
+      if (uploadStatus) {
+        uploadStatus.style.color = '#15803d';
+        uploadStatus.style.fontWeight = 'bold';
+        uploadStatus.style.whiteSpace = 'pre-line';
+        uploadStatus.textContent = '✅ ' + (data.message || '').replace('SVG 刀模檔成功儲存至：\n', '已儲存 SVG 刀模檔：').trim();
+      }
       const resultDiv = document.getElementById('submit-result');
       if (resultDiv) resultDiv.style.display = '';
       window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
     } else {
       alert('生成失敗: ' + (data.error || '未知錯誤'));
-      if (placeholder) placeholder.style.display = 'block';
     }
   } catch (err) {
     console.error('[submitThickDesign]', err);
     alert('無法連接到後端 API，請確認後端服務運行狀態');
-    if (placeholder) placeholder.style.display = 'block';
   } finally {
     if (btn) { btn.innerHTML = '✉ 設計稿確認送出'; btn.disabled = false; }
   }

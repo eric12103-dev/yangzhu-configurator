@@ -74,7 +74,36 @@ async def api_submit(
         if bg_image is not None and bg_image.filename:
             bg_bytes = await bg_image.read()
 
-        # 1. 渲染 3D 模擬圖
+        # 【嚴守商品隔離：只針對 biz_thick 厚切商品，移除 3D 合成渲染與 PNG 儲存程序，純粹輸出 SVG 打印刀模圖】
+        if product_id == "biz_thick":
+            svg_bytes = generate_svg_bytes(
+                shape_info["dxf_path_mm"],
+                shape_info["hole_center_mm"],
+                shape_info["hole_radius_mm"],
+                img_bytes,
+                shape_info["img_w_px"] * shape_info["scale"],
+                shape_info["img_h_px"] * shape_info["scale"],
+                0, 0,
+                is_biz_thick=True,
+                shape_info=shape_info
+            )
+            safe_name = customer_name.strip() if customer_name.strip() else f"厚切電子票證-{datetime.datetime.now().strftime('%Y%m%d')}-001"
+            base_filename = safe_name
+            base_dir = os.path.dirname(os.path.dirname(__file__))
+            target_dir = os.path.abspath(os.path.join(base_dir, "..", "打樣檔案下載"))
+            os.makedirs(target_dir, exist_ok=True)
+            
+            svg_path = os.path.join(target_dir, f"{base_filename}.SVG")
+            with open(svg_path, "wb") as f:
+                f.write(svg_bytes)
+                
+            return JSONResponse({
+                "success": True,
+                "message": f"SVG 刀模檔成功儲存至：\n{svg_path}",
+                "mockup_b64": ""
+            })
+
+        # 1. 渲染 3D 模擬圖 (其他非厚切商品保留原有邏輯)
         mockup_bytes, mask_bytes = render_3d_mockup(img_bytes, shape_info, clasp_type, bg_bytes)
 
         # 1.5. AI 重繪五金扣（選用）
