@@ -24,8 +24,18 @@ def generate_svg_bytes(dxf_path_mm, hole_center_mm, hole_radius_mm, img_bytes, i
     
     dwg = svgwrite.Drawing(size=(f"{width_mm}mm", f"{height_mm}mm"), viewBox=f"{min_x} {min_y} {width_mm} {height_mm}")
     
-    # Embed the image
-    img_b64 = base64.b64encode(img_bytes).decode('utf-8')
+    # Embed the image with explicit 350 DPI metadata for Adobe Illustrator / Photoshop
+    try:
+        from PIL import Image as PILImage
+        import io as pil_io
+        pil_img = PILImage.open(pil_io.BytesIO(img_bytes))
+        out_io = pil_io.BytesIO()
+        pil_img.save(out_io, format="PNG", dpi=(350, 350))
+        img_bytes_to_embed = out_io.getvalue()
+    except Exception:
+        img_bytes_to_embed = img_bytes
+
+    img_b64 = base64.b64encode(img_bytes_to_embed).decode('utf-8')
     href = f"data:image/png;base64,{img_b64}"
     
     # The image origin is at offset_x_mm, offset_y_mm in the SVG coordinate system
