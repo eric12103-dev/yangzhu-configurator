@@ -103,6 +103,12 @@ function initDieCutStep() {
     if (dcVal) dcVal.textContent = rmbgSlider.value + 'px';
   }
 
+  // 【嚴守商品隔離：只在 biz_thick 厚切電子票證顯示整體尺寸縮放滑桿】
+  const maxSizeContainer = document.getElementById('diecut-max-size-container');
+  if (maxSizeContainer) {
+    maxSizeContainer.style.display = (typeof STATE !== 'undefined' && STATE.productId === 'biz_thick') ? 'block' : 'none';
+  }
+
   const noPreview = document.getElementById('diecut-no-preview');
   const img       = document.getElementById('diecut-preview-img');
 

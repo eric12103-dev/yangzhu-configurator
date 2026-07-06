@@ -135,7 +135,9 @@ async function _callPreviewDie(imageBlob, marginMm, onProgress, holePos) {
     var hp = holePos !== undefined ? holePos : _getHolePosVal();
     var formData = new FormData();
     formData.append('image', imageBlob, 'rembg_result.png');
-    formData.append('max_size_mm', '50');
+    var maxSizeEl = document.getElementById('diecut-max-size');
+    var maxSizeVal = maxSizeEl ? maxSizeEl.value : '50';
+    formData.append('max_size_mm', String(maxSizeVal));
     formData.append('margin_mm', String(marginMm || 2.0));
     formData.append('hole_diameter_mm', '3');
     formData.append('hole_position', String(hp));

@@ -280,6 +280,16 @@
         <!-- 控制區 -->
         <div style="flex:0 0 260px;">
           <div class="tool-section">
+            <div id="diecut-max-size-container" style="display:none;">
+              <h4>整體尺寸縮放</h4>
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:14px;">
+                <input type="range" id="diecut-max-size" min="20" max="53" step="1" value="50"
+                       style="flex:1;accent-color:var(--green);"
+                       oninput="document.getElementById('diecut-max-size-val').textContent=this.value+'mm'"
+                       onchange="regenDieCut()">
+                <span id="diecut-max-size-val" style="font-size:12px;color:var(--gray-400);min-width:36px;text-align:right;">50mm</span>
+              </div>
+            </div>
             <h4>刀模邊距</h4>
             <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
               <input type="range" id="diecut-margin" min="0" max="40" step="1" value="10"
