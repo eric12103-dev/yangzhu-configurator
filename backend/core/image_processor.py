@@ -67,7 +67,7 @@ def get_acrylic_shape(img_bytes: bytes, max_size_mm: float, margin_mm: float, ho
             print(f"[WARN] Failed to load AI diecut model: {e}")
 
     if ai_model:
-        print(f"\n[AI INFERENCE] 收到 {product_id} 請求！正在啟用 AI 貝茲曲線張力平滑 (Tension={ai_model.get('base_tension', 0.65)}) 與黃金耳孔 (2.7mm)...")
+        print(f"\n[AI INFERENCE] 收到 {product_id} 請求！正在啟用 AI 貝茲曲線張力平滑 (Tension={ai_model.get('base_tension', 0.65)}) 與美編黃金耳孔 (內洞3mm/外耳8mm)...")
         # 使用 AI 學習到的貝茲張力係數 (base_tension = 0.65+) 進行幾何曲線平滑過渡
         # 先用微小容差去噪，避免直接 simplify(1.0) 造成生硬折角
         simplified_poly = buffered_poly.simplify(0.25, preserve_topology=True)
@@ -118,12 +118,12 @@ def get_acrylic_shape(img_bytes: bytes, max_size_mm: float, margin_mm: float, ho
                 center_x = (min_x + max_x) / 2
     
     if ai_model and hole_diameter_mm > 0:
-        # AI 模型學習自 18 筆美編標竿的黃金鑰匙孔半徑 (optimal_hole_radius_mm = 2.7mm)
-        hole_radius_mm = ai_model.get("optimal_hole_radius_mm", 2.7)
-        ear_border_mm = 4.5  # 搭配 2.7mm 孔洞的最佳過渡外圍
+        # 嚴格落實美編黃金實測比例：內洞直徑 3.0mm (r=1.5mm) + 耳朵外徑 8.0mm (r=4.0mm)
+        hole_radius_mm = ai_model.get("optimal_hole_radius_mm", 1.5)
+        ear_border_mm = ai_model.get("optimal_ear_border_mm", 2.5)  # r=1.5 + 2.5 = 4.0mm (外徑 exactly 8mm)
     else:
         hole_radius_mm = hole_diameter_mm / 2.0
-        ear_border_mm = 4.0
+        ear_border_mm = 2.5
 
     hole_radius_px = hole_radius_mm / scale
     ear_radius_px = hole_radius_px + (ear_border_mm / scale)
@@ -148,6 +148,23 @@ def get_acrylic_shape(img_bytes: bytes, max_size_mm: float, margin_mm: float, ho
     if hole_diameter_mm > 0:
         ear_shape = Point(ear_center_x, ear_center_y).buffer(ear_radius_px)
         final_acrylic_shape = unary_union([simplified_poly, ear_shape])
+        if ai_model and isinstance(final_acrylic_shape, Polygon):
+            # 在耳朵與主體結合後，進行二次貝茲自適應平滑，將接合硬角過渡為流暢的 S 型反向圓弧！
+            tension = ai_model.get("base_tension", 0.65)
+            t = max(0.1, min(0.35, (1.0 - tension) / 2.0))
+            coords = list(final_acrylic_shape.exterior.coords)
+            for _ in range(2):
+                new_coords = []
+                for i in range(len(coords) - 1):
+                    p1, p2 = np.array(coords[i]), np.array(coords[i+1])
+                    q = (1 - t) * p1 + t * p2
+                    r = t * p1 + (1 - t) * p2
+                    new_coords.extend([tuple(q), tuple(r)])
+                new_coords.append(new_coords[0])
+                coords = new_coords
+            from shapely.geometry import Polygon as ShapelyPoly
+            if smoothed_union.is_valid:
+                final_acrylic_shape = smoothed_union
     else:
         final_acrylic_shape = simplified_poly
         
