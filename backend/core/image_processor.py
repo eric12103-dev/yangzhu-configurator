@@ -67,6 +67,7 @@ def get_acrylic_shape(img_bytes: bytes, max_size_mm: float, margin_mm: float, ho
             print(f"[WARN] Failed to load AI diecut model: {e}")
 
     if ai_model:
+        print(f"\n[AI INFERENCE] 收到 {product_id} 請求！正在啟用 AI 貝茲曲線張力平滑 (Tension={ai_model.get('base_tension', 0.65)}) 與黃金耳孔 (2.7mm)...")
         # 使用 AI 學習到的貝茲張力係數 (base_tension = 0.65+) 進行幾何曲線平滑過渡
         # 先用微小容差去噪，避免直接 simplify(1.0) 造成生硬折角
         simplified_poly = buffered_poly.simplify(0.25, preserve_topology=True)
