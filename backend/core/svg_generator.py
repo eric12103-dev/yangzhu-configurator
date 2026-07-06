@@ -1,7 +1,7 @@
 import svgwrite
 import base64
 
-def generate_svg_bytes(dxf_path_mm, hole_center_mm, hole_radius_mm, img_bytes, img_width_mm, img_height_mm, offset_x_mm, offset_y_mm, is_biz_thick=False):
+def generate_svg_bytes(dxf_path_mm, hole_center_mm, hole_radius_mm, img_bytes, img_width_mm, img_height_mm, offset_x_mm, offset_y_mm, is_biz_thick=False, shape_info=None):
     """
     Generates an SVG file containing the embedded image and the cutting path (die line).
     dxf_path_mm is a list of (x,y) in mm.
@@ -40,7 +40,30 @@ def generate_svg_bytes(dxf_path_mm, hole_center_mm, hole_radius_mm, img_bytes, i
     try:
         from PIL import Image as PILImage
         import io as pil_io
-        pil_img = PILImage.open(pil_io.BytesIO(img_bytes))
+        pil_img = PILImage.open(pil_io.BytesIO(img_bytes)).convert("RGBA")
+        
+        # 【嚴守商品隔離：只針對 biz_thick 厚切商品，於導出 SVG 前進行置中平移與防超框雷射遮罩剪裁】
+        if is_biz_thick and shape_info:
+            dx_px, dy_px = shape_info.get("content_shift_px", (0.0, 0.0))
+            scale = shape_info["scale"]
+            max_w_px = 54.0 / scale
+            max_h_px = 85.6 / scale
+            radius_px = 3.3 / scale
+            
+            shifted_img = PILImage.new('RGBA', pil_img.size, (0, 0, 0, 0))
+            shifted_img.paste(pil_img, (int(round(dx_px)), int(round(dy_px))))
+            pil_img = shifted_img
+            
+            cx = pil_img.width / 2.0
+            cy = pil_img.height / 2.0
+            mask = PILImage.new('L', pil_img.size, 0)
+            from PIL import ImageDraw as PILImageDraw, ImageChops as PILImageChops
+            mask_draw = PILImageDraw.Draw(mask)
+            mask_draw.rounded_rectangle([cx - max_w_px/2.0, cy - max_h_px/2.0, cx + max_w_px/2.0, cy + max_h_px/2.0], radius=radius_px, fill=255)
+            
+            orig_alpha = pil_img.getchannel('A')
+            pil_img.putalpha(PILImageChops.darker(orig_alpha, mask))
+            
         out_io = pil_io.BytesIO()
         pil_img.save(out_io, format="PNG", dpi=(350, 350))
         img_bytes_to_embed = out_io.getvalue()

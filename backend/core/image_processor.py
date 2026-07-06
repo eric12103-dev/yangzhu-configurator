@@ -47,6 +47,19 @@ def get_acrylic_shape(img_bytes: bytes, max_size_mm: float, margin_mm: float, ho
         poly = poly.buffer(0)
         
     h, w = img.shape[:2]
+    
+    # 【嚴守商品隔離：只針對 biz_thick 厚切商品，進行內容重心絕對置中對位】
+    dx_px = 0.0
+    dy_px = 0.0
+    if product_id == "biz_thick":
+        min_x, min_y, max_x, max_y = poly.bounds
+        poly_cx = (min_x + max_x) / 2.0
+        poly_cy = (min_y + max_y) / 2.0
+        dx_px = (w / 2.0) - poly_cx
+        dy_px = (h / 2.0) - poly_cy
+        from shapely.affinity import translate
+        poly = translate(poly, xoff=dx_px, yoff=dy_px)
+
     max_px = max(h, w)
     scale = max_size_mm / max_px  # mm per pixel
     
@@ -232,6 +245,7 @@ def get_acrylic_shape(img_bytes: bytes, max_size_mm: float, margin_mm: float, ho
         "img_w_px": w,
         "img_h_px": h,
         "bounds_px": final_acrylic_shape.bounds,
+        "content_shift_px": (dx_px, dy_px),
         "product_id": product_id
     }
 
@@ -267,6 +281,29 @@ def draw_preview_die(shape_info, img_bytes):
     # Draw original image with 80% opacity
     faded_img = pil_img.copy()
     faded_img.putalpha(faded_img.getchannel('A').point(lambda i: i * 0.8))
+    
+    # 【嚴守商品隔離：只針對 biz_thick 厚切商品，進行圖片平移置中與防超框雷射遮罩剪裁】
+    if shape_info.get("product_id") == "biz_thick":
+        dx_px, dy_px = shape_info.get("content_shift_px", (0.0, 0.0))
+        scale = shape_info["scale"]
+        max_w_px = 54.0 / scale
+        max_h_px = 85.6 / scale
+        radius_px = 3.3 / scale
+        
+        shifted_img = Image.new('RGBA', pil_img.size, (0, 0, 0, 0))
+        shifted_img.paste(faded_img, (int(round(dx_px)), int(round(dy_px))))
+        faded_img = shifted_img
+        
+        cx = pil_img.width / 2.0
+        cy = pil_img.height / 2.0
+        mask = Image.new('L', pil_img.size, 0)
+        mask_draw = ImageDraw.Draw(mask)
+        mask_draw.rounded_rectangle([cx - max_w_px/2.0, cy - max_h_px/2.0, cx + max_w_px/2.0, cy + max_h_px/2.0], radius=radius_px, fill=255)
+        
+        from PIL import ImageChops
+        orig_alpha = faded_img.getchannel('A')
+        faded_img.putalpha(ImageChops.darker(orig_alpha, mask))
+
     preview.paste(faded_img, (pad_left, pad_top))
     
     draw = ImageDraw.Draw(preview)
