@@ -93,7 +93,8 @@ async def api_submit(
             img_bytes,
             shape_info["img_w_px"] * shape_info["scale"],
             shape_info["img_h_px"] * shape_info["scale"],
-            0, 0
+            0, 0,
+            is_biz_thick=(product_id == "biz_thick")
         )
 
         # 3. 儲存檔案

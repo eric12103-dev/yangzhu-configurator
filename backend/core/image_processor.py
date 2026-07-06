@@ -231,7 +231,8 @@ def get_acrylic_shape(img_bytes: bytes, max_size_mm: float, margin_mm: float, ho
         "scale": scale,
         "img_w_px": w,
         "img_h_px": h,
-        "bounds_px": final_acrylic_shape.bounds
+        "bounds_px": final_acrylic_shape.bounds,
+        "product_id": product_id
     }
 
 def draw_preview_die(shape_info, img_bytes):
@@ -267,6 +268,20 @@ def draw_preview_die(shape_info, img_bytes):
     if hc and hr:
         cx, cy = hc[0] + pad_left, hc[1] + pad_top
         draw.ellipse([cx-hr, cy-hr, cx+hr, cy+hr], fill="white", outline="blue", width=2)
+        
+    # Draw maximum boundary frame for biz_thick (54mm x 85.6mm, rx=ry=3.3mm) with red outline
+    if shape_info.get("product_id") == "biz_thick":
+        scale = shape_info["scale"]
+        max_w_px = 54.0 / scale
+        max_h_px = 85.6 / scale
+        radius_px = 3.3 / scale
+        cx = pad_left + (pil_img.width / 2.0)
+        cy = pad_top + (pil_img.height / 2.0)
+        box_x0 = cx - (max_w_px / 2.0)
+        box_y0 = cy - (max_h_px / 2.0)
+        box_x1 = cx + (max_w_px / 2.0)
+        box_y1 = cy + (max_h_px / 2.0)
+        draw.rounded_rectangle([box_x0, box_y0, box_x1, box_y1], radius=radius_px, outline="red", width=2)
         
     out_io = io.BytesIO()
     preview.save(out_io, format="PNG")
