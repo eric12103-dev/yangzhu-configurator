@@ -200,6 +200,18 @@ def get_acrylic_shape(img_bytes: bytes, max_size_mm: float, margin_mm: float, ho
     else:
         final_acrylic_shape = simplified_poly
         
+    # 【嚴守商品隔離：只針對 biz_thick 厚切電子票證】
+    # 確保直徑 35mm (半徑 17.5mm) 的 RFID 線圈圓完全包含在刀模線內！
+    if product_id == "biz_thick":
+        try:
+            coil_r_px = (17.5 + 1.5) / scale  # 直徑35mm(半徑17.5mm) + 1.5mm 安全邊距
+            coil_center = Point(w / 2.0, (h / 2.0) + (4.0 / scale))  # 位於中下方
+            coil_safety_poly = coil_center.buffer(coil_r_px, resolution=32)
+            if coil_safety_poly.is_valid and not coil_safety_poly.is_empty:
+                final_acrylic_shape = unary_union([final_acrylic_shape, coil_safety_poly])
+        except Exception:
+            pass
+        
     # 3. 【嚴守商品隔離：只針對 biz_thick 厚切電子票證進行最大範圍限縮】
     # 依據 Kiven 提供的「厚切電子票證最大範圍.svg」之物理極限規格：
     # 最大極限尺寸 = 寬 54.0 mm × 高 85.6 mm，四角圓角半徑 = 3.3 mm。
@@ -386,24 +398,34 @@ def draw_preview_die(shape_info, img_bytes, ticket_type="easycard", clasp_type="
                 tw = len(text_str) * (font_obj.size * 0.6)
             draw.text((cx_pos - tw / 2.0, y_pos), text_str, font=font_obj, fill=fill_col)
 
-        logo_y = cy_back + (10.0 / scale)
-        pr = max(4, int(new_w / 60))
+        logo_filename = "ipass_logo.png" if "ipass" in str(ticket_type).lower() else "easycard_logo.png"
+        logo_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "assets", logo_filename)
+        
+        # 載入自刀模資料庫下載的官方 LOGO 圖片
+        if os.path.exists(logo_path):
+            try:
+                logo_im = Image.open(logo_path).convert("RGBA")
+                lw = int(new_w * 0.65)
+                lh = int(logo_im.height * (lw / float(max(1, logo_im.width))))
+                logo_im = logo_im.resize((lw, lh), Image.Resampling.LANCZOS)
+                logo_x = int(cx_back - lw / 2.0)
+                logo_y = int(cy_back + (6.0 / scale))
+                preview.paste(logo_im, (logo_x, logo_y), logo_im)
+                
+                info_y = logo_y + lh + int(8.0 / scale)
+            except Exception:
+                info_y = int(cy_back + (25.0 / scale))
+        else:
+            info_y = int(cy_back + (25.0 / scale))
+            
         draw = ImageDraw.Draw(preview)
         if "ipass" in str(ticket_type).lower():
-            draw.ellipse([cx_back - pr*3, logo_y - pr, cx_back - pr, logo_y + pr], fill=(255, 120, 0))
-            draw.ellipse([cx_back + pr, logo_y - pr, cx_back + pr*3, logo_y + pr], fill=(0, 180, 80))
-            draw_centered_text(cx_back, logo_y + pr*1.5, "iPASS 一卡通", font_logo, (50, 50, 50))
-            draw_centered_text(cx_back, logo_y + pr*1.5 + font_size_logo + 4, "888 8888888 8", font_info, (100, 100, 100))
-            draw_centered_text(cx_back, logo_y + pr*1.5 + font_size_logo + font_size_info + 8, "客服：(07)791-2000", font_info, (100, 100, 100))
-            draw_centered_text(cx_back, logo_y + pr*1.5 + font_size_logo + font_size_info*2 + 12, "www.i-pass.com.tw", font_info, (120, 120, 120))
+            draw_centered_text(cx_back, info_y, "888 8888888 8", font_info, (100, 100, 100))
+            draw_centered_text(cx_back, info_y + font_size_info + 6, "客服：(07)791-2000", font_info, (100, 100, 100))
+            draw_centered_text(cx_back, info_y + font_size_info*2 + 12, "www.i-pass.com.tw", font_info, (120, 120, 120))
         else:
-            draw.ellipse([cx_back - pr*1.5, logo_y - pr*1.5, cx_back - 2, logo_y - 2], fill=(235, 97, 0))
-            draw.ellipse([cx_back + 2, logo_y - pr*1.5, cx_back + pr*1.5, logo_y - 2], fill=(255, 180, 0))
-            draw.ellipse([cx_back + 2, logo_y + 2, cx_back + pr*1.5, logo_y + pr*1.5], fill=(0, 160, 80))
-            draw.ellipse([cx_back - pr*1.5, logo_y + 2, cx_back - 2, logo_y + pr*1.5], fill=(0, 130, 200))
-            draw_centered_text(cx_back, logo_y + pr*2, "EASYCARD 悠遊卡", font_logo, (50, 50, 50))
-            draw_centered_text(cx_back, logo_y + pr*2 + font_size_logo + 4, "123456789 1", font_info, (100, 100, 100))
-            draw_centered_text(cx_back, logo_y + pr*2 + font_size_logo + font_size_info + 8, "客服 412-8880", font_info, (100, 100, 100))
+            draw_centered_text(cx_back, info_y, "123456789 1", font_info, (100, 100, 100))
+            draw_centered_text(cx_back, info_y + font_size_info + 6, "客服 412-8880", font_info, (100, 100, 100))
 
         # 8. 繪製頂部金屬鑰匙圈與鏈條 (對應正背面打孔位置)
         if hc and hr:
