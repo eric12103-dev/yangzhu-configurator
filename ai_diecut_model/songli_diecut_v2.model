@@ -1,0 +1,35 @@
+{
+  "model_version": "v2.0-aesthetic-pro",
+  "trained_at": "2026-07-07T16:27:12.246979",
+  "training_samples_count": 272,
+  "target_product": "biz_thick",
+  "aesthetic_rules": {
+    "bezier_tension": {
+      "base_tension": 0.7104,
+      "min_tension": 0.0054,
+      "max_tension": 0.8475,
+      "aspect_ratio_weight": 0.125,
+      "complexity_weight": 0.0008
+    },
+    "corner_radius": {
+      "optimal_radius_mm": 6.08,
+      "min_radius_mm": 0.02
+    },
+    "safety_wall_thickness": {
+      "optimal_wall_mm": 3.79,
+      "min_safe_wall_mm": 0.83,
+      "robust_wall_mm": 10.48
+    },
+    "hole_placement_and_balance": {
+      "optimal_hole_radius_mm": 1.5,
+      "min_hole_radius_mm": 1.5,
+      "max_hole_radius_mm": 1.5,
+      "com_offset_dx_mm": -56.19,
+      "com_offset_dy_mm": -5.92,
+      "optimal_top_offset_mm": 68.32
+    },
+    "margin_and_scaling": {
+      "optimal_margin_mm": 0.0
+    }
+  }
+}

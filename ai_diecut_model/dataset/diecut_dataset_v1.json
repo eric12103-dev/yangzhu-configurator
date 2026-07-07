@@ -1,0 +1,1437 @@
+{
+  "meta": {
+    "created_at": "2026-07-06T12:04:05.642943",
+    "target_product": "biz_thick",
+    "total_samples": 57
+  },
+  "samples": [
+    {
+      "id": "sample_001",
+      "filename": "200721-圓鼎-造型厚板一卡通(裁切與示意).ai",
+      "artwork_bounds": [
+        65.04859924316406,
+        77.48348999023438,
+        1248.3070068359375,
+        575.4129028320312
+      ],
+      "dieline_bounds": [
+        77.17200469970703,
+        108.72503662109375,
+        774.8587646484375,
+        473.0168151855469
+      ],
+      "dieline_points_count": 960,
+      "hole": null,
+      "learned_features": {
+        "aspect_ratio": 1.9152,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": null
+      }
+    },
+    {
+      "id": "sample_002",
+      "filename": "201118-日月光-造型厚板一卡通(裁切與示意).ai",
+      "artwork_bounds": [
+        65.04869842529297,
+        77.48346710205078,
+        1250.1182998046875,
+        575.4149169921875
+      ],
+      "dieline_bounds": [
+        77.17200469970703,
+        108.72698974609375,
+        774.8587646484375,
+        473.0177917480469
+      ],
+      "dieline_points_count": 854,
+      "hole": null,
+      "learned_features": {
+        "aspect_ratio": 1.9152,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": null
+      }
+    },
+    {
+      "id": "sample_003",
+      "filename": "211018-富博-造型厚板一卡通(裁切與示意).ai",
+      "artwork_bounds": [
+        65.04869842529297,
+        77.48371124267578,
+        1270.1309814453125,
+        596.61669921875
+      ],
+      "dieline_bounds": [
+        77.17200469970703,
+        108.72698974609375,
+        774.8587646484375,
+        473.01739501953125
+      ],
+      "dieline_points_count": 521,
+      "hole": null,
+      "learned_features": {
+        "aspect_ratio": 1.9152,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": null
+      }
+    },
+    {
+      "id": "sample_004",
+      "filename": "211102-高雄郵局-造型滴膠一卡通(裁切與示意).ai",
+      "artwork_bounds": [
+        55.9192008972168,
+        67.82931518554688,
+        1286.7572021484375,
+        610.5369873046875
+      ],
+      "dieline_bounds": [
+        68.04299926757812,
+        99.07098388671875,
+        877.306984375,
+        508.14093017578125
+      ],
+      "dieline_points_count": 2156,
+      "hole": {
+        "cx": 868.1316726074219,
+        "cy": 374.93277160644527,
+        "radius": 6.839009033203183
+      },
+      "learned_features": {
+        "aspect_ratio": 1.9783,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": 275.86
+      }
+    },
+    {
+      "id": "sample_007",
+      "filename": "220419-齊銳-造型滴膠+厚板一卡通(裁切與示意).ai",
+      "artwork_bounds": [
+        65.04869842529297,
+        77.48371124267578,
+        1245.51416015625,
+        596.6165771484375
+      ],
+      "dieline_bounds": [
+        77.17200469970703,
+        108.72698974609375,
+        774.8587646484375,
+        473.01751708984375
+      ],
+      "dieline_points_count": 792,
+      "hole": null,
+      "learned_features": {
+        "aspect_ratio": 1.9152,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": null
+      }
+    },
+    {
+      "id": "sample_009",
+      "filename": "220812-大南汽車-造型滴膠一卡通(裁切與示意) 0812.ai",
+      "artwork_bounds": [
+        55.9193000793457,
+        67.82931518554688,
+        1257.0032653808594,
+        610.5369873046875
+      ],
+      "dieline_bounds": [
+        68.04299926757812,
+        99.07098388671875,
+        1236.487548828125,
+        508.14093017578125
+      ],
+      "dieline_points_count": 66161,
+      "hole": {
+        "cx": 146.31343744659424,
+        "cy": 393.7789809570312,
+        "radius": 7.079670692443841
+      },
+      "learned_features": {
+        "aspect_ratio": 2.8563,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": 294.71
+      }
+    },
+    {
+      "id": "sample_010",
+      "filename": "220824-富堃 -造型厚版(外加滴膠)一卡通(裁切與示意).ai",
+      "artwork_bounds": [
+        65.04869842529297,
+        51.74150085449219,
+        1270.458251953125,
+        596.61669921875
+      ],
+      "dieline_bounds": [
+        77.17200469970703,
+        108.72698974609375,
+        774.8587646484375,
+        473.01739501953125
+      ],
+      "dieline_points_count": 348,
+      "hole": null,
+      "learned_features": {
+        "aspect_ratio": 1.9152,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": null
+      }
+    },
+    {
+      "id": "sample_011",
+      "filename": "220831-富堃 -造型厚版(外加滴膠)一卡通(裁切與示意).ai",
+      "artwork_bounds": [
+        65.04869842529297,
+        62.677978515625,
+        1271.306884765625,
+        596.61669921875
+      ],
+      "dieline_bounds": [
+        77.17200469970703,
+        108.72698974609375,
+        774.8587646484375,
+        473.01739501953125
+      ],
+      "dieline_points_count": 650,
+      "hole": null,
+      "learned_features": {
+        "aspect_ratio": 1.9152,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": null
+      }
+    },
+    {
+      "id": "sample_012",
+      "filename": "221020-紀陽工程-造型厚板一卡通(裁切與示意).ai",
+      "artwork_bounds": [
+        55.9193000793457,
+        67.82931518554688,
+        1270.0496826171875,
+        610.5369873046875
+      ],
+      "dieline_bounds": [
+        68.04299926757812,
+        99.07098388671875,
+        905.3580932617188,
+        508.14093017578125
+      ],
+      "dieline_points_count": 870,
+      "hole": {
+        "cx": 146.96460723876953,
+        "cy": 376.93011474609375,
+        "radius": 3.6664962768554688
+      },
+      "learned_features": {
+        "aspect_ratio": 2.0469,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": 277.86
+      }
+    },
+    {
+      "id": "sample_013",
+      "filename": "221024-紀陽工程-造型厚板一卡通(裁切與示意).ai",
+      "artwork_bounds": [
+        55.9193000793457,
+        67.82931518554688,
+        1269.749267578125,
+        627.4429931640625
+      ],
+      "dieline_bounds": [
+        68.04299926757812,
+        99.07098388671875,
+        1151.3241689453125,
+        508.14093017578125
+      ],
+      "dieline_points_count": 1068,
+      "hole": {
+        "cx": 373.9975541534424,
+        "cy": 328.92726330566404,
+        "radius": 2.7406838836670318
+      },
+      "learned_features": {
+        "aspect_ratio": 2.6482,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": 229.86
+      }
+    },
+    {
+      "id": "sample_014",
+      "filename": "221026-紀陽工程-造型厚板一卡通(裁切與示意).ai",
+      "artwork_bounds": [
+        55.9193000793457,
+        67.82931518554688,
+        1265.4971923828125,
+        627.4429931640625
+      ],
+      "dieline_bounds": [
+        68.04299926757812,
+        99.07098388671875,
+        1153.7753447265625,
+        508.14093017578125
+      ],
+      "dieline_points_count": 1068,
+      "hole": {
+        "cx": 376.60401611328126,
+        "cy": 332.2040188293457,
+        "radius": 2.5855529785156364
+      },
+      "learned_features": {
+        "aspect_ratio": 2.6541,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": 233.13
+      }
+    },
+    {
+      "id": "sample_015",
+      "filename": "221109-藝騋-造型厚板一卡通(裁切與示意).ai",
+      "artwork_bounds": [
+        65.04869842529297,
+        77.48389434814453,
+        1227.126339111328,
+        653.3096923828125
+      ],
+      "dieline_bounds": [
+        77.17200469970703,
+        108.72698974609375,
+        774.8587646484375,
+        473.0177307128906
+      ],
+      "dieline_points_count": 560,
+      "hole": null,
+      "learned_features": {
+        "aspect_ratio": 1.9152,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": null
+      }
+    },
+    {
+      "id": "sample_017",
+      "filename": "221206-相信創意-造型滴膠一卡通(迷你卡尺寸)(裁切與示意).ai",
+      "artwork_bounds": [
+        75.80500793457031,
+        77.48352813720703,
+        1229.60986328125,
+        596.6170043945312
+      ],
+      "dieline_bounds": [
+        77.17200469970703,
+        46.0250244140625,
+        1219.08544921875,
+        442.4031066894531
+      ],
+      "dieline_points_count": 2518,
+      "hole": {
+        "cx": 1146.0074462890625,
+        "cy": 65.53511428833008,
+        "radius": 10.259033203125
+      },
+      "learned_features": {
+        "aspect_ratio": 2.8809,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": 19.51
+      }
+    },
+    {
+      "id": "sample_018",
+      "filename": "221214-相信創意-造型滴膠一卡通(正常卡尺寸)(裁切與示意).ai",
+      "artwork_bounds": [
+        65.04869842529297,
+        77.48352813720703,
+        1229.60986328125,
+        596.6170043945312
+      ],
+      "dieline_bounds": [
+        77.17200469970703,
+        50.010009765625,
+        1269.46142578125,
+        473.0177001953125
+      ],
+      "dieline_points_count": 2622,
+      "hole": {
+        "cx": 1196.3834228515625,
+        "cy": 69.51992797851562,
+        "radius": 10.259033203125
+      },
+      "learned_features": {
+        "aspect_ratio": 2.8186,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": 19.51
+      }
+    },
+    {
+      "id": "sample_019",
+      "filename": "230131-意創-造型厚板一卡通(裁切與示意).ai",
+      "artwork_bounds": [
+        65.04869842529297,
+        77.48401641845703,
+        1252.70101953125,
+        624.9633178710938
+      ],
+      "dieline_bounds": [
+        77.17200469970703,
+        108.72705078125,
+        906.8555297851562,
+        473.017822265625
+      ],
+      "dieline_points_count": 1549,
+      "hole": null,
+      "learned_features": {
+        "aspect_ratio": 2.2775,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": null
+      }
+    },
+    {
+      "id": "sample_021",
+      "filename": "230222-藝騋-造型厚板一卡通(一般卡)(裁切與示意).ai",
+      "artwork_bounds": [
+        65.04869842529297,
+        77.48389434814453,
+        1227.262939453125,
+        653.309326171875
+      ],
+      "dieline_bounds": [
+        77.17200469970703,
+        58.64501953125,
+        1239.6180419921875,
+        473.01763916015625
+      ],
+      "dieline_points_count": 4251,
+      "hole": {
+        "cx": 1114.0250244140625,
+        "cy": 69.8895263671875,
+        "radius": 10.89697265625
+      },
+      "learned_features": {
+        "aspect_ratio": 2.8053,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": 11.24
+      }
+    },
+    {
+      "id": "sample_022",
+      "filename": "230606-聖洋-造型厚板一卡通(裁切與示意).ai",
+      "artwork_bounds": [
+        65.04869842529297,
+        77.48371124267578,
+        1245.84619140625,
+        624.963134765625
+      ],
+      "dieline_bounds": [
+        111.83599853515625,
+        230.37091064453125,
+        774.8587646484375,
+        473.01751708984375
+      ],
+      "dieline_points_count": 1063,
+      "hole": null,
+      "learned_features": {
+        "aspect_ratio": 2.7325,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": null
+      }
+    },
+    {
+      "id": "sample_023",
+      "filename": "230630-金楓-造型厚板一卡通(裁切與示意).ai",
+      "artwork_bounds": [
+        65.04869842529297,
+        77.48371124267578,
+        1247.1776855468752,
+        596.6165771484375
+      ],
+      "dieline_bounds": [
+        77.17200469970703,
+        108.72698974609375,
+        1171.221435546875,
+        473.01751708984375
+      ],
+      "dieline_points_count": 12640,
+      "hole": {
+        "cx": 415.5361022949219,
+        "cy": 317.3430288085938,
+        "radius": 8.75299072265625
+      },
+      "learned_features": {
+        "aspect_ratio": 3.0032,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": 208.62
+      }
+    },
+    {
+      "id": "sample_024",
+      "filename": "231101-鏡采-造型厚板一卡通(裁切與示意).ai",
+      "artwork_bounds": [
+        55.9193000793457,
+        67.82931518554688,
+        1270.020560546875,
+        610.5369873046875
+      ],
+      "dieline_bounds": [
+        68.04299926757812,
+        99.07098388671875,
+        936.8348388671875,
+        508.14093017578125
+      ],
+      "dieline_points_count": 1779,
+      "hole": null,
+      "learned_features": {
+        "aspect_ratio": 2.1238,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": null
+      }
+    },
+    {
+      "id": "sample_025",
+      "filename": "231220-大力-造型厚板一卡通(裁切與示意).ai",
+      "artwork_bounds": [
+        55.9193000793457,
+        67.82931518554688,
+        1272.8722080078126,
+        610.5369873046875
+      ],
+      "dieline_bounds": [
+        68.04299926757812,
+        99.07098388671875,
+        908.9615473632814,
+        508.14093017578125
+      ],
+      "dieline_points_count": 1210,
+      "hole": {
+        "cx": 166.6394026412964,
+        "cy": 385.7804780120849,
+        "radius": 7.457655952453621
+      },
+      "learned_features": {
+        "aspect_ratio": 2.0557,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": 286.71
+      }
+    },
+    {
+      "id": "sample_026",
+      "filename": "240123-亞呈環境-造型厚板一卡通(裁切與示意).ai",
+      "artwork_bounds": [
+        55.9193000793457,
+        67.82931518554688,
+        1274.7451171875,
+        610.5369873046875
+      ],
+      "dieline_bounds": [
+        68.04299926757812,
+        99.07098388671875,
+        765.7296752929688,
+        508.14093017578125
+      ],
+      "dieline_points_count": 583,
+      "hole": null,
+      "learned_features": {
+        "aspect_ratio": 1.7055,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": null
+      }
+    },
+    {
+      "id": "sample_027",
+      "filename": "240216-大安廣告-造型厚板一卡通(裁切與示意).ai",
+      "artwork_bounds": [
+        55.9193000793457,
+        67.82931518554688,
+        1281.2707762451173,
+        610.5369873046875
+      ],
+      "dieline_bounds": [
+        68.04299926757812,
+        99.07098388671875,
+        765.7296752929688,
+        508.14093017578125
+      ],
+      "dieline_points_count": 1155,
+      "hole": null,
+      "learned_features": {
+        "aspect_ratio": 1.7055,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": null
+      }
+    },
+    {
+      "id": "sample_028",
+      "filename": "240321-瑞普-造型滴膠一卡通(飽和+15)(相思萌兔)(裁切與示意).ai",
+      "artwork_bounds": [
+        65.04869842529297,
+        77.48371124267578,
+        1233.3228759765625,
+        624.963134765625
+      ],
+      "dieline_bounds": [
+        111.83599853515625,
+        230.37091064453125,
+        774.8587646484375,
+        473.01751708984375
+      ],
+      "dieline_points_count": 651,
+      "hole": null,
+      "learned_features": {
+        "aspect_ratio": 2.7325,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": null
+      }
+    },
+    {
+      "id": "sample_030",
+      "filename": "240411-成昌營造-造型厚板一卡通(裁切與示意)(對色票).ai",
+      "artwork_bounds": [
+        55.9193000793457,
+        67.82931518554688,
+        1260.9169506835938,
+        610.5369873046875
+      ],
+      "dieline_bounds": [
+        68.04299926757812,
+        99.07098388671875,
+        765.7296752929688,
+        508.14093017578125
+      ],
+      "dieline_points_count": 880,
+      "hole": null,
+      "learned_features": {
+        "aspect_ratio": 1.7055,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": null
+      }
+    },
+    {
+      "id": "sample_031",
+      "filename": "240423-沛客思-造型厚板一卡通(灰15%)(裁切與示意).ai",
+      "artwork_bounds": [
+        65.04869842529297,
+        77.48371124267578,
+        1275.9825439453125,
+        624.963134765625
+      ],
+      "dieline_bounds": [
+        111.83599853515625,
+        186.0299072265625,
+        1077.05517578125,
+        473.01751708984375
+      ],
+      "dieline_points_count": 1055,
+      "hole": null,
+      "learned_features": {
+        "aspect_ratio": 3.3633,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": null
+      }
+    },
+    {
+      "id": "sample_032",
+      "filename": "240516-溢恩-造型厚板一卡通(裁切與示意)(+20%).ai",
+      "artwork_bounds": [
+        65.04869842529297,
+        77.48371124267578,
+        1245.1194305419922,
+        624.963134765625
+      ],
+      "dieline_bounds": [
+        111.83599853515625,
+        230.37091064453125,
+        774.8587646484375,
+        473.01751708984375
+      ],
+      "dieline_points_count": 659,
+      "hole": null,
+      "learned_features": {
+        "aspect_ratio": 2.7325,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": null
+      }
+    },
+    {
+      "id": "sample_033",
+      "filename": "240604-結果設計-造型厚板一卡通(裁切與示意).ai",
+      "artwork_bounds": [
+        65.04869842529297,
+        77.48371124267578,
+        1232.7996826171875,
+        624.963134765625
+      ],
+      "dieline_bounds": [
+        111.83599853515625,
+        230.37091064453125,
+        774.8587646484375,
+        473.01751708984375
+      ],
+      "dieline_points_count": 446,
+      "hole": null,
+      "learned_features": {
+        "aspect_ratio": 2.7325,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": null
+      }
+    },
+    {
+      "id": "sample_034",
+      "filename": "240607-桃園市政府消防局-造型滴膠一卡通(裁切與示意)(+10).ai",
+      "artwork_bounds": [
+        65.04869842529297,
+        77.48371124267578,
+        1263.8174438476562,
+        624.963134765625
+      ],
+      "dieline_bounds": [
+        111.83599853515625,
+        230.37091064453125,
+        774.8587646484375,
+        473.01751708984375
+      ],
+      "dieline_points_count": 1142,
+      "hole": null,
+      "learned_features": {
+        "aspect_ratio": 2.7325,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": null
+      }
+    },
+    {
+      "id": "sample_035",
+      "filename": "240617-金楓-造型厚板一卡通(裁切與示意)(臉+5%).ai",
+      "artwork_bounds": [
+        65.04869842529297,
+        77.48371124267578,
+        1247.1776855468752,
+        596.6165771484375
+      ],
+      "dieline_bounds": [
+        77.17200469970703,
+        108.72698974609375,
+        1171.89453125,
+        473.01751708984375
+      ],
+      "dieline_points_count": 12672,
+      "hole": {
+        "cx": 416.2091979980469,
+        "cy": 327.3107996826172,
+        "radius": 8.75299072265625
+      },
+      "learned_features": {
+        "aspect_ratio": 3.0051,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": 218.58
+      }
+    },
+    {
+      "id": "sample_036",
+      "filename": "240807-可嵐-造型厚板一卡通(裁切與示意).ai",
+      "artwork_bounds": [
+        65.04869842529297,
+        77.48371124267578,
+        1260.674560546875,
+        624.963134765625
+      ],
+      "dieline_bounds": [
+        111.83599853515625,
+        230.37091064453125,
+        947.9649047851562,
+        473.01751708984375
+      ],
+      "dieline_points_count": 596,
+      "hole": null,
+      "learned_features": {
+        "aspect_ratio": 3.4459,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": null
+      }
+    },
+    {
+      "id": "sample_037",
+      "filename": "240808-思想力-造型滴膠一卡通(裁切與示意).ai",
+      "artwork_bounds": [
+        65.04869842529297,
+        77.48371124267578,
+        1269.365811523438,
+        624.963134765625
+      ],
+      "dieline_bounds": [
+        111.83599853515625,
+        230.37091064453125,
+        1248.7750244140625,
+        473.01751708984375
+      ],
+      "dieline_points_count": 963,
+      "hole": null,
+      "learned_features": {
+        "aspect_ratio": 4.6856,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": null
+      }
+    },
+    {
+      "id": "sample_038",
+      "filename": "240902-台灣智慧-造型滴膠一卡通(裁切與示意).ai",
+      "artwork_bounds": [
+        55.9193000793457,
+        67.82931518554688,
+        1267.4757080078125,
+        610.5369873046875
+      ],
+      "dieline_bounds": [
+        68.04299926757812,
+        99.07098388671875,
+        765.7293701171875,
+        508.14093017578125
+      ],
+      "dieline_points_count": 547,
+      "hole": null,
+      "learned_features": {
+        "aspect_ratio": 1.7055,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": null
+      }
+    },
+    {
+      "id": "sample_041",
+      "filename": "240912-永豐金-造型厚板一卡通(裁切與示意).ai",
+      "artwork_bounds": [
+        65.04869842529297,
+        77.48371124267578,
+        1250.2378310546876,
+        624.963134765625
+      ],
+      "dieline_bounds": [
+        111.83599853515625,
+        230.37091064453125,
+        998.9067993164062,
+        473.01751708984375
+      ],
+      "dieline_points_count": 888,
+      "hole": {
+        "cx": 233.73279571533203,
+        "cy": 310.1792907714844,
+        "radius": 8.277503967285156
+      },
+      "learned_features": {
+        "aspect_ratio": 3.6558,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": 79.81
+      }
+    },
+    {
+      "id": "sample_042",
+      "filename": "241008-黃怡芳-造型厚板一卡通(裁切與示意).ai",
+      "artwork_bounds": [
+        65.04869842529297,
+        47.20138168334961,
+        1295.162109375,
+        624.96337890625
+      ],
+      "dieline_bounds": [
+        111.83599853515625,
+        230.37091064453125,
+        774.8587646484375,
+        473.01739501953125
+      ],
+      "dieline_points_count": 1030,
+      "hole": null,
+      "learned_features": {
+        "aspect_ratio": 2.7325,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": null
+      }
+    },
+    {
+      "id": "sample_043",
+      "filename": "241016-警衛大隊-造型厚板一卡通(裁切與示意).ai",
+      "artwork_bounds": [
+        65.04869842529297,
+        77.48371124267578,
+        1246.6791113281251,
+        624.963134765625
+      ],
+      "dieline_bounds": [
+        111.83599853515625,
+        230.37091064453125,
+        975.4425654296878,
+        535.5108032226562
+      ],
+      "dieline_points_count": 2670,
+      "hole": null,
+      "learned_features": {
+        "aspect_ratio": 2.8302,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": null
+      }
+    },
+    {
+      "id": "sample_045",
+      "filename": "250102-台中教育大學-造型滴膠一卡通(背面調整)(裁切與示意)+15%.ai",
+      "artwork_bounds": [
+        65.04869842529297,
+        77.48371124267578,
+        1249.896944946289,
+        624.963134765625
+      ],
+      "dieline_bounds": [
+        111.83599853515625,
+        230.37091064453125,
+        774.8587646484375,
+        473.01751708984375
+      ],
+      "dieline_points_count": 850,
+      "hole": null,
+      "learned_features": {
+        "aspect_ratio": 2.7325,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": null
+      }
+    },
+    {
+      "id": "sample_047",
+      "filename": "250121-鼎盛-造型滴膠一卡通(裁切與示意).ai",
+      "artwork_bounds": [
+        65.04869842529297,
+        77.48371124267578,
+        1243.6619873046875,
+        624.963134765625
+      ],
+      "dieline_bounds": [
+        111.83599853515625,
+        230.37091064453125,
+        774.8587646484375,
+        473.01751708984375
+      ],
+      "dieline_points_count": 1295,
+      "hole": null,
+      "learned_features": {
+        "aspect_ratio": 2.7325,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": null
+      }
+    },
+    {
+      "id": "sample_048",
+      "filename": "250121-鼎盛-造型滴膠一卡通尺寸更新(裁切與示意).ai",
+      "artwork_bounds": [
+        65.04859924316406,
+        77.48377227783203,
+        1242.8729248046875,
+        624.96337890625
+      ],
+      "dieline_bounds": [
+        111.83589935302734,
+        230.37100219726562,
+        774.8587646484375,
+        473.01751708984375
+      ],
+      "dieline_points_count": 2190,
+      "hole": null,
+      "learned_features": {
+        "aspect_ratio": 2.7325,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": null
+      }
+    },
+    {
+      "id": "sample_049",
+      "filename": "250219-安安十全-造型厚板一卡通(裁切與示意).ai",
+      "artwork_bounds": [
+        65.04869842529297,
+        77.48407745361328,
+        1218.626220703125,
+        624.9633178710938
+      ],
+      "dieline_bounds": [
+        111.83599853515625,
+        45.68740463256836,
+        1256.91748046875,
+        473.01739501953125
+      ],
+      "dieline_points_count": 30566,
+      "hole": {
+        "cx": 1233.6090087890625,
+        "cy": 63.90041923522949,
+        "radius": 7.5770263671875
+      },
+      "learned_features": {
+        "aspect_ratio": 2.6796,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": 18.21
+      }
+    },
+    {
+      "id": "sample_050",
+      "filename": "250321-陸軍砲兵-造型厚板一卡通PLUS(裁切與示意).ai",
+      "artwork_bounds": [
+        55.9193000793457,
+        67.82931518554688,
+        1265.261763671875,
+        610.5369873046875
+      ],
+      "dieline_bounds": [
+        68.04299926757812,
+        99.07098388671875,
+        942.632080078125,
+        508.14093017578125
+      ],
+      "dieline_points_count": 1078,
+      "hole": null,
+      "learned_features": {
+        "aspect_ratio": 2.138,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": null
+      }
+    },
+    {
+      "id": "sample_051",
+      "filename": "250327-金利食安-造型厚板一卡通(裁切與示意).ai",
+      "artwork_bounds": [
+        55.919700622558594,
+        67.82931518554688,
+        1251.278076171875,
+        610.5369873046875
+      ],
+      "dieline_bounds": [
+        68.04299926757812,
+        99.07098388671875,
+        765.7293701171875,
+        508.14093017578125
+      ],
+      "dieline_points_count": 840,
+      "hole": null,
+      "learned_features": {
+        "aspect_ratio": 1.7055,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": null
+      }
+    },
+    {
+      "id": "sample_052",
+      "filename": "250410-樂巧創意-造型滴膠一卡通(裁切與示意).ai",
+      "artwork_bounds": [
+        55.919700622558594,
+        67.82931518554688,
+        1274.599024658203,
+        610.5369873046875
+      ],
+      "dieline_bounds": [
+        68.04299926757812,
+        99.07098388671875,
+        1184.6673671875003,
+        508.14093017578125
+      ],
+      "dieline_points_count": 2575,
+      "hole": null,
+      "learned_features": {
+        "aspect_ratio": 2.7297,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": null
+      }
+    },
+    {
+      "id": "sample_053",
+      "filename": "250423-和境建設-造型厚板一卡通(裁切與示意).ai",
+      "artwork_bounds": [
+        55.919700622558594,
+        67.82931518554688,
+        1207.68798828125,
+        610.5369873046875
+      ],
+      "dieline_bounds": [
+        68.04299926757812,
+        99.07098388671875,
+        765.7293701171875,
+        508.14093017578125
+      ],
+      "dieline_points_count": 546,
+      "hole": null,
+      "learned_features": {
+        "aspect_ratio": 1.7055,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": null
+      }
+    },
+    {
+      "id": "sample_054",
+      "filename": "250424-彼比企業社-造型厚板一卡通(裁切與示意).ai",
+      "artwork_bounds": [
+        55.919700622558594,
+        67.82931518554688,
+        1212.8062042236324,
+        610.5369873046875
+      ],
+      "dieline_bounds": [
+        68.04299926757812,
+        99.07098388671875,
+        765.7293701171875,
+        508.14093017578125
+      ],
+      "dieline_points_count": 912,
+      "hole": null,
+      "learned_features": {
+        "aspect_ratio": 1.7055,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": null
+      }
+    },
+    {
+      "id": "sample_055",
+      "filename": "250428-全勝-造型滴膠一卡通(裁切與示意).ai",
+      "artwork_bounds": [
+        65.04869842529297,
+        77.48371124267578,
+        1246.5372314453125,
+        624.963134765625
+      ],
+      "dieline_bounds": [
+        111.83599853515625,
+        230.37091064453125,
+        774.8587646484375,
+        473.01751708984375
+      ],
+      "dieline_points_count": 1289,
+      "hole": null,
+      "learned_features": {
+        "aspect_ratio": 2.7325,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": null
+      }
+    },
+    {
+      "id": "sample_056",
+      "filename": "250428-新智力-造型厚板一卡通(裁切與示意).ai",
+      "artwork_bounds": [
+        55.919700622558594,
+        67.82931518554688,
+        1194.931884765625,
+        610.5369873046875
+      ],
+      "dieline_bounds": [
+        68.04299926757812,
+        99.07098388671875,
+        765.7293701171875,
+        508.14093017578125
+      ],
+      "dieline_points_count": 548,
+      "hole": null,
+      "learned_features": {
+        "aspect_ratio": 1.7055,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": null
+      }
+    },
+    {
+      "id": "sample_058",
+      "filename": "250506-台積電-造型滴膠一卡通(淺灰+15_)(裁切與示意).ai",
+      "artwork_bounds": [
+        55.919700622558594,
+        67.82931518554688,
+        1194.9300537109375,
+        610.5369873046875
+      ],
+      "dieline_bounds": [
+        68.04299926757812,
+        99.07098388671875,
+        1160.9144287109375,
+        508.14093017578125
+      ],
+      "dieline_points_count": 2002,
+      "hole": {
+        "cx": 401.181884765625,
+        "cy": 362.04310607910156,
+        "radius": 3.813507080078125
+      },
+      "learned_features": {
+        "aspect_ratio": 2.6716,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": 262.97
+      }
+    },
+    {
+      "id": "sample_059",
+      "filename": "250507-彩宸-造型厚板一卡通(裁切與示意).ai",
+      "artwork_bounds": [
+        55.919700622558594,
+        67.82931518554688,
+        1211.9326630859375,
+        610.5369873046875
+      ],
+      "dieline_bounds": [
+        68.04299926757812,
+        99.07098388671875,
+        765.7293701171875,
+        508.14093017578125
+      ],
+      "dieline_points_count": 824,
+      "hole": null,
+      "learned_features": {
+        "aspect_ratio": 1.7055,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": null
+      }
+    },
+    {
+      "id": "sample_061",
+      "filename": "250612-台灣默克-造型厚板一卡通(裁切與示意).ai",
+      "artwork_bounds": [
+        55.919700622558594,
+        67.82931518554688,
+        1237.45263671875,
+        610.5369873046875
+      ],
+      "dieline_bounds": [
+        68.04299926757812,
+        99.07098388671875,
+        765.7293701171875,
+        508.14093017578125
+      ],
+      "dieline_points_count": 667,
+      "hole": null,
+      "learned_features": {
+        "aspect_ratio": 1.7055,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": null
+      }
+    },
+    {
+      "id": "sample_062",
+      "filename": "250717-新北服務利他-造型厚板一卡通(裁切與示意).ai",
+      "artwork_bounds": [
+        55.919700622558594,
+        67.82931518554688,
+        1198.7509765625,
+        610.5369873046875
+      ],
+      "dieline_bounds": [
+        68.04299926757812,
+        99.07098388671875,
+        949.6682340087892,
+        508.14093017578125
+      ],
+      "dieline_points_count": 215287,
+      "hole": null,
+      "learned_features": {
+        "aspect_ratio": 2.1552,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": null
+      }
+    },
+    {
+      "id": "sample_063",
+      "filename": "251128-佐詡-造型厚板一卡通PLUS(裁切與示意).ai",
+      "artwork_bounds": [
+        55.9192008972168,
+        67.82931518554688,
+        1239.9571007080074,
+        610.5369873046875
+      ],
+      "dieline_bounds": [
+        68.04299926757812,
+        99.07098388671875,
+        765.7293701171875,
+        508.14093017578125
+      ],
+      "dieline_points_count": 953,
+      "hole": null,
+      "learned_features": {
+        "aspect_ratio": 1.7055,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": null
+      }
+    },
+    {
+      "id": "sample_064",
+      "filename": "251222-吉富多-造型厚板一卡通(裁切與示意).ai",
+      "artwork_bounds": [
+        65.04869842529297,
+        77.48371124267578,
+        1246.4861855468755,
+        596.6165771484375
+      ],
+      "dieline_bounds": [
+        77.17200469970703,
+        108.72698974609375,
+        966.8671875,
+        473.01751708984375
+      ],
+      "dieline_points_count": 1721,
+      "hole": null,
+      "learned_features": {
+        "aspect_ratio": 2.4423,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": null
+      }
+    },
+    {
+      "id": "sample_065",
+      "filename": "260109-山葉機車-造型厚板一卡通(裁切與示意).ai",
+      "artwork_bounds": [
+        55.919700622558594,
+        67.82931518554688,
+        1248.4349365234375,
+        610.5369873046875
+      ],
+      "dieline_bounds": [
+        68.04299926757812,
+        99.07098388671875,
+        765.7293701171875,
+        508.14093017578125
+      ],
+      "dieline_points_count": 553,
+      "hole": null,
+      "learned_features": {
+        "aspect_ratio": 1.7055,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": null
+      }
+    },
+    {
+      "id": "sample_066",
+      "filename": "260113-山葉機車-造型厚板一卡通-中文字加大(裁切與示意).ai",
+      "artwork_bounds": [
+        55.9197998046875,
+        67.82913208007812,
+        1248.4356689453125,
+        610.5368041992188
+      ],
+      "dieline_bounds": [
+        68.04299926757812,
+        99.07098388671875,
+        765.7293701171875,
+        508.1407165527344
+      ],
+      "dieline_points_count": 544,
+      "hole": null,
+      "learned_features": {
+        "aspect_ratio": 1.7055,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": null
+      }
+    },
+    {
+      "id": "sample_067",
+      "filename": "260513-結果設計-造型滴膠一卡通(裁切與示意).ai",
+      "artwork_bounds": [
+        65.04869842529297,
+        77.48371124267578,
+        1235.7696533203125,
+        596.6165771484375
+      ],
+      "dieline_bounds": [
+        77.17200469970703,
+        108.72698974609375,
+        774.8587646484375,
+        473.01751708984375
+      ],
+      "dieline_points_count": 617,
+      "hole": null,
+      "learned_features": {
+        "aspect_ratio": 1.9152,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": null
+      }
+    },
+    {
+      "id": "sample_069",
+      "filename": "260603-謝旻秀-造型厚板一卡通(裁切與示意).ai",
+      "artwork_bounds": [
+        55.919700622558594,
+        67.82931518554688,
+        1245.510986328125,
+        610.5369873046875
+      ],
+      "dieline_bounds": [
+        68.04299926757812,
+        99.07098388671875,
+        765.7293701171875,
+        508.14093017578125
+      ],
+      "dieline_points_count": 1233,
+      "hole": null,
+      "learned_features": {
+        "aspect_ratio": 1.7055,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": null
+      }
+    },
+    {
+      "id": "sample_070",
+      "filename": "260630-金楓國際-造型厚板一卡通(裁切與示意).ai",
+      "artwork_bounds": [
+        65.04869842529297,
+        77.48371124267578,
+        1248.7053985595703,
+        624.963134765625
+      ],
+      "dieline_bounds": [
+        111.83599853515625,
+        230.37091064453125,
+        1172.8336181640625,
+        473.01751708984375
+      ],
+      "dieline_points_count": 12686,
+      "hole": {
+        "cx": 414.8385009765625,
+        "cy": 336.7770910644531,
+        "radius": 8.75299072265625
+      },
+      "learned_features": {
+        "aspect_ratio": 4.3726,
+        "avg_margin_pt": 0,
+        "avg_margin_mm": 0.0,
+        "hole_top_offset_pt": 106.41
+      }
+    }
+  ]
+}

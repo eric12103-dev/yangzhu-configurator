@@ -72,9 +72,11 @@ def get_acrylic_shape(img_bytes: bytes, max_size_mm: float, margin_mm: float, ho
         try:
             import json
             import os
-            model_path = os.path.join(os.path.dirname(__file__), "songli_diecut_v1.model")
-            if os.path.exists(model_path):
-                with open(model_path, "r", encoding="utf-8") as mf:
+            model_path_v2 = os.path.join(os.path.dirname(__file__), "songli_diecut_v2.model")
+            model_path_v1 = os.path.join(os.path.dirname(__file__), "songli_diecut_v1.model")
+            target_model_path = model_path_v2 if os.path.exists(model_path_v2) else model_path_v1
+            if os.path.exists(target_model_path):
+                with open(target_model_path, "r", encoding="utf-8") as mf:
                     ai_model = json.load(mf)
         except Exception as e:
             print(f"[WARN] Failed to load AI diecut model: {e}")
