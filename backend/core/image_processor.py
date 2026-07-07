@@ -251,7 +251,7 @@ def get_acrylic_shape(img_bytes: bytes, max_size_mm: float, margin_mm: float, ho
         "product_id": product_id
     }
 
-def draw_preview_die(shape_info, img_bytes, ticket_type="easycard"):
+def draw_preview_die(shape_info, img_bytes, ticket_type="easycard", clasp_type="lobster_gold"):
     """Draws the uploaded image with the red die line and hole overlay, dynamically padding canvas to prevent clipping."""
     pil_img = Image.open(io.BytesIO(img_bytes)).convert("RGBA")
     
@@ -275,21 +275,60 @@ def draw_preview_die(shape_info, img_bytes, ticket_type="easycard"):
     pad_right = int(max(0, max_x - pil_img.width + 20))
     pad_bottom = int(max(0, max_y - pil_img.height + 20))
     
-    new_w = pil_img.width + pad_left + pad_right
-    new_h = pil_img.height + pad_top + pad_bottom
-
-    # 【嚴守商品隔離：只針對 biz_thick 厚切商品，生成雙面 (Front vs Back) 鏡像對位與公版 LOGO 預覽圖】
+    # 【嚴守商品隔離：只針對 biz_thick 厚切商品，生成包含金屬鑰匙圈的「成品示意」雙面對照圖】
     if shape_info.get("product_id") == "biz_thick":
-        gap = 60
-        bottom_label_h = 60
+        hc = shape_info.get("hole_center_px")
+        if hc:
+            needed_top = 220 - int(hc[1] + pad_top)
+            if needed_top > 0:
+                pad_top += needed_top
+        new_h = pil_img.height + pad_top + pad_bottom
+        new_w = pil_img.width + pad_left + pad_right
+        
+        gap = 100
         dual_w = new_w * 2 + gap
-        dual_h = new_h + bottom_label_h
+        dual_h = new_h + 40
         preview = Image.new('RGBA', (dual_w, dual_h), (255, 255, 255, 255))
         draw = ImageDraw.Draw(preview)
 
-        # 1. 處理正面底圖
-        faded_img = pil_img.copy()
-        faded_img.putalpha(faded_img.getchannel('A').point(lambda i: i * 0.8))
+        # 1. 繪製左上角「成品示意」標題
+        from PIL import ImageFont, ImageFilter, ImageChops
+        font_size_title = max(26, int(new_w / 11))
+        try:
+            font_title = ImageFont.truetype("C:\\Windows\\Fonts\\msjhbd.ttc", font_size_title)
+        except:
+            try:
+                font_title = ImageFont.truetype("C:\\Windows\\Fonts\\msjh.ttc", font_size_title)
+            except:
+                font_title = ImageFont.load_default()
+        draw.text((pad_left, 30), "成品示意", font=font_title, fill=(20, 20, 20, 255))
+
+        # 正面與背面中心坐標
+        cx_front = pad_left + (pil_img.width / 2.0)
+        cy_front = pad_top + (pil_img.height / 2.0)
+        cx_back = cx_front + new_w + gap
+        cy_back = cy_front
+
+        shifted_path = [(x + pad_left, y + pad_top) for x, y in shape_info["final_path_px"]]
+        back_path = [(cx_back + cx_front - x, y) for x, y in shifted_path]
+
+        # 2. 壓克力底座柔和陰影
+        shadow_layer = Image.new('RGBA', (dual_w, dual_h), (0, 0, 0, 0))
+        s_draw = ImageDraw.Draw(shadow_layer)
+        s_draw.polygon([(x+8, y+8) for x, y in shifted_path], fill=(0, 0, 0, 45))
+        s_draw.polygon([(x+8, y+8) for x, y in back_path], fill=(0, 0, 0, 45))
+        shadow_layer = shadow_layer.filter(ImageFilter.GaussianBlur(8))
+        preview = Image.alpha_composite(preview, shadow_layer)
+
+        # 3. 壓克力本體底層 (正面與背面為白色/透明質感底板)
+        body_layer = Image.new('RGBA', (dual_w, dual_h), (0, 0, 0, 0))
+        b_draw = ImageDraw.Draw(body_layer)
+        b_draw.polygon(shifted_path, fill=(255, 255, 255, 255), outline=(210, 215, 220, 255), width=2)
+        b_draw.polygon(back_path, fill=(255, 255, 255, 255), outline=(210, 215, 220, 255), width=2)
+        preview = Image.alpha_composite(preview, body_layer)
+
+        # 4. 正面貼上 100% 飽和度圖案 (雷射遮罩防超框)
+        front_img = pil_img.copy()
         dx_px, dy_px = shape_info.get("content_shift_px", (0.0, 0.0))
         scale = shape_info["scale"]
         max_w_px = 54.0 / scale
@@ -297,74 +336,48 @@ def draw_preview_die(shape_info, img_bytes, ticket_type="easycard"):
         radius_px = 3.3 / scale
         
         shifted_img = Image.new('RGBA', pil_img.size, (0, 0, 0, 0))
-        shifted_img.paste(faded_img, (int(round(dx_px)), int(round(dy_px))))
-        faded_img = shifted_img
+        shifted_img.paste(front_img, (int(round(dx_px)), int(round(dy_px))))
+        front_img = shifted_img
         
         cx_orig = pil_img.width / 2.0
         cy_orig = pil_img.height / 2.0
         mask = Image.new('L', pil_img.size, 0)
         mask_draw = ImageDraw.Draw(mask)
         mask_draw.rounded_rectangle([cx_orig - max_w_px/2.0, cy_orig - max_h_px/2.0, cx_orig + max_w_px/2.0, cy_orig + max_h_px/2.0], radius=radius_px, fill=255)
-        from PIL import ImageChops
-        orig_alpha = faded_img.getchannel('A')
-        faded_img.putalpha(ImageChops.darker(orig_alpha, mask))
+        
+        orig_alpha = front_img.getchannel('A')
+        front_img.putalpha(ImageChops.darker(orig_alpha, mask))
+        preview.paste(front_img, (pad_left, pad_top), front_img)
 
-        # 貼上正面底圖 (左側)
-        preview.paste(faded_img, (pad_left, pad_top), faded_img)
+        # 5. 壓克力邊緣高光
+        gloss_layer = Image.new('RGBA', (dual_w, dual_h), (0, 0, 0, 0))
+        g_draw = ImageDraw.Draw(gloss_layer)
+        g_draw.polygon([(x, y - 2) for x, y in shifted_path], outline=(255, 255, 255, 180), width=2)
+        g_draw.polygon([(x, y - 2) for x, y in back_path], outline=(255, 255, 255, 180), width=2)
+        preview = Image.alpha_composite(preview, gloss_layer)
 
-        # 正面與背面卡片中心坐標
-        cx_front = pad_left + (pil_img.width / 2.0)
-        cy_front = pad_top + (pil_img.height / 2.0)
-        cx_back = cx_front + new_w + gap
-        cy_back = cy_front
-
-        # 2. 繪製紅外框 (54mm x 85.6mm)
-        box_x0_f = cx_front - (max_w_px / 2.0)
-        box_y0_f = cy_front - (max_h_px / 2.0)
-        box_x1_f = cx_front + (max_w_px / 2.0)
-        box_y1_f = cy_front + (max_h_px / 2.0)
-        draw.rounded_rectangle([box_x0_f, box_y0_f, box_x1_f, box_y1_f], radius=radius_px, outline="red", width=2)
-
-        box_x0_b = cx_back - (max_w_px / 2.0)
-        box_y0_b = cy_back - (max_h_px / 2.0)
-        box_x1_b = cx_back + (max_w_px / 2.0)
-        box_y1_b = cy_back + (max_h_px / 2.0)
-        draw.rounded_rectangle([box_x0_b, box_y0_b, box_x1_b, box_y1_b], radius=radius_px, outline="red", width=2)
-
-        # 3. 繪製正面刀模與背面鏡像刀模
-        shifted_path = [(x + pad_left, y + pad_top) for x, y in shape_info["final_path_px"]]
-        draw.polygon(shifted_path, outline="red", width=2, fill=None)
-
-        back_path = [(cx_back + cx_front - x, y) for x, y in shifted_path]
-        draw.polygon(back_path, outline="red", width=2, fill=None)
-
-        # 4. 繪製耳孔與鏡像耳孔
+        # 6. 打孔位置 (白心灰邊仿真打洞)
         hc = shape_info["hole_center_px"]
         hr = shape_info["hole_radius_px"]
+        h_cx_f, h_cy_f = 0, 0
+        h_cx_b, h_cy_b = 0, 0
         if hc and hr:
             h_cx_f, h_cy_f = hc[0] + pad_left, hc[1] + pad_top
-            draw.ellipse([h_cx_f-hr, h_cy_f-hr, h_cx_f+hr, h_cy_f+hr], fill="white", outline="blue", width=2)
             h_cx_b = cx_back + cx_front - h_cx_f
-            draw.ellipse([h_cx_b-hr, h_cy_f-hr, h_cx_b+hr, h_cy_f+hr], fill="white", outline="blue", width=2)
+            h_cy_b = h_cy_f
+            draw = ImageDraw.Draw(preview)
+            draw.ellipse([h_cx_f-hr, h_cy_f-hr, h_cx_f+hr, h_cy_f+hr], fill=(255, 255, 255, 255), outline=(170, 175, 180, 255), width=2)
+            draw.ellipse([h_cx_b-hr, h_cy_b-hr, h_cx_b+hr, h_cy_b+hr], fill=(255, 255, 255, 255), outline=(170, 175, 180, 255), width=2)
 
-        # 5. 背面：繪製線圈安全範圍虛線紅圈 (約半徑 15mm)
-        coil_r_px = 15.0 / scale
-        for deg in range(0, 360, 15):
-            draw.arc([cx_back - coil_r_px, cy_back - coil_r_px, cx_back + coil_r_px, cy_back + coil_r_px], start=deg, end=deg+8, fill="#e11d48", width=2)
-
-        # 載入字型
-        from PIL import ImageFont
-        font_size_label = max(16, int(new_w / 22))
+        # 7. 背面：繪製公版 LOGO 與卡號客服資訊
         font_size_logo = max(15, int(new_w / 24))
         font_size_info = max(11, int(new_w / 34))
-        font_label, font_logo, font_info = None, None, None
         try:
-            font_label = ImageFont.truetype("C:\\Windows\\Fonts\\msjh.ttc", font_size_label)
             font_logo = ImageFont.truetype("C:\\Windows\\Fonts\\msjh.ttc", font_size_logo)
             font_info = ImageFont.truetype("C:\\Windows\\Fonts\\msjh.ttc", font_size_info)
         except:
-            font_label = font_logo = font_info = ImageFont.load_default()
-
+            font_logo = font_info = ImageFont.load_default()
+            
         def draw_centered_text(cx_pos, y_pos, text_str, font_obj, fill_col):
             if hasattr(draw, 'textbbox'):
                 bbox = draw.textbbox((0, 0), text_str, font=font_obj)
@@ -373,11 +386,10 @@ def draw_preview_die(shape_info, img_bytes, ticket_type="easycard"):
                 tw = len(text_str) * (font_obj.size * 0.6)
             draw.text((cx_pos - tw / 2.0, y_pos), text_str, font=font_obj, fill=fill_col)
 
-        # 6. 背面：繪製公版 LOGO 與卡號客服資訊
         logo_y = cy_back + (10.0 / scale)
         pr = max(4, int(new_w / 60))
+        draw = ImageDraw.Draw(preview)
         if "ipass" in str(ticket_type).lower():
-            # iPASS 一卡通圖示與資訊
             draw.ellipse([cx_back - pr*3, logo_y - pr, cx_back - pr, logo_y + pr], fill=(255, 120, 0))
             draw.ellipse([cx_back + pr, logo_y - pr, cx_back + pr*3, logo_y + pr], fill=(0, 180, 80))
             draw_centered_text(cx_back, logo_y + pr*1.5, "iPASS 一卡通", font_logo, (50, 50, 50))
@@ -385,19 +397,63 @@ def draw_preview_die(shape_info, img_bytes, ticket_type="easycard"):
             draw_centered_text(cx_back, logo_y + pr*1.5 + font_size_logo + font_size_info + 8, "客服：(07)791-2000", font_info, (100, 100, 100))
             draw_centered_text(cx_back, logo_y + pr*1.5 + font_size_logo + font_size_info*2 + 12, "www.i-pass.com.tw", font_info, (120, 120, 120))
         else:
-            # 悠遊卡 EasyCard 圖示與資訊
-            draw.ellipse([cx_back - pr*1.5, logo_y - pr*1.5, cx_back - 2, logo_y - 2], fill=(235, 97, 0)) # 紅橙
-            draw.ellipse([cx_back + 2, logo_y - pr*1.5, cx_back + pr*1.5, logo_y - 2], fill=(255, 180, 0)) # 黃
-            draw.ellipse([cx_back + 2, logo_y + 2, cx_back + pr*1.5, logo_y + pr*1.5], fill=(0, 160, 80))  # 綠
-            draw.ellipse([cx_back - pr*1.5, logo_y + 2, cx_back - 2, logo_y + pr*1.5], fill=(0, 130, 200)) # 藍
+            draw.ellipse([cx_back - pr*1.5, logo_y - pr*1.5, cx_back - 2, logo_y - 2], fill=(235, 97, 0))
+            draw.ellipse([cx_back + 2, logo_y - pr*1.5, cx_back + pr*1.5, logo_y - 2], fill=(255, 180, 0))
+            draw.ellipse([cx_back + 2, logo_y + 2, cx_back + pr*1.5, logo_y + pr*1.5], fill=(0, 160, 80))
+            draw.ellipse([cx_back - pr*1.5, logo_y + 2, cx_back - 2, logo_y + pr*1.5], fill=(0, 130, 200))
             draw_centered_text(cx_back, logo_y + pr*2, "EASYCARD 悠遊卡", font_logo, (50, 50, 50))
             draw_centered_text(cx_back, logo_y + pr*2 + font_size_logo + 4, "123456789 1", font_info, (100, 100, 100))
             draw_centered_text(cx_back, logo_y + pr*2 + font_size_logo + font_size_info + 8, "客服 412-8880", font_info, (100, 100, 100))
 
-        # 7. 底部標籤
-        label_y = new_h + 15
-        draw_centered_text(cx_front, label_y, "(FRONT) 正面刀模", font_label, (30, 30, 30))
-        draw_centered_text(cx_back, label_y, "(BACK) 背面刀模與公版規範", font_label, (30, 30, 30))
+        # 8. 繪製頂部金屬鑰匙圈與鏈條 (對應正背面打孔位置)
+        if hc and hr:
+            keychain_layer = Image.new('RGBA', (dual_w, dual_h), (0, 0, 0, 0))
+            k_draw = ImageDraw.Draw(keychain_layer)
+            
+            is_gold = ('gold' in str(clasp_type).lower())
+            if is_gold:
+                col_dark = (170, 130, 20, 255)
+                col_main = (235, 195, 60, 255)
+                col_light = (255, 245, 180, 255)
+            else:
+                col_dark = (120, 125, 130, 255)
+                col_main = (190, 195, 200, 255)
+                col_light = (245, 248, 250, 255)
+                
+            def draw_keychain_at_hole(hx, hy):
+                # 穿過孔洞的小C環/扣環
+                k_draw.arc([hx - 12, hy - 20, hx + 12, hy + 6], start=180, end=360, fill=col_main, width=5)
+                k_draw.arc([hx - 12, hy - 20, hx + 12, hy + 6], start=180, end=360, fill=col_light, width=2)
+                # 三節金屬鏈條
+                k_draw.ellipse([hx - 7, hy - 40, hx + 7, hy - 16], outline=col_dark, width=4)
+                k_draw.ellipse([hx - 7, hy - 40, hx + 7, hy - 16], outline=col_main, width=2)
+                k_draw.ellipse([hx - 6, hy - 39, hx + 6, hy - 17], outline=col_light, width=1)
+                
+                k_draw.ellipse([hx - 8, hy - 62, hx + 8, hy - 36], outline=col_dark, width=4)
+                k_draw.ellipse([hx - 8, hy - 62, hx + 8, hy - 36], outline=col_main, width=2)
+                k_draw.ellipse([hx - 7, hy - 61, hx + 7, hy - 37], outline=col_light, width=1)
+                
+                k_draw.ellipse([hx - 7, hy - 84, hx + 7, hy - 58], outline=col_dark, width=4)
+                k_draw.ellipse([hx - 7, hy - 84, hx + 7, hy - 58], outline=col_main, width=2)
+                k_draw.ellipse([hx - 6, hy - 83, hx + 6, hy - 59], outline=col_light, width=1)
+                # 旋轉接頭與夾片
+                clip_y_top = hy - 124
+                clip_y_bot = hy - 80
+                k_draw.polygon([(hx - 10, clip_y_bot), (hx + 10, clip_y_bot), (hx + 13, clip_y_top), (hx - 13, clip_y_top)], fill=col_main, outline=col_dark, width=2)
+                k_draw.line([(hx - 5, clip_y_bot - 2), (hx - 5, clip_y_top + 2)], fill=col_light, width=3)
+                k_draw.line([(hx - 12, hy - 98), (hx + 12, hy - 98)], fill=col_dark, width=2)
+                # 頂部大鑰匙圓環
+                kr_cx = hx
+                kr_cy = hy - 168
+                kr_r = 44
+                k_draw.ellipse([kr_cx - kr_r, kr_cy - kr_r, kr_cx + kr_r, kr_cy + kr_r], outline=col_dark, width=9)
+                k_draw.ellipse([kr_cx - kr_r, kr_cy - kr_r, kr_cx + kr_r, kr_cy + kr_r], outline=col_main, width=7)
+                k_draw.ellipse([kr_cx - kr_r + 1, kr_cy - kr_r + 1, kr_cx + kr_r - 1, kr_cy + kr_r - 1], outline=col_light, width=2)
+                k_draw.ellipse([kr_cx - kr_r + 3, kr_cy - kr_r + 3, kr_cx + kr_r - 3, kr_cy + kr_r - 3], outline=col_dark, width=1)
+
+            draw_keychain_at_hole(h_cx_f, h_cy_f)
+            draw_keychain_at_hole(h_cx_b, h_cy_b)
+            preview = Image.alpha_composite(preview, keychain_layer)
 
         out_io = io.BytesIO()
         preview.save(out_io, format="PNG")
