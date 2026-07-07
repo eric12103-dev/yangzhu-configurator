@@ -41,12 +41,13 @@ async def api_preview_die(
     margin_mm: float = Form(2.0),
     hole_diameter_mm: float = Form(3.0),
     hole_position: str = Form("top"),
-    product_id: str = Form("biz_thick")
+    product_id: str = Form("biz_thick"),
+    ticket_type: str = Form("easycard")
 ):
     try:
         img_bytes = await image.read()
         shape_info = get_acrylic_shape(img_bytes, max_size_mm, margin_mm, hole_diameter_mm, hole_position, product_id)
-        preview_bytes = draw_preview_die(shape_info, img_bytes)
+        preview_bytes = draw_preview_die(shape_info, img_bytes, ticket_type=ticket_type)
 
         b64 = base64.b64encode(preview_bytes).decode("utf-8")
         return JSONResponse({"success": True, "die_overlay_b64": f"data:image/png;base64,{b64}"})
@@ -64,7 +65,8 @@ async def api_submit(
     clasp_type: str = Form("gold_clasp"),
     bg_image: UploadFile = File(None),
     use_ai_render: bool = Form(False),
-    product_id: str = Form("biz_thick")
+    product_id: str = Form("biz_thick"),
+    ticket_type: str = Form("easycard")
 ):
     try:
         img_bytes = await image.read()
@@ -85,7 +87,8 @@ async def api_submit(
                 shape_info["img_h_px"] * shape_info["scale"],
                 0, 0,
                 is_biz_thick=True,
-                shape_info=shape_info
+                shape_info=shape_info,
+                ticket_type=ticket_type
             )
             safe_name = customer_name.strip() if customer_name.strip() else f"厚切電子票證-{datetime.datetime.now().strftime('%Y%m%d')}-001"
             base_filename = safe_name
@@ -124,7 +127,8 @@ async def api_submit(
             shape_info["img_h_px"] * shape_info["scale"],
             0, 0,
             is_biz_thick=(product_id == "biz_thick"),
-            shape_info=shape_info
+            shape_info=shape_info,
+            ticket_type=ticket_type
         )
 
         # 3. 儲存檔案

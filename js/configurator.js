@@ -785,7 +785,7 @@ function initPreviewStep() {
       flatEl.style.display = '';
       const previewImg = (typeof _thickDieCutOverlayURL !== 'undefined' && _thickDieCutOverlayURL) ? _thickDieCutOverlayURL : (STATE.designDataURL || '');
       flatEl.innerHTML = previewImg
-        ? `<div style="margin-bottom:12px;font-size:14px;font-weight:700;color:var(--gray-700);">打印刀模圖預覽</div><img src="${previewImg}" style="max-width:320px;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.15);background:#fff;padding:16px;">`
+        ? `<div style="margin-bottom:12px;font-size:14px;font-weight:700;color:var(--gray-700);">打印刀模圖預覽 (正面刀模 vs 背面鏡像對位與公版LOGO)</div><img src="${previewImg}" style="max-width:680px;width:100%;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.15);background:#fff;padding:16px;">`
         : '<p style="color:var(--gray-400);">已準備好刀模數據，請點擊下方送出。</p>';
     }
     if (mockupDiv) mockupDiv.style.display = 'none';
@@ -1119,6 +1119,8 @@ async function submitThickDesign(filename) {
   formData.append('hole_position', holePosSlider ? holePosSlider.value : '0.5');
   formData.append('clasp_type', window._thickSelectedClasp || 'lobster_gold');
   formData.append('use_ai_render', useAi ? 'true' : 'false');
+  formData.append('product_id', (typeof STATE !== 'undefined' && STATE.productId) ? STATE.productId : 'biz_thick');
+  formData.append('ticket_type', (typeof STATE !== 'undefined' && STATE.materialId) ? STATE.materialId : 'easycard');
 
   try {
     const apiBase = (typeof REMBG_API_BASE !== 'undefined' && REMBG_API_BASE) ? REMBG_API_BASE : '';

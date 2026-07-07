@@ -1,7 +1,7 @@
 import svgwrite
 import base64
 
-def generate_svg_bytes(dxf_path_mm, hole_center_mm, hole_radius_mm, img_bytes, img_width_mm, img_height_mm, offset_x_mm, offset_y_mm, is_biz_thick=False, shape_info=None):
+def generate_svg_bytes(dxf_path_mm, hole_center_mm, hole_radius_mm, img_bytes, img_width_mm, img_height_mm, offset_x_mm, offset_y_mm, is_biz_thick=False, shape_info=None, ticket_type="easycard"):
     """
     Generates an SVG file containing the embedded image and the cutting path (die line).
     dxf_path_mm is a list of (x,y) in mm.
@@ -19,17 +19,24 @@ def generate_svg_bytes(dxf_path_mm, hole_center_mm, hole_radius_mm, img_bytes, i
     min_y = min(ys) - 10
     max_y = max(ys) + 10
     
+    cx_mm = offset_x_mm + (img_width_mm / 2.0)
+    cy_mm = offset_y_mm + (img_height_mm / 2.0)
+    cx_back_mm = 0.0
+
     if is_biz_thick:
-        cx_mm = offset_x_mm + (img_width_mm / 2.0)
-        cy_mm = offset_y_mm + (img_height_mm / 2.0)
         frame_min_x = cx_mm - 27.0
         frame_max_x = cx_mm + 27.0
         frame_min_y = cy_mm - 42.8
         frame_max_y = cy_mm + 42.8
         min_x = min(min_x, frame_min_x - 5)
-        max_x = max(max_x, frame_max_x + 5)
         min_y = min(min_y, frame_min_y - 5)
-        max_y = max(max_y, frame_max_y + 5)
+        
+        # 雙面並列：計算右側背面鏡像坐標
+        gap_mm = 20.0
+        front_w_mm = (frame_max_x - min_x) + 5
+        cx_back_mm = cx_mm + front_w_mm + gap_mm
+        max_x = cx_back_mm + 27.0 + 10
+        max_y = max(max_y, frame_max_y + 12)
     
     width_mm = max_x - min_x
     height_mm = max_y - min_y
@@ -78,22 +85,55 @@ def generate_svg_bytes(dxf_path_mm, hole_center_mm, hole_radius_mm, img_bytes, i
     
     # Draw maximum boundary frame for biz_thick (54mm x 85.6mm, rx=ry=3.3mm) with red outline
     if is_biz_thick:
-        cx_mm = offset_x_mm + (img_width_mm / 2.0)
-        cy_mm = offset_y_mm + (img_height_mm / 2.0)
         frame_x = cx_mm - 27.0
         frame_y = cy_mm - 42.8
-        dwg.add(dwg.rect(insert=(frame_x, frame_y), size=(54.0, 85.6), rx=3.3, ry=3.3, fill="none", stroke="red", stroke_width=0.5, id="厚切電子票證最大範圍"))
+        dwg.add(dwg.rect(insert=(frame_x, frame_y), size=(54.0, 85.6), rx=3.3, ry=3.3, fill="none", stroke="red", stroke_width=0.5, id="正面厚切最大範圍"))
+        
+        # 背面紅外框
+        back_frame_x = cx_back_mm - 27.0
+        dwg.add(dwg.rect(insert=(back_frame_x, frame_y), size=(54.0, 85.6), rx=3.3, ry=3.3, fill="none", stroke="red", stroke_width=0.5, id="背面厚切最大範圍"))
     
-    # Draw cut path
+    # Draw cut path (正面)
     path_data = "M " + f"{dxf_path_mm[0][0]},{dxf_path_mm[0][1]} "
     for p in dxf_path_mm[1:]:
         path_data += f"L {p[0]},{p[1]} "
     path_data += "Z"
+    dwg.add(dwg.path(d=path_data, fill="none", stroke="red", stroke_width=0.5, id="正面刀模"))
     
-    dwg.add(dwg.path(d=path_data, fill="none", stroke="red", stroke_width=0.5))
-    
-    # Draw hole
+    # Draw hole (正面)
     if hole_center_mm and hole_radius_mm > 0:
-        dwg.add(dwg.circle(center=hole_center_mm, r=hole_radius_mm, fill="none", stroke="red", stroke_width=0.5))
-    
+        dwg.add(dwg.circle(center=hole_center_mm, r=hole_radius_mm, fill="none", stroke="blue", stroke_width=0.5, id="正面打孔"))
+        
+    # 【嚴守商品隔離：只針對 biz_thick 厚切商品，生成背面鏡像刀模與公版規範 SVG 向量物件】
+    if is_biz_thick:
+        # 背面鏡像刀模
+        back_path_data = "M " + f"{cx_back_mm + cx_mm - dxf_path_mm[0][0]},{dxf_path_mm[0][1]} "
+        for p in dxf_path_mm[1:]:
+            back_path_data += f"L {cx_back_mm + cx_mm - p[0]},{p[1]} "
+        back_path_data += "Z"
+        dwg.add(dwg.path(d=back_path_data, fill="none", stroke="red", stroke_width=0.5, id="背面鏡像對位刀模"))
+
+        # 背面鏡像打孔
+        if hole_center_mm and hole_radius_mm > 0:
+            hc_back_mm = (cx_back_mm + cx_mm - hole_center_mm[0], hole_center_mm[1])
+            dwg.add(dwg.circle(center=hc_back_mm, r=hole_radius_mm, fill="none", stroke="blue", stroke_width=0.5, id="背面鏡像對位打孔"))
+
+        # 線圈安全範圍虛線圓 (半徑 15mm)
+        dwg.add(dwg.circle(center=(cx_back_mm, cy_mm), r=15.0, fill="none", stroke="#e11d48", stroke_width=0.5, stroke_dasharray="2,2", id="線圈安全範圍"))
+
+        # 公版 LOGO 與文字規範
+        if "ipass" in str(ticket_type).lower():
+            dwg.add(dwg.text("iPASS 一卡通", insert=(cx_back_mm, cy_mm + 15.0), font_size="4mm", text_anchor="middle", fill="#333333", font_weight="bold", font_family="Microsoft JhengHei, Arial"))
+            dwg.add(dwg.text("888 8888888 8", insert=(cx_back_mm, cy_mm + 21.0), font_size="2.8mm", text_anchor="middle", fill="#666666", font_family="Microsoft JhengHei, Arial"))
+            dwg.add(dwg.text("客服：(07)791-2000", insert=(cx_back_mm, cy_mm + 26.0), font_size="2.8mm", text_anchor="middle", fill="#666666", font_family="Microsoft JhengHei, Arial"))
+            dwg.add(dwg.text("www.i-pass.com.tw", insert=(cx_back_mm, cy_mm + 31.0), font_size="2.5mm", text_anchor="middle", fill="#888888", font_family="Microsoft JhengHei, Arial"))
+        else:
+            dwg.add(dwg.text("EASYCARD 悠遊卡", insert=(cx_back_mm, cy_mm + 15.0), font_size="4mm", text_anchor="middle", fill="#333333", font_weight="bold", font_family="Microsoft JhengHei, Arial"))
+            dwg.add(dwg.text("123456789 1", insert=(cx_back_mm, cy_mm + 21.0), font_size="2.8mm", text_anchor="middle", fill="#666666", font_family="Microsoft JhengHei, Arial"))
+            dwg.add(dwg.text("客服 412-8880", insert=(cx_back_mm, cy_mm + 26.0), font_size="2.8mm", text_anchor="middle", fill="#666666", font_family="Microsoft JhengHei, Arial"))
+
+        # 底部標籤
+        dwg.add(dwg.text("(FRONT) 正面打印與刀模", insert=(cx_mm, max_y - 3), font_size="3.5mm", text_anchor="middle", fill="#111111", font_weight="bold", font_family="Microsoft JhengHei, Arial"))
+        dwg.add(dwg.text("(BACK) 背面鏡像刀模與公版規範", insert=(cx_back_mm, max_y - 3), font_size="3.5mm", text_anchor="middle", fill="#111111", font_weight="bold", font_family="Microsoft JhengHei, Arial"))
+
     return dwg.tostring().encode('utf-8')

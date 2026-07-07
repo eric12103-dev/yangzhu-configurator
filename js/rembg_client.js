@@ -141,6 +141,10 @@ async function _callPreviewDie(imageBlob, marginMm, onProgress, holePos) {
     formData.append('margin_mm', String(marginMm || 2.0));
     formData.append('hole_diameter_mm', '3');
     formData.append('hole_position', String(hp));
+    var prodId = (typeof STATE !== 'undefined' && STATE.productId) ? STATE.productId : 'biz_thick';
+    var ticketType = (typeof STATE !== 'undefined' && STATE.materialId) ? STATE.materialId : 'easycard';
+    formData.append('product_id', String(prodId));
+    formData.append('ticket_type', String(ticketType));
 
     var resp = await fetch(REMBG_API_BASE + '/api/preview_die', {
       method: 'POST',

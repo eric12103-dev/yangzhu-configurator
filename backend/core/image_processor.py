@@ -251,7 +251,7 @@ def get_acrylic_shape(img_bytes: bytes, max_size_mm: float, margin_mm: float, ho
         "product_id": product_id
     }
 
-def draw_preview_die(shape_info, img_bytes):
+def draw_preview_die(shape_info, img_bytes, ticket_type="easycard"):
     """Draws the uploaded image with the red die line and hole overlay, dynamically padding canvas to prevent clipping."""
     pil_img = Image.open(io.BytesIO(img_bytes)).convert("RGBA")
     
@@ -277,15 +277,19 @@ def draw_preview_die(shape_info, img_bytes):
     
     new_w = pil_img.width + pad_left + pad_right
     new_h = pil_img.height + pad_top + pad_bottom
-    
-    preview = Image.new('RGBA', (new_w, new_h), (0, 0, 0, 0))
-    
-    # Draw original image with 80% opacity
-    faded_img = pil_img.copy()
-    faded_img.putalpha(faded_img.getchannel('A').point(lambda i: i * 0.8))
-    
-    # 【嚴守商品隔離：只針對 biz_thick 厚切商品，進行圖片平移置中與防超框雷射遮罩剪裁】
+
+    # 【嚴守商品隔離：只針對 biz_thick 厚切商品，生成雙面 (Front vs Back) 鏡像對位與公版 LOGO 預覽圖】
     if shape_info.get("product_id") == "biz_thick":
+        gap = 60
+        bottom_label_h = 60
+        dual_w = new_w * 2 + gap
+        dual_h = new_h + bottom_label_h
+        preview = Image.new('RGBA', (dual_w, dual_h), (255, 255, 255, 255))
+        draw = ImageDraw.Draw(preview)
+
+        # 1. 處理正面底圖
+        faded_img = pil_img.copy()
+        faded_img.putalpha(faded_img.getchannel('A').point(lambda i: i * 0.8))
         dx_px, dy_px = shape_info.get("content_shift_px", (0.0, 0.0))
         scale = shape_info["scale"]
         max_w_px = 54.0 / scale
@@ -296,16 +300,115 @@ def draw_preview_die(shape_info, img_bytes):
         shifted_img.paste(faded_img, (int(round(dx_px)), int(round(dy_px))))
         faded_img = shifted_img
         
-        cx = pil_img.width / 2.0
-        cy = pil_img.height / 2.0
+        cx_orig = pil_img.width / 2.0
+        cy_orig = pil_img.height / 2.0
         mask = Image.new('L', pil_img.size, 0)
         mask_draw = ImageDraw.Draw(mask)
-        mask_draw.rounded_rectangle([cx - max_w_px/2.0, cy - max_h_px/2.0, cx + max_w_px/2.0, cy + max_h_px/2.0], radius=radius_px, fill=255)
-        
+        mask_draw.rounded_rectangle([cx_orig - max_w_px/2.0, cy_orig - max_h_px/2.0, cx_orig + max_w_px/2.0, cy_orig + max_h_px/2.0], radius=radius_px, fill=255)
         from PIL import ImageChops
         orig_alpha = faded_img.getchannel('A')
         faded_img.putalpha(ImageChops.darker(orig_alpha, mask))
 
+        # 貼上正面底圖 (左側)
+        preview.paste(faded_img, (pad_left, pad_top), faded_img)
+
+        # 正面與背面卡片中心坐標
+        cx_front = pad_left + (pil_img.width / 2.0)
+        cy_front = pad_top + (pil_img.height / 2.0)
+        cx_back = cx_front + new_w + gap
+        cy_back = cy_front
+
+        # 2. 繪製紅外框 (54mm x 85.6mm)
+        box_x0_f = cx_front - (max_w_px / 2.0)
+        box_y0_f = cy_front - (max_h_px / 2.0)
+        box_x1_f = cx_front + (max_w_px / 2.0)
+        box_y1_f = cy_front + (max_h_px / 2.0)
+        draw.rounded_rectangle([box_x0_f, box_y0_f, box_x1_f, box_y1_f], radius=radius_px, outline="red", width=2)
+
+        box_x0_b = cx_back - (max_w_px / 2.0)
+        box_y0_b = cy_back - (max_h_px / 2.0)
+        box_x1_b = cx_back + (max_w_px / 2.0)
+        box_y1_b = cy_back + (max_h_px / 2.0)
+        draw.rounded_rectangle([box_x0_b, box_y0_b, box_x1_b, box_y1_b], radius=radius_px, outline="red", width=2)
+
+        # 3. 繪製正面刀模與背面鏡像刀模
+        shifted_path = [(x + pad_left, y + pad_top) for x, y in shape_info["final_path_px"]]
+        draw.polygon(shifted_path, outline="red", width=2, fill=None)
+
+        back_path = [(cx_back + cx_front - x, y) for x, y in shifted_path]
+        draw.polygon(back_path, outline="red", width=2, fill=None)
+
+        # 4. 繪製耳孔與鏡像耳孔
+        hc = shape_info["hole_center_px"]
+        hr = shape_info["hole_radius_px"]
+        if hc and hr:
+            h_cx_f, h_cy_f = hc[0] + pad_left, hc[1] + pad_top
+            draw.ellipse([h_cx_f-hr, h_cy_f-hr, h_cx_f+hr, h_cy_f+hr], fill="white", outline="blue", width=2)
+            h_cx_b = cx_back + cx_front - h_cx_f
+            draw.ellipse([h_cx_b-hr, h_cy_f-hr, h_cx_b+hr, h_cy_f+hr], fill="white", outline="blue", width=2)
+
+        # 5. 背面：繪製線圈安全範圍虛線紅圈 (約半徑 15mm)
+        coil_r_px = 15.0 / scale
+        for deg in range(0, 360, 15):
+            draw.arc([cx_back - coil_r_px, cy_back - coil_r_px, cx_back + coil_r_px, cy_back + coil_r_px], start=deg, end=deg+8, fill="#e11d48", width=2)
+
+        # 載入字型
+        from PIL import ImageFont
+        font_size_label = max(16, int(new_w / 22))
+        font_size_logo = max(15, int(new_w / 24))
+        font_size_info = max(11, int(new_w / 34))
+        font_label, font_logo, font_info = None, None, None
+        try:
+            font_label = ImageFont.truetype("C:\\Windows\\Fonts\\msjh.ttc", font_size_label)
+            font_logo = ImageFont.truetype("C:\\Windows\\Fonts\\msjh.ttc", font_size_logo)
+            font_info = ImageFont.truetype("C:\\Windows\\Fonts\\msjh.ttc", font_size_info)
+        except:
+            font_label = font_logo = font_info = ImageFont.load_default()
+
+        def draw_centered_text(cx_pos, y_pos, text_str, font_obj, fill_col):
+            if hasattr(draw, 'textbbox'):
+                bbox = draw.textbbox((0, 0), text_str, font=font_obj)
+                tw = bbox[2] - bbox[0]
+            else:
+                tw = len(text_str) * (font_obj.size * 0.6)
+            draw.text((cx_pos - tw / 2.0, y_pos), text_str, font=font_obj, fill=fill_col)
+
+        # 6. 背面：繪製公版 LOGO 與卡號客服資訊
+        logo_y = cy_back + (10.0 / scale)
+        pr = max(4, int(new_w / 60))
+        if "ipass" in str(ticket_type).lower():
+            # iPASS 一卡通圖示與資訊
+            draw.ellipse([cx_back - pr*3, logo_y - pr, cx_back - pr, logo_y + pr], fill=(255, 120, 0))
+            draw.ellipse([cx_back + pr, logo_y - pr, cx_back + pr*3, logo_y + pr], fill=(0, 180, 80))
+            draw_centered_text(cx_back, logo_y + pr*1.5, "iPASS 一卡通", font_logo, (50, 50, 50))
+            draw_centered_text(cx_back, logo_y + pr*1.5 + font_size_logo + 4, "888 8888888 8", font_info, (100, 100, 100))
+            draw_centered_text(cx_back, logo_y + pr*1.5 + font_size_logo + font_size_info + 8, "客服：(07)791-2000", font_info, (100, 100, 100))
+            draw_centered_text(cx_back, logo_y + pr*1.5 + font_size_logo + font_size_info*2 + 12, "www.i-pass.com.tw", font_info, (120, 120, 120))
+        else:
+            # 悠遊卡 EasyCard 圖示與資訊
+            draw.ellipse([cx_back - pr*1.5, logo_y - pr*1.5, cx_back - 2, logo_y - 2], fill=(235, 97, 0)) # 紅橙
+            draw.ellipse([cx_back + 2, logo_y - pr*1.5, cx_back + pr*1.5, logo_y - 2], fill=(255, 180, 0)) # 黃
+            draw.ellipse([cx_back + 2, logo_y + 2, cx_back + pr*1.5, logo_y + pr*1.5], fill=(0, 160, 80))  # 綠
+            draw.ellipse([cx_back - pr*1.5, logo_y + 2, cx_back - 2, logo_y + pr*1.5], fill=(0, 130, 200)) # 藍
+            draw_centered_text(cx_back, logo_y + pr*2, "EASYCARD 悠遊卡", font_logo, (50, 50, 50))
+            draw_centered_text(cx_back, logo_y + pr*2 + font_size_logo + 4, "123456789 1", font_info, (100, 100, 100))
+            draw_centered_text(cx_back, logo_y + pr*2 + font_size_logo + font_size_info + 8, "客服 412-8880", font_info, (100, 100, 100))
+
+        # 7. 底部標籤
+        label_y = new_h + 15
+        draw_centered_text(cx_front, label_y, "(FRONT) 正面刀模", font_label, (30, 30, 30))
+        draw_centered_text(cx_back, label_y, "(BACK) 背面刀模與公版規範", font_label, (30, 30, 30))
+
+        out_io = io.BytesIO()
+        preview.save(out_io, format="PNG")
+        return out_io.getvalue()
+
+    # 其他非厚切商品：維持原版單一預覽圖邏輯
+    preview = Image.new('RGBA', (new_w, new_h), (0, 0, 0, 0))
+    
+    # Draw original image with 80% opacity
+    faded_img = pil_img.copy()
+    faded_img.putalpha(faded_img.getchannel('A').point(lambda i: i * 0.8))
     preview.paste(faded_img, (pad_left, pad_top))
     
     draw = ImageDraw.Draw(preview)
@@ -320,20 +423,6 @@ def draw_preview_die(shape_info, img_bytes):
     if hc and hr:
         cx, cy = hc[0] + pad_left, hc[1] + pad_top
         draw.ellipse([cx-hr, cy-hr, cx+hr, cy+hr], fill="white", outline="blue", width=2)
-        
-    # Draw maximum boundary frame for biz_thick (54mm x 85.6mm, rx=ry=3.3mm) with red outline
-    if shape_info.get("product_id") == "biz_thick":
-        scale = shape_info["scale"]
-        max_w_px = 54.0 / scale
-        max_h_px = 85.6 / scale
-        radius_px = 3.3 / scale
-        cx = pad_left + (pil_img.width / 2.0)
-        cy = pad_top + (pil_img.height / 2.0)
-        box_x0 = cx - (max_w_px / 2.0)
-        box_y0 = cy - (max_h_px / 2.0)
-        box_x1 = cx + (max_w_px / 2.0)
-        box_y1 = cy + (max_h_px / 2.0)
-        draw.rounded_rectangle([box_x0, box_y0, box_x1, box_y1], radius=radius_px, outline="red", width=2)
         
     out_io = io.BytesIO()
     preview.save(out_io, format="PNG")
