@@ -16,7 +16,7 @@
 
 'use strict';
 
-// 後端 API 基底網址（與士元專案共用同一個 Python 伺服器）
+// 後端 API 基底網址（獨立 Python AI 伺服器）
 var REMBG_API_BASE = 'http://127.0.0.1:8000';
 
 // 全域狀態（供 configurator.js 讀取）
