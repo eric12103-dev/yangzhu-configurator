@@ -275,5 +275,5 @@ def process_ai_database(db_dir, output_dir):
 
 if __name__ == "__main__":
     db_path = r"C:\Users\admin\Desktop\阿斯拉\刀模資料庫"
-    out_path = r"C:\Users\admin\Desktop\阿斯拉\頌禮-企業禮贈品客製化服務\ai_diecut_model\dataset"
+    out_path = r"C:\Users\admin\Desktop\阿斯拉\刀模資料庫"
     process_ai_database(db_path, out_path)

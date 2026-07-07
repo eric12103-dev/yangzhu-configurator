@@ -112,6 +112,6 @@ def evaluate_and_generate_report(model_path, output_dir):
     print("="*60)
 
 if __name__ == "__main__":
-    mod_file = r"C:\Users\admin\Desktop\阿斯拉\頌禮-企業禮贈品客製化服務\ai_diecut_model\songli_diecut_v2.model"
-    out_dir = r"C:\Users\admin\Desktop\阿斯拉\頌禮-企業禮贈品客製化服務\ai_diecut_model"
+    mod_file = r"C:\Users\admin\Desktop\阿斯拉\刀模資料庫\songli_diecut_v2.model"
+    out_dir = r"C:\Users\admin\Desktop\阿斯拉\刀模資料庫"
     evaluate_and_generate_report(mod_file, out_dir)
