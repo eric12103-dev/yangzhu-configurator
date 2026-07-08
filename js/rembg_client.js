@@ -143,10 +143,8 @@ async function _callPreviewDie(imageBlob, marginMm, onProgress, holePos) {
     formData.append('hole_position', String(hp));
     var prodId = (typeof STATE !== 'undefined' && STATE.productId) ? STATE.productId : 'biz_thick';
     var ticketType = (typeof STATE !== 'undefined' && STATE.materialId) ? STATE.materialId : 'easycard';
-    var claspType = window._thickSelectedClasp || 'lobster_gold';
     formData.append('product_id', String(prodId));
     formData.append('ticket_type', String(ticketType));
-    formData.append('clasp_type', String(claspType));
 
     var resp = await fetch(REMBG_API_BASE + '/api/preview_die', {
       method: 'POST',

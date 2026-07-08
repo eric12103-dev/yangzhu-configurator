@@ -42,13 +42,12 @@ async def api_preview_die(
     hole_diameter_mm: float = Form(3.0),
     hole_position: str = Form("top"),
     product_id: str = Form("biz_thick"),
-    ticket_type: str = Form("easycard"),
-    clasp_type: str = Form("lobster_gold")
+    ticket_type: str = Form("easycard")
 ):
     try:
         img_bytes = await image.read()
         shape_info = get_acrylic_shape(img_bytes, max_size_mm, margin_mm, hole_diameter_mm, hole_position, product_id)
-        preview_bytes = draw_preview_die(shape_info, img_bytes, ticket_type=ticket_type, clasp_type=clasp_type)
+        preview_bytes = draw_preview_die(shape_info, img_bytes, ticket_type=ticket_type)
 
         b64 = base64.b64encode(preview_bytes).decode("utf-8")
         return JSONResponse({"success": True, "die_overlay_b64": f"data:image/png;base64,{b64}"})
