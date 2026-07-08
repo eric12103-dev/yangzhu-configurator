@@ -63,35 +63,22 @@ def get_acrylic_shape(img_bytes: bytes, max_size_mm: float, margin_mm: float, ho
     max_px = max(h, w)
     scale = max_size_mm / max_px  # mm per pixel
     
-    # ── 【方案三實作：厚切電子票證 智慧雙模式混搭 (安全線圈重心定位 + 38mm 圓形底座自動融合)】 ──
+    # ── 【厚切電子票證 智慧內切圓定位 (Polylabel 最大內切圓心，完美包覆 35mm 晶片)】 ──
     coil_center_px = (w / 2.0, h / 2.0)
     if product_id == "biz_thick":
         try:
+            from shapely.ops import polylabel
+            # 採用幾何最大內切圓心 (Polylabel)，找出圖案內部能容納最大圓形的黃金中心點！
+            # 無論圖案造型為人像、寵物或不規則物件，此中心即為最完美包覆 35mm 晶片的位置
+            poly_center = polylabel(poly, tolerance=0.5)
+            coil_center_px = (poly_center.x, poly_center.y)
+        except Exception as e:
+            print(f"[WARN] biz_thick polylabel center calculation failed: {e}")
             min_x, min_y, max_x, max_y = poly.bounds
-            poly_w = max_x - min_x
-            poly_h = max_y - min_y
-            poly_ratio = min(poly_w, poly_h) / max(poly_w, poly_h) if max(poly_w, poly_h) > 0 else 1.0
-            
-            # 1. 智慧重心定位：若為直式構圖 (poly_h > poly_w * 1.05)，將晶片線圈對齊下半部 60% 飽滿區域
+            poly_h, poly_w = max_y - min_y, max_x - min_x
             coil_cx = (min_x + max_x) / 2.0
             coil_cy = min_y + (poly_h * 0.6) if (poly_h > poly_w * 1.05) else (min_y + max_y) / 2.0
             coil_center_px = (coil_cx, coil_cy)
-            
-            # 2. 智慧底座保護模式 (Solution 3)：當圖案最窄處小於 38mm (晶片35mm+切邊3mm) 時自動啟動
-            min_safe_diam_px = 38.0 / scale
-            if poly_ratio < 0.45 or min(poly_w, poly_h) < min_safe_diam_px:
-                halo_radius_px = 19.0 / scale  # 直徑 38mm (半徑 19mm)
-                halo_base = Point(coil_cx, coil_cy).buffer(halo_radius_px, resolution=32)
-                merged_poly = unary_union([poly, halo_base])
-                # 工業級 CAD 內倒角平滑過渡，讓細長圖形與底座無縫融合為一體
-                fillet_r_px = max(9.0, 3.0 / scale)
-                closed_poly = merged_poly.buffer(-fillet_r_px, join_style=1).buffer(+fillet_r_px, join_style=1)
-                if closed_poly.is_valid and not closed_poly.is_empty:
-                    if isinstance(closed_poly, MultiPolygon):
-                        closed_poly = max(closed_poly.geoms, key=lambda a: a.area)
-                    poly = closed_poly
-        except Exception as e:
-            print(f"[WARN] biz_thick smart halo base fusion failed: {e}")
 
     margin_px = margin_mm / scale
     buffered_poly = poly.buffer(margin_px, join_style=1)

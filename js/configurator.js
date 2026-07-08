@@ -92,7 +92,7 @@ function renderStep() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// ─── 智慧防呆：動態計算厚切電子票證整體縮放下限值與預設值（計算不透明實體比例，確保短邊大於等於晶片直徑 38mm）───
+// ─── 智慧防呆：動態計算厚切電子票證整體縮放下限值與預設值（計算實體腹地比例，確保大於等於晶片直徑 35mm）───
 function _adjustThickMaxSizeSlider(dataUrl) {
   return new Promise((resolve) => {
     if (typeof STATE === 'undefined' || STATE.productId !== 'biz_thick' || !dataUrl) {
@@ -115,8 +115,9 @@ function _adjustThickMaxSizeSlider(dataUrl) {
       const w = tempImg.width;
       const h = tempImg.height;
       
-      // 建立離線畫布，排除四周透明留白，計算真正有像素的實體邊界
+      // 建立離線畫布，排除四周透明留白，並利用距離掃描找出「最大內切圓直徑比 (inscribedRatio)」
       let minX = w, minY = h, maxX = 0, maxY = 0;
+      let maxInscribedDiam = 0;
       try {
         const cvs = document.createElement('canvas');
         cvs.width = w;
@@ -124,10 +125,11 @@ function _adjustThickMaxSizeSlider(dataUrl) {
         const ctx = cvs.getContext('2d');
         ctx.drawImage(tempImg, 0, 0);
         const imgData = ctx.getImageData(0, 0, w, h).data;
+        
+        // 1. 找出有像素實體邊界
         for (let y = 0; y < h; y += 2) {
           for (let x = 0; x < w; x += 2) {
-            const alpha = imgData[(y * w + x) * 4 + 3];
-            if (alpha > 10) {
+            if (imgData[(y * w + x) * 4 + 3] > 10) {
               if (x < minX) minX = x;
               if (x > maxX) maxX = x;
               if (y < minY) minY = y;
@@ -135,17 +137,43 @@ function _adjustThickMaxSizeSlider(dataUrl) {
             }
           }
         }
+        
+        // 2. 快速估算內部最大安全腹地直徑 (在網格上尋找最深處像素)
+        let step = Math.max(2, Math.floor(Math.min(w, h) / 50));
+        let maxR = 0;
+        for (let y = minY + step; y < maxY; y += step) {
+          for (let x = minX + step; x < maxX; x += step) {
+            if (imgData[(y * w + x) * 4 + 3] > 10) {
+              let r = 0;
+              while (
+                x - r >= 0 && x + r < w && y - r >= 0 && y + r < h &&
+                imgData[((y - r) * w + x) * 4 + 3] > 10 &&
+                imgData[((y + r) * w + x) * 4 + 3] > 10 &&
+                imgData[(y * w + (x - r)) * 4 + 3] > 10 &&
+                imgData[(y * w + (x + r)) * 4 + 3] > 10
+              ) {
+                r += step;
+              }
+              if (r > maxR) maxR = r;
+            }
+          }
+        }
+        maxInscribedDiam = maxR * 2;
       } catch (e) {
-        console.warn('[configurator] Bounds check failed, using full size', e);
+        console.warn('[configurator] Bounds/Inscribed check failed, using full size', e);
       }
       
       let realW = (maxX > minX) ? (maxX - minX + 1) : w;
       let realH = (maxY > minY) ? (maxY - minY + 1) : h;
-      const ratio = Math.min(realW, realH) / Math.max(realW, realH); // 實體短邊 / 實體長邊
+      let shortSide = Math.min(realW, realH);
       
-      // 確保實體短邊大於等於 38mm (35mm晶片 + 3mm壓克力邊距)
-      let minSize = Math.max(38, Math.ceil(38 / ratio));
-      if (minSize > 86) minSize = 86; // 不超過最大卡片物理尺寸 (過窄時後端會自動啟用 38mm 圓形底座保護)
+      // 取實體短邊與最大內切圓直徑的較大值作為有效腹地比
+      let effectiveWidth = Math.max(shortSide, maxInscribedDiam);
+      const ratio = effectiveWidth / Math.max(realW, realH);
+      
+      // 依客戶黃金規則：大於等於晶片 35mm 就對了！
+      let minSize = Math.max(35, Math.ceil(35 / ratio));
+      if (minSize > 86) minSize = 86; // 嚴守客戶鐵則二：不可以移除 86mm 的鎖定！
 
       slider.min = minSize;
       // 依客戶要求：將計算出的下限安全值設為預設值
