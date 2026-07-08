@@ -1,8 +1,5 @@
 import svgwrite
 import base64
-import os
-import io
-from PIL import Image as PILImage
 
 def generate_svg_bytes(dxf_path_mm, hole_center_mm, hole_radius_mm, img_bytes, img_width_mm, img_height_mm, offset_x_mm, offset_y_mm, is_biz_thick=False, shape_info=None, ticket_type="easycard"):
     """
@@ -121,40 +118,19 @@ def generate_svg_bytes(dxf_path_mm, hole_center_mm, hole_radius_mm, img_bytes, i
             hc_back_mm = (cx_back_mm + cx_mm - hole_center_mm[0], hole_center_mm[1])
             dwg.add(dwg.circle(center=hc_back_mm, r=hole_radius_mm, fill="none", stroke="blue", stroke_width=0.5, id="背面鏡像對位打孔"))
 
-        # 線圈安全範圍虛線圓 (直徑 35mm，半徑 17.5mm)
-        coil_cy_mm = cy_mm + 4.0
-        dwg.add(dwg.circle(center=(cx_back_mm, coil_cy_mm), r=17.5, fill="none", stroke="#e11d48", stroke_width=0.5, stroke_dasharray="2,2", id="背面線圈安全範圍(直徑35mm)"))
-        dwg.add(dwg.circle(center=(cx_mm, coil_cy_mm), r=17.5, fill="none", stroke="#e11d48", stroke_width=0.5, stroke_dasharray="2,2", id="正面線圈安全範圍(直徑35mm)"))
+        # 線圈安全範圍虛線圓 (半徑 15mm)
+        dwg.add(dwg.circle(center=(cx_back_mm, cy_mm), r=15.0, fill="none", stroke="#e11d48", stroke_width=0.5, stroke_dasharray="2,2", id="線圈安全範圍"))
 
-        # 公版 LOGO 與文字規範 (嵌入自刀模資料庫下載的官方 LOGO)
-        logo_filename = "ipass_logo.png" if "ipass" in str(ticket_type).lower() else "easycard_logo.png"
-        logo_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "assets", logo_filename)
-        
-        if os.path.exists(logo_path):
-            try:
-                with open(logo_path, "rb") as f:
-                    logo_bytes = f.read()
-                logo_b64 = base64.b64encode(logo_bytes).decode('utf-8')
-                logo_href = f"data:image/png;base64,{logo_b64}"
-                logo_w_mm = 30.0
-                with PILImage.open(io.BytesIO(logo_bytes)) as lim:
-                    logo_h_mm = logo_w_mm * (lim.height / float(max(1, lim.width)))
-                logo_x_mm = cx_back_mm - (logo_w_mm / 2.0)
-                logo_y_mm = cy_mm + 4.0
-                dwg.add(dwg.image(href=logo_href, insert=(logo_x_mm, logo_y_mm), size=(logo_w_mm, logo_h_mm), id="官方公版LOGO"))
-                info_y_mm = logo_y_mm + logo_h_mm + 3.0
-            except Exception:
-                info_y_mm = cy_mm + 15.0
-        else:
-            info_y_mm = cy_mm + 15.0
-            
+        # 公版 LOGO 與文字規範
         if "ipass" in str(ticket_type).lower():
-            dwg.add(dwg.text("888 8888888 8", insert=(cx_back_mm, info_y_mm), font_size="2.8mm", text_anchor="middle", fill="#666666", font_family="Microsoft JhengHei, Arial"))
-            dwg.add(dwg.text("客服：(07)791-2000", insert=(cx_back_mm, info_y_mm + 5.0), font_size="2.8mm", text_anchor="middle", fill="#666666", font_family="Microsoft JhengHei, Arial"))
-            dwg.add(dwg.text("www.i-pass.com.tw", insert=(cx_back_mm, info_y_mm + 10.0), font_size="2.5mm", text_anchor="middle", fill="#888888", font_family="Microsoft JhengHei, Arial"))
+            dwg.add(dwg.text("iPASS 一卡通", insert=(cx_back_mm, cy_mm + 15.0), font_size="4mm", text_anchor="middle", fill="#333333", font_weight="bold", font_family="Microsoft JhengHei, Arial"))
+            dwg.add(dwg.text("888 8888888 8", insert=(cx_back_mm, cy_mm + 21.0), font_size="2.8mm", text_anchor="middle", fill="#666666", font_family="Microsoft JhengHei, Arial"))
+            dwg.add(dwg.text("客服：(07)791-2000", insert=(cx_back_mm, cy_mm + 26.0), font_size="2.8mm", text_anchor="middle", fill="#666666", font_family="Microsoft JhengHei, Arial"))
+            dwg.add(dwg.text("www.i-pass.com.tw", insert=(cx_back_mm, cy_mm + 31.0), font_size="2.5mm", text_anchor="middle", fill="#888888", font_family="Microsoft JhengHei, Arial"))
         else:
-            dwg.add(dwg.text("123456789 1", insert=(cx_back_mm, info_y_mm), font_size="2.8mm", text_anchor="middle", fill="#666666", font_family="Microsoft JhengHei, Arial"))
-            dwg.add(dwg.text("客服 412-8880", insert=(cx_back_mm, info_y_mm + 5.0), font_size="2.8mm", text_anchor="middle", fill="#666666", font_family="Microsoft JhengHei, Arial"))
+            dwg.add(dwg.text("EASYCARD 悠遊卡", insert=(cx_back_mm, cy_mm + 15.0), font_size="4mm", text_anchor="middle", fill="#333333", font_weight="bold", font_family="Microsoft JhengHei, Arial"))
+            dwg.add(dwg.text("123456789 1", insert=(cx_back_mm, cy_mm + 21.0), font_size="2.8mm", text_anchor="middle", fill="#666666", font_family="Microsoft JhengHei, Arial"))
+            dwg.add(dwg.text("客服 412-8880", insert=(cx_back_mm, cy_mm + 26.0), font_size="2.8mm", text_anchor="middle", fill="#666666", font_family="Microsoft JhengHei, Arial"))
 
         # 底部標籤
         dwg.add(dwg.text("(FRONT) 正面打印與刀模", insert=(cx_mm, max_y - 3), font_size="3.5mm", text_anchor="middle", fill="#111111", font_weight="bold", font_family="Microsoft JhengHei, Arial"))
