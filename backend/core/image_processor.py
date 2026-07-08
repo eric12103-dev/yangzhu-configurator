@@ -347,8 +347,8 @@ def draw_preview_die(shape_info, img_bytes, ticket_type="easycard"):
             h_cx_b = cx_back + cx_front - h_cx_f
             draw.ellipse([h_cx_b-hr, h_cy_f-hr, h_cx_b+hr, h_cy_f+hr], fill="white", outline="blue", width=2)
 
-        # 5. 背面：繪製線圈安全範圍虛線紅圈 (約半徑 15mm)
-        coil_r_px = 15.0 / scale
+        # 5. 背面：繪製線圈安全範圍虛線紅圈 (真實標準晶片尺寸直徑 35mm / 半徑 17.5mm)
+        coil_r_px = 17.5 / scale
         for deg in range(0, 360, 15):
             draw.arc([cx_back - coil_r_px, cy_back - coil_r_px, cx_back + coil_r_px, cy_back + coil_r_px], start=deg, end=deg+8, fill="#e11d48", width=2)
 

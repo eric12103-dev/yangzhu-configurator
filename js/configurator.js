@@ -92,6 +92,44 @@ function renderStep() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+// ─── 智慧防呆：動態計算厚切電子票證整體縮放下限值與預設值（確保短邊大於等於晶片直徑 35mm）───
+function _adjustThickMaxSizeSlider(dataUrl) {
+  return new Promise((resolve) => {
+    if (typeof STATE === 'undefined' || STATE.productId !== 'biz_thick' || !dataUrl) {
+      resolve();
+      return;
+    }
+    const slider = document.getElementById('diecut-max-size');
+    const valSpan = document.getElementById('diecut-max-size-val');
+    if (!slider) {
+      resolve();
+      return;
+    }
+
+    const tempImg = new Image();
+    tempImg.onload = function() {
+      if (!tempImg.width || !tempImg.height) {
+        resolve();
+        return;
+      }
+      const w = tempImg.width;
+      const h = tempImg.height;
+      const ratio = Math.min(w, h) / Math.max(w, h); // 短邊 / 長邊
+      // 確保短邊大於等於悠遊卡/一卡通標準晶片直徑 35mm
+      let minSize = Math.max(35, Math.ceil(35 / ratio));
+      if (minSize > 86) minSize = 86; // 不超過最大卡片尺寸
+
+      slider.min = minSize;
+      // 依客戶要求：將計算出的下限安全值設為預設值
+      slider.value = minSize;
+      if (valSpan) valSpan.textContent = slider.value + 'mm';
+      resolve(minSize);
+    };
+    tempImg.onerror = function() { resolve(); };
+    tempImg.src = dataUrl;
+  });
+}
+
 // ─── 生產刀模步驟（biz_thick step 4）─────────────────────────
 function initDieCutStep() {
   // 同步邊距滑桿
@@ -103,10 +141,15 @@ function initDieCutStep() {
     if (dcVal) dcVal.textContent = rmbgSlider.value + 'px';
   }
 
-  // 【嚴守商品隔離：只在 biz_thick 厚切電子票證顯示整體尺寸縮放滑桿】
+  // 【嚴守商品隔離：只在 biz_thick 厚切電子票證顯示整體尺寸縮放滑桿，並自動校正防呆下限與預設值】
   const maxSizeContainer = document.getElementById('diecut-max-size-container');
   if (maxSizeContainer) {
     maxSizeContainer.style.display = (typeof STATE !== 'undefined' && STATE.productId === 'biz_thick') ? 'block' : 'none';
+    if (typeof _lastRembgDataURL !== 'undefined' && _lastRembgDataURL) {
+      _adjustThickMaxSizeSlider(_lastRembgDataURL);
+    } else if (typeof _lastUploadedDataURL !== 'undefined' && _lastUploadedDataURL) {
+      _adjustThickMaxSizeSlider(_lastUploadedDataURL);
+    }
   }
 
   const noPreview = document.getElementById('diecut-no-preview');

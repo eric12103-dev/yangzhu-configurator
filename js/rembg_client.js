@@ -81,6 +81,11 @@ async function removeBgWithContourClient(imageFileOrDataURL, marginPx, onProgres
 
     if (onProgress) onProgress('✅ 去背完成！正在計算刀模外框…');
 
+    // 依圖片比例動態調整縮放下限值與預設值，確保不小於晶片直徑 35mm
+    if (typeof _adjustThickMaxSizeSlider === 'function') {
+      await _adjustThickMaxSizeSlider(_lastRembgDataURL);
+    }
+
     // 立即接著呼叫刀模預覽
     var marginMm = Math.max(1, Math.round(marginPx / 5));
     var dieResult = await _callPreviewDie(_lastRembgBlob, marginMm, onProgress);
