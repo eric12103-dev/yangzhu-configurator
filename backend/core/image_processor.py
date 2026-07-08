@@ -63,6 +63,36 @@ def get_acrylic_shape(img_bytes: bytes, max_size_mm: float, margin_mm: float, ho
     max_px = max(h, w)
     scale = max_size_mm / max_px  # mm per pixel
     
+    # ── 【方案三實作：厚切電子票證 智慧雙模式混搭 (安全線圈重心定位 + 38mm 圓形底座自動融合)】 ──
+    coil_center_px = (w / 2.0, h / 2.0)
+    if product_id == "biz_thick":
+        try:
+            min_x, min_y, max_x, max_y = poly.bounds
+            poly_w = max_x - min_x
+            poly_h = max_y - min_y
+            poly_ratio = min(poly_w, poly_h) / max(poly_w, poly_h) if max(poly_w, poly_h) > 0 else 1.0
+            
+            # 1. 智慧重心定位：若為直式構圖 (poly_h > poly_w * 1.05)，將晶片線圈對齊下半部 60% 飽滿區域
+            coil_cx = (min_x + max_x) / 2.0
+            coil_cy = min_y + (poly_h * 0.6) if (poly_h > poly_w * 1.05) else (min_y + max_y) / 2.0
+            coil_center_px = (coil_cx, coil_cy)
+            
+            # 2. 智慧底座保護模式 (Solution 3)：當圖案最窄處小於 38mm (晶片35mm+切邊3mm) 時自動啟動
+            min_safe_diam_px = 38.0 / scale
+            if poly_ratio < 0.45 or min(poly_w, poly_h) < min_safe_diam_px:
+                halo_radius_px = 19.0 / scale  # 直徑 38mm (半徑 19mm)
+                halo_base = Point(coil_cx, coil_cy).buffer(halo_radius_px, resolution=32)
+                merged_poly = unary_union([poly, halo_base])
+                # 工業級 CAD 內倒角平滑過渡，讓細長圖形與底座無縫融合為一體
+                fillet_r_px = max(9.0, 3.0 / scale)
+                closed_poly = merged_poly.buffer(-fillet_r_px, join_style=1).buffer(+fillet_r_px, join_style=1)
+                if closed_poly.is_valid and not closed_poly.is_empty:
+                    if isinstance(closed_poly, MultiPolygon):
+                        closed_poly = max(closed_poly.geoms, key=lambda a: a.area)
+                    poly = closed_poly
+        except Exception as e:
+            print(f"[WARN] biz_thick smart halo base fusion failed: {e}")
+
     margin_px = margin_mm / scale
     buffered_poly = poly.buffer(margin_px, join_style=1)
     
@@ -248,6 +278,7 @@ def get_acrylic_shape(img_bytes: bytes, max_size_mm: float, margin_mm: float, ho
         "img_h_px": h,
         "bounds_px": final_acrylic_shape.bounds,
         "content_shift_px": (dx_px, dy_px),
+        "coil_center_px": coil_center_px,
         "product_id": product_id
     }
 
@@ -349,8 +380,16 @@ def draw_preview_die(shape_info, img_bytes, ticket_type="easycard"):
 
         # 5. 背面：繪製線圈安全範圍虛線紅圈 (真實標準晶片尺寸直徑 35mm / 半徑 17.5mm)
         coil_r_px = 17.5 / scale
+        coil_center = shape_info.get("coil_center_px")
+        if coil_center and isinstance(coil_center, (list, tuple)) and len(coil_center) == 2:
+            c_cx_f, c_cy_f = coil_center[0] + pad_left, coil_center[1] + pad_top
+            c_cx_b = cx_back + cx_front - c_cx_f
+            c_cy_b = c_cy_f
+        else:
+            c_cx_b, c_cy_b = cx_back, cy_back
+            
         for deg in range(0, 360, 15):
-            draw.arc([cx_back - coil_r_px, cy_back - coil_r_px, cx_back + coil_r_px, cy_back + coil_r_px], start=deg, end=deg+8, fill="#e11d48", width=2)
+            draw.arc([c_cx_b - coil_r_px, c_cy_b - coil_r_px, c_cx_b + coil_r_px, c_cy_b + coil_r_px], start=deg, end=deg+8, fill="#e11d48", width=2)
 
         # 載入字型
         from PIL import ImageFont

@@ -92,7 +92,7 @@ function renderStep() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// ─── 智慧防呆：動態計算厚切電子票證整體縮放下限值與預設值（確保短邊大於等於晶片直徑 35mm）───
+// ─── 智慧防呆：動態計算厚切電子票證整體縮放下限值與預設值（計算不透明實體比例，確保短邊大於等於晶片直徑 38mm）───
 function _adjustThickMaxSizeSlider(dataUrl) {
   return new Promise((resolve) => {
     if (typeof STATE === 'undefined' || STATE.productId !== 'biz_thick' || !dataUrl) {
@@ -114,10 +114,38 @@ function _adjustThickMaxSizeSlider(dataUrl) {
       }
       const w = tempImg.width;
       const h = tempImg.height;
-      const ratio = Math.min(w, h) / Math.max(w, h); // 短邊 / 長邊
-      // 確保短邊大於等於悠遊卡/一卡通標準晶片直徑 35mm
-      let minSize = Math.max(35, Math.ceil(35 / ratio));
-      if (minSize > 86) minSize = 86; // 不超過最大卡片尺寸
+      
+      // 建立離線畫布，排除四周透明留白，計算真正有像素的實體邊界
+      let minX = w, minY = h, maxX = 0, maxY = 0;
+      try {
+        const cvs = document.createElement('canvas');
+        cvs.width = w;
+        cvs.height = h;
+        const ctx = cvs.getContext('2d');
+        ctx.drawImage(tempImg, 0, 0);
+        const imgData = ctx.getImageData(0, 0, w, h).data;
+        for (let y = 0; y < h; y += 2) {
+          for (let x = 0; x < w; x += 2) {
+            const alpha = imgData[(y * w + x) * 4 + 3];
+            if (alpha > 10) {
+              if (x < minX) minX = x;
+              if (x > maxX) maxX = x;
+              if (y < minY) minY = y;
+              if (y > maxY) maxY = y;
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('[configurator] Bounds check failed, using full size', e);
+      }
+      
+      let realW = (maxX > minX) ? (maxX - minX + 1) : w;
+      let realH = (maxY > minY) ? (maxY - minY + 1) : h;
+      const ratio = Math.min(realW, realH) / Math.max(realW, realH); // 實體短邊 / 實體長邊
+      
+      // 確保實體短邊大於等於 38mm (35mm晶片 + 3mm壓克力邊距)
+      let minSize = Math.max(38, Math.ceil(38 / ratio));
+      if (minSize > 86) minSize = 86; // 不超過最大卡片物理尺寸 (過窄時後端會自動啟用 38mm 圓形底座保護)
 
       slider.min = minSize;
       // 依客戶要求：將計算出的下限安全值設為預設值
