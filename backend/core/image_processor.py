@@ -1,8 +1,10 @@
 import cv2
 import numpy as np
+import os
+import json
 from shapely.geometry import Polygon, Point, MultiPolygon
 from shapely.ops import unary_union
-from PIL import Image, ImageDraw, ImageFilter, ImageOps
+from PIL import Image, ImageDraw, ImageFilter, ImageOps, ImageFont, ImageChops
 import io
 import rembg
 
