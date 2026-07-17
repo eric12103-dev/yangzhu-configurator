@@ -1071,36 +1071,53 @@ async function submitDesign() {
 
       // 優先嘗試呼叫 FastAPI 後端 (port 8000) 或 Node 後端 (port 3000) 將檔案直接存至 DB 小龍蝦目錄
       let savedServer = false;
+      
+      // 1. 嘗試本地 Python FastAPI 端點 (當用戶在雲端網頁但在電腦有開啟啟動生成器.bat時)
       try {
-        const apiBase = (typeof REMBG_API_BASE !== 'undefined' && REMBG_API_BASE) ? REMBG_API_BASE : '';
-        const res = await fetch(apiBase + '/api/save_design_file', { method: 'POST', body: fd });
-        if (res.ok) {
+        const res0 = await fetch('http://127.0.0.1:8000/api/save_design_file', { method: 'POST', body: fd });
+        if (res0.ok) {
           savedServer = true;
           if (statusEl) {
-            statusEl.textContent = '✅ 設計圖檔與 SVG 刀模已成功同步儲存至 DB 圖檔下載資料夾';
+            statusEl.textContent = '✅ 設計圖檔與 SVG 刀模已透過本機服務器成功寫入 DB 圖檔下載資料夾';
             statusEl.style.color = '#15803d';
           }
         }
-      } catch (err) {
-        console.warn('[submitDesign] /api/save_design_file 呼叫失敗，改用 Node 或瀏覽器直接下載', err);
-      }
+      } catch (err0) {}
 
+      // 2. 嘗試 apiBase 或 Node 本地 3000
       if (!savedServer) {
         try {
-          const res2 = await fetch('/api/save_design_file', { method: 'POST', body: fd });
-          if (res2.ok) {
+          const apiBase = (typeof REMBG_API_BASE !== 'undefined' && REMBG_API_BASE) ? REMBG_API_BASE : '';
+          const res = await fetch(apiBase + '/api/save_design_file', { method: 'POST', body: fd });
+          if (res.ok) {
             savedServer = true;
             if (statusEl) {
               statusEl.textContent = '✅ 設計圖檔與 SVG 刀模已成功同步儲存至 DB 圖檔下載資料夾';
               statusEl.style.color = '#15803d';
             }
           }
-        } catch (err2) {
-          console.warn('[submitDesign] Node /api/save_design_file 呼叫失敗', err2);
-        }
+        } catch (err) {}
       }
 
-      // 備援：若兩個後端皆未回應（純靜態網頁模式），則自動觸發瀏覽器下載 SVG 檔案
+      // 3. 嘗試同源伺服器 /api/save_design_file
+      if (!savedServer) {
+        try {
+          const res2 = await fetch('/api/save_design_file', { method: 'POST', body: fd });
+          if (res2.ok) {
+            const data = await res2.json();
+            // 若後端是 Render 雲端伺服器且無法寫入 DB 網路磁碟，則觸發瀏覽器下載
+            if (data.targetDir && data.targetDir.includes('\\\\Db')) {
+              savedServer = true;
+              if (statusEl) {
+                statusEl.textContent = '✅ 設計圖檔與 SVG 刀模已成功同步儲存至 DB 圖檔下載資料夾';
+                statusEl.style.color = '#15803d';
+              }
+            }
+          }
+        } catch (err2) {}
+      }
+
+      // 備援：若無法直接寫入 DB 磁碟（如使用 Render 雲端網址且未開本機後端），則觸發瀏覽器下載 SVG 檔案
       if (!savedServer) {
         const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
         const url = URL.createObjectURL(blob);
@@ -1112,7 +1129,7 @@ async function submitDesign() {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
         if (statusEl) {
-          statusEl.textContent = '✅ 已自動觸發瀏覽器下載 SVG 檔案';
+          statusEl.innerHTML = '✅ 已自動觸發瀏覽器下載 SVG 檔案至您的<b>電腦「下載 (Downloads)」資料夾</b><br><small style="color:#666;">💡 提醒：您目前使用的是 Render 雲端網址，雲端主機無法直接跨網際網路寫入公司內部 \\\\Db 磁碟。檔案已由瀏覽器直接下載至電腦預設的「下載」資料夾！<br>若想讓瀏覽器直接存入 DB 資料夾，可在 Chrome/Edge 設定中將「預設下載位置」改為：<br><code>\\\\Db\\業務部\\Kiven\\小龍蝦\\客製化編輯及時預覽-圖檔下載</code></small>';
           statusEl.style.color = '#15803d';
         }
       }
