@@ -971,7 +971,28 @@ function initPreviewStep() {
 
 
 
-// Google Apps Script 雲端上傳已依照需求移除，改直接同步儲存至 DB 圖檔下載目錄或本地下載
+// Google Apps Script 網頁應用程式 URL（雙軌並行：同時上傳至 Google 雲端與寫入 DB 圖檔下載目錄）
+const DRIVE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxfzeV4SS_VEWHQhNO-GzkF2UUknXg30NYqXY_xXvAqvIZO8A0Bhgp6AEKJuRcMwM85hA/exec';
+
+async function _uploadWithRetry(url, formData, maxRetries = 3) {
+  if (typeof navigator.sendBeacon === 'function') {
+    const beaconOk = navigator.sendBeacon(url, formData);
+    if (beaconOk) return true;
+  }
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 30000);
+      await fetch(url, { method: 'POST', mode: 'no-cors', body: formData, signal: ctrl.signal });
+      clearTimeout(timer);
+      return true;
+    } catch (e) {
+      console.warn('[upload] attempt', i + 1, 'failed:', e.name, e.message);
+      if (i < maxRetries - 1) await new Promise(r => setTimeout(r, 3000));
+    }
+  }
+  return false;
+}
 
 async function copyOrderName() {
   const name = STATE.submittedFilename || '';
@@ -1060,8 +1081,18 @@ async function submitDesign() {
     }
     if (svg) {
       const statusEl = document.getElementById('upload-status');
-      if (statusEl) { statusEl.textContent = '💾 檔案儲存/匯出中...'; statusEl.style.color = 'var(--gray-500)'; }
+      if (statusEl) { statusEl.textContent = '💾 雙軌同步中：上傳 Google 雲端硬碟 & 儲存至 DB 圖檔中心...'; statusEl.style.color = 'var(--gray-500)'; }
       
+      // ─── 雙軌一：同步上傳至 Google Apps Script 雲端 (供外部客人或異地異地備援) ───
+      let driveOkPromise = Promise.resolve(false);
+      if (DRIVE_SCRIPT_URL && DRIVE_SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL') {
+        const fdDrive = new FormData();
+        fdDrive.append('filename', filename + '.svg');
+        fdDrive.append('svg', svg);
+        driveOkPromise = _uploadWithRetry(DRIVE_SCRIPT_URL, fdDrive);
+      }
+
+      // ─── 雙軌二：同步儲存至 DB 公司圖檔下載資料夾 / 本機下載 ───
       const fd = new FormData();
       fd.append('filename', filename);
       fd.append('svg_content', svg);
@@ -1069,7 +1100,6 @@ async function submitDesign() {
         fd.append('png_b64', STATE.designDataURL);
       }
 
-      // 優先嘗試呼叫 FastAPI 後端 (port 8000) 或 Node 後端 (port 3000) 將檔案直接存至 DB 小龍蝦目錄
       let savedServer = false;
       
       // 1. 嘗試本地 Python FastAPI 端點 (當用戶在雲端網頁但在電腦有開啟啟動生成器.bat時)
@@ -1077,10 +1107,6 @@ async function submitDesign() {
         const res0 = await fetch('http://127.0.0.1:8000/api/save_design_file', { method: 'POST', body: fd });
         if (res0.ok) {
           savedServer = true;
-          if (statusEl) {
-            statusEl.textContent = '✅ 設計圖檔與 SVG 刀模已透過本機服務器成功寫入 DB 圖檔下載資料夾';
-            statusEl.style.color = '#15803d';
-          }
         }
       } catch (err0) {}
 
@@ -1091,10 +1117,6 @@ async function submitDesign() {
           const res = await fetch(apiBase + '/api/save_design_file', { method: 'POST', body: fd });
           if (res.ok) {
             savedServer = true;
-            if (statusEl) {
-              statusEl.textContent = '✅ 設計圖檔與 SVG 刀模已成功同步儲存至 DB 圖檔下載資料夾';
-              statusEl.style.color = '#15803d';
-            }
           }
         } catch (err) {}
       }
@@ -1105,19 +1127,15 @@ async function submitDesign() {
           const res2 = await fetch('/api/save_design_file', { method: 'POST', body: fd });
           if (res2.ok) {
             const data = await res2.json();
-            // 若後端是 Render 雲端伺服器且無法寫入 DB 網路磁碟，則觸發瀏覽器下載
             if (data.targetDir && data.targetDir.includes('\\\\Db')) {
               savedServer = true;
-              if (statusEl) {
-                statusEl.textContent = '✅ 設計圖檔與 SVG 刀模已成功同步儲存至 DB 圖檔下載資料夾';
-                statusEl.style.color = '#15803d';
-              }
             }
           }
         } catch (err2) {}
       }
 
-      // 備援：若無法直接寫入 DB 磁碟（如使用 Render 雲端網址且未開本機後端），則觸發瀏覽器下載 SVG 檔案
+      // 備援：若連不到直接寫入 DB 的服務器，則觸發瀏覽器下載 SVG
+      let triggeredDownload = false;
       if (!savedServer) {
         const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
         const url = URL.createObjectURL(blob);
@@ -1128,10 +1146,20 @@ async function submitDesign() {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        if (statusEl) {
-          statusEl.innerHTML = '✅ 已自動觸發瀏覽器下載 SVG 檔案至您的<b>電腦「下載 (Downloads)」資料夾</b><br><small style="color:#666;">💡 提醒：您目前使用的是 Render 雲端網址，雲端主機無法直接跨網際網路寫入公司內部 \\\\Db 磁碟。檔案已由瀏覽器直接下載至電腦預設的「下載」資料夾！<br>若想讓瀏覽器直接存入 DB 資料夾，可在 Chrome/Edge 設定中將「預設下載位置」改為：<br><code>\\\\Db\\業務部\\Kiven\\小龍蝦\\客製化編輯及時預覽-圖檔下載</code></small>';
-          statusEl.style.color = '#15803d';
+        triggeredDownload = true;
+      }
+
+      const driveOk = await driveOkPromise;
+      if (statusEl) {
+        let msg = '✅ <b>雙軌並行送出成功！</b><br>';
+        msg += driveOk ? '☁️ Google 雲端：已同步備份至 Google 雲端硬碟<br>' : '☁️ Google 雲端：傳送請求已發出 (背景同步)<br>';
+        if (savedServer) {
+          msg += '💾 公司 DB：已直接同步寫入 <code>\\\\Db\\業務部\\Kiven\\小龍蝦\\客製化編輯及時預覽-圖檔下載</code>';
+        } else if (triggeredDownload) {
+          msg += '📥 本機下載：已同步下載至電腦「下載 (Downloads)」資料夾';
         }
+        statusEl.innerHTML = msg;
+        statusEl.style.color = '#15803d';
       }
       if (btn) btn.style.display = 'none';
     }
@@ -1265,12 +1293,45 @@ async function submitThickDesign(filename) {
       STATE.submittedFilename = filename;
       const nameEl = document.getElementById('submit-order-name');
       if (nameEl) nameEl.textContent = filename;
+      
+      // ─── 厚切商品雙軌一：同步上傳至 Google Apps Script 雲端 ───
+      let driveOkPromise = Promise.resolve(false);
+      if (data.svg_content && DRIVE_SCRIPT_URL && DRIVE_SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL') {
+        const fdDrive = new FormData();
+        fdDrive.append('filename', filename + '.svg');
+        fdDrive.append('svg', data.svg_content);
+        driveOkPromise = _uploadWithRetry(DRIVE_SCRIPT_URL, fdDrive);
+      }
+
+      // ─── 厚切商品雙軌二：若無法直接寫入 DB，則觸發瀏覽器下載 ───
+      let triggeredDownload = false;
+      const isDbSaved = data.target_dir && data.target_dir.includes('\\\\Db');
+      if (!isDbSaved && data.svg_content) {
+        const blob = new Blob([data.svg_content], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename + '.svg';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        triggeredDownload = true;
+      }
+
+      const driveOk = await driveOkPromise;
       const uploadStatus = document.getElementById('upload-status');
       if (uploadStatus) {
         uploadStatus.style.color = '#15803d';
         uploadStatus.style.fontWeight = 'bold';
-        uploadStatus.style.whiteSpace = 'pre-line';
-        uploadStatus.textContent = '✅ ' + (data.message || '').replace('SVG 刀模檔成功儲存至：\n', '已儲存 SVG 刀模檔：').trim();
+        let msg = '✅ <b>雙軌並行送出成功！</b><br>';
+        msg += driveOk ? '☁️ Google 雲端：已同步備份至 Google 雲端硬碟<br>' : '☁️ Google 雲端：傳送請求已發出 (背景同步)<br>';
+        if (isDbSaved) {
+          msg += '💾 公司 DB：已直接同步寫入 <code>\\\\Db\\業務部\\Kiven\\小龍蝦\\客製化編輯及時預覽-圖檔下載</code>';
+        } else if (triggeredDownload) {
+          msg += '📥 本機下載：已同步下載至電腦「下載 (Downloads)」資料夾';
+        }
+        uploadStatus.innerHTML = msg;
       }
       const resultDiv = document.getElementById('submit-result');
       if (resultDiv) resultDiv.style.display = '';

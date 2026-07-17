@@ -112,7 +112,9 @@ async def api_submit(
             return JSONResponse({
                 "success": True,
                 "message": f"SVG 刀模檔成功儲存至：\n{svg_path}",
-                "mockup_b64": ""
+                "mockup_b64": "",
+                "svg_content": svg_bytes.decode("utf-8", errors="ignore"),
+                "target_dir": target_dir
             })
 
         # 1. 渲染 3D 模擬圖 (其他非厚切商品保留原有邏輯)
@@ -159,7 +161,9 @@ async def api_submit(
         return JSONResponse({
             "success": True,
             "message": f"Files saved successfully to:\n{mockup_path}\n{svg_path}",
-            "mockup_b64": f"data:image/png;base64,{mockup_b64}"
+            "mockup_b64": f"data:image/png;base64,{mockup_b64}",
+            "svg_content": svg_bytes.decode("utf-8", errors="ignore"),
+            "target_dir": target_dir
         })
     except Exception as e:
         return JSONResponse({"success": False, "error": str(e)}, status_code=500)
