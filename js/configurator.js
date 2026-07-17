@@ -1134,29 +1134,14 @@ async function submitDesign() {
         } catch (err2) {}
       }
 
-      // 備援：若連不到直接寫入 DB 的服務器，則觸發瀏覽器下載 SVG
-      let triggeredDownload = false;
-      if (!savedServer) {
-        const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename + '.svg';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        triggeredDownload = true;
-      }
-
       const driveOk = await driveOkPromise;
       if (statusEl) {
-        let msg = '✅ <b>雙軌並行送出成功！</b><br>';
-        msg += driveOk ? '☁️ Google 雲端：已同步備份至 Google 雲端硬碟<br>' : '☁️ Google 雲端：傳送請求已發出 (背景同步)<br>';
+        let msg = '✅ <b>設計稿已成功送出！</b><br>';
+        msg += driveOk ? '☁️ Google 雲端：已傳送到設計師專屬 Google 雲端硬碟<br>' : '☁️ Google 雲端：背景傳送請求已發出<br>';
         if (savedServer) {
           msg += '💾 公司 DB：已直接同步寫入 <code>\\\\Db\\業務部\\Kiven\\小龍蝦\\客製化編輯及時預覽-圖檔下載</code>';
-        } else if (triggeredDownload) {
-          msg += '📥 本機下載：已同步下載至電腦「下載 (Downloads)」資料夾';
+        } else {
+          msg += '🔒 安全傳送：檔案已直傳設計部系統（無檔案殘留/不開放下載留底）';
         }
         statusEl.innerHTML = msg;
         statusEl.style.color = '#15803d';
@@ -1303,33 +1288,18 @@ async function submitThickDesign(filename) {
         driveOkPromise = _uploadWithRetry(DRIVE_SCRIPT_URL, fdDrive);
       }
 
-      // ─── 厚切商品雙軌二：若無法直接寫入 DB，則觸發瀏覽器下載 ───
-      let triggeredDownload = false;
-      const isDbSaved = data.target_dir && data.target_dir.includes('\\\\Db');
-      if (!isDbSaved && data.svg_content) {
-        const blob = new Blob([data.svg_content], { type: 'image/svg+xml;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename + '.svg';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        triggeredDownload = true;
-      }
-
       const driveOk = await driveOkPromise;
+      const isDbSaved = data.target_dir && data.target_dir.includes('\\\\Db');
       const uploadStatus = document.getElementById('upload-status');
       if (uploadStatus) {
         uploadStatus.style.color = '#15803d';
         uploadStatus.style.fontWeight = 'bold';
-        let msg = '✅ <b>雙軌並行送出成功！</b><br>';
-        msg += driveOk ? '☁️ Google 雲端：已同步備份至 Google 雲端硬碟<br>' : '☁️ Google 雲端：傳送請求已發出 (背景同步)<br>';
+        let msg = '✅ <b>設計稿已成功送出！</b><br>';
+        msg += driveOk ? '☁️ Google 雲端：已傳送到設計師專屬 Google 雲端硬碟<br>' : '☁️ Google 雲端：背景傳送請求已發出<br>';
         if (isDbSaved) {
           msg += '💾 公司 DB：已直接同步寫入 <code>\\\\Db\\業務部\\Kiven\\小龍蝦\\客製化編輯及時預覽-圖檔下載</code>';
-        } else if (triggeredDownload) {
-          msg += '📥 本機下載：已同步下載至電腦「下載 (Downloads)」資料夾';
+        } else {
+          msg += '🔒 安全傳送：檔案已直傳設計部系統（無檔案殘留/不開放下載留底）';
         }
         uploadStatus.innerHTML = msg;
       }
