@@ -54,6 +54,17 @@ async def api_preview_die(
     except Exception as e:
         return JSONResponse({"success": False, "error": str(e)}, status_code=500)
 
+def get_target_dir():
+    target = r"\\Db\業務部\Kiven\小龍蝦\客製化編輯及時預覽-圖檔下載"
+    try:
+        os.makedirs(target, exist_ok=True)
+        return target
+    except Exception:
+        base_dir = os.path.dirname(os.path.dirname(__file__))
+        local_target = os.path.abspath(os.path.join(base_dir, "..", "打樣檔案下載"))
+        os.makedirs(local_target, exist_ok=True)
+        return local_target
+
 @app.post("/api/submit")
 async def api_submit(
     image: UploadFile = File(...),
@@ -92,9 +103,7 @@ async def api_submit(
             )
             safe_name = customer_name.strip() if customer_name.strip() else f"厚切電子票證-{datetime.datetime.now().strftime('%Y%m%d')}-001"
             base_filename = safe_name
-            base_dir = os.path.dirname(os.path.dirname(__file__))
-            target_dir = os.path.abspath(os.path.join(base_dir, "..", "打樣檔案下載"))
-            os.makedirs(target_dir, exist_ok=True)
+            target_dir = get_target_dir()
             
             svg_path = os.path.join(target_dir, f"{base_filename}.SVG")
             with open(svg_path, "wb") as f:
@@ -135,10 +144,7 @@ async def api_submit(
         safe_name = customer_name.strip() if customer_name.strip() else f"厚切電子票證-{datetime.datetime.now().strftime('%Y%m%d')}-001"
         base_filename = safe_name
 
-        # 儲存到「頌禮-企業禮贈品客製化服務/打樣檔案下載」目錄
-        base_dir = os.path.dirname(os.path.dirname(__file__))
-        target_dir = os.path.abspath(os.path.join(base_dir, "..", "打樣檔案下載"))
-        os.makedirs(target_dir, exist_ok=True)
+        target_dir = get_target_dir()
 
         mockup_path = os.path.join(target_dir, f"{base_filename}.PNG")
         svg_path    = os.path.join(target_dir, f"{base_filename}.SVG")
@@ -154,6 +160,38 @@ async def api_submit(
             "success": True,
             "message": f"Files saved successfully to:\n{mockup_path}\n{svg_path}",
             "mockup_b64": f"data:image/png;base64,{mockup_b64}"
+        })
+    except Exception as e:
+        return JSONResponse({"success": False, "error": str(e)}, status_code=500)
+
+@app.post("/api/save_design_file")
+async def api_save_design_file(
+    filename: str = Form(...),
+    svg_content: str = Form(""),
+    png_b64: str = Form("")
+):
+    try:
+        target_dir = get_target_dir()
+        saved_files = []
+        
+        if svg_content:
+            svg_path = os.path.join(target_dir, f"{filename}.svg")
+            with open(svg_path, "w", encoding="utf-8") as f:
+                f.write(svg_content)
+            saved_files.append(svg_path)
+            
+        if png_b64 and png_b64.startswith("data:image/"):
+            header, encoded = png_b64.split(",", 1)
+            png_bytes = base64.b64decode(encoded)
+            png_path = os.path.join(target_dir, f"{filename}.png")
+            with open(png_path, "wb") as f:
+                f.write(png_bytes)
+            saved_files.append(png_path)
+            
+        return JSONResponse({
+            "success": True,
+            "message": f"設計圖檔已同步儲存至圖檔下載資料夾：\n" + "\n".join(saved_files),
+            "target_dir": target_dir
         })
     except Exception as e:
         return JSONResponse({"success": False, "error": str(e)}, status_code=500)

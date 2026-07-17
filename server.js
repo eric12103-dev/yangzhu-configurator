@@ -10,12 +10,15 @@ const fs      = require('fs');
 const app  = express();
 const port = process.env.PORT || 3000;
 
-// ─── 訂單資料夾（本機在上層，雲端在專案目錄內）──────────────
-const ORDER_DIR = process.env.NODE_ENV === 'production'
-  ? path.join(__dirname, '訂單資料')
-  : path.join(__dirname, '..', '訂單資料');
-if (!fs.existsSync(ORDER_DIR)) {
-  fs.mkdirSync(ORDER_DIR, { recursive: true });
+// ─── 訂單與圖檔資料夾（指向 DB 小龍蝦圖檔下載目錄，備援為本地）──────────────
+let ORDER_DIR = '\\\\Db\\業務部\\Kiven\\小龍蝦\\客製化編輯及時預覽-圖檔下載';
+try {
+  if (!fs.existsSync(ORDER_DIR)) fs.mkdirSync(ORDER_DIR, { recursive: true });
+} catch (e) {
+  ORDER_DIR = process.env.NODE_ENV === 'production'
+    ? path.join(__dirname, '訂單資料')
+    : path.join(__dirname, '..', '訂單資料');
+  if (!fs.existsSync(ORDER_DIR)) fs.mkdirSync(ORDER_DIR, { recursive: true });
 }
 
 app.use(cors());
@@ -78,6 +81,31 @@ app.post('/api/save-order', (req, res) => {
   } catch (err) {
     console.error('[save-order]', err.message);
     res.status(500).json({ error: '訂單儲存失敗' });
+  }
+});
+
+// ─── API：儲存 SVG 與 PNG 圖檔（供通用商品打樣輸出）──────────
+app.post('/api/save_design_file', (req, res) => {
+  try {
+    const { filename, svg_content, png_b64 } = req.body;
+    if (!filename) return res.status(400).json({ error: '檔名不可為空' });
+    const savedFiles = [];
+    if (svg_content) {
+      const svgPath = path.join(ORDER_DIR, `${filename}.svg`);
+      fs.writeFileSync(svgPath, svg_content, 'utf8');
+      savedFiles.push(svgPath);
+    }
+    if (png_b64 && png_b64.startsWith('data:image/')) {
+      const base64 = png_b64.replace(/^data:image\/\w+;base64,/, '');
+      const pngPath = path.join(ORDER_DIR, `${filename}.png`);
+      fs.writeFileSync(pngPath, Buffer.from(base64, 'base64'));
+      savedFiles.push(pngPath);
+    }
+    console.log(`[打樣存檔] 已儲存至圖檔下載資料夾：${filename}`);
+    res.json({ success: true, savedFiles, targetDir: ORDER_DIR });
+  } catch (err) {
+    console.error('[save_design_file]', err.message);
+    res.status(500).json({ error: '儲存圖檔失敗: ' + err.message });
   }
 });
 

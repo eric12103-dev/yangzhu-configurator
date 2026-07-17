@@ -971,30 +971,7 @@ function initPreviewStep() {
 
 
 
-// Google Apps Script 網頁應用程式 URL（部署後填入）
-const DRIVE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxfzeV4SS_VEWHQhNO-GzkF2UUknXg30NYqXY_xXvAqvIZO8A0Bhgp6AEKJuRcMwM85hA/exec';
-
-async function _uploadWithRetry(url, formData, maxRetries = 3) {
-  // sendBeacon：瀏覽器原生可靠傳送，無逾時限制、無 CORS 問題
-  if (typeof navigator.sendBeacon === 'function') {
-    const beaconOk = navigator.sendBeacon(url, formData);
-    if (beaconOk) return true;
-  }
-  // fallback：fetch 重試
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      const ctrl = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), 30000);
-      await fetch(url, { method: 'POST', mode: 'no-cors', body: formData, signal: ctrl.signal });
-      clearTimeout(timer);
-      return true;
-    } catch (e) {
-      console.warn('[upload] attempt', i + 1, 'failed:', e.name, e.message);
-      if (i < maxRetries - 1) await new Promise(r => setTimeout(r, 3000));
-    }
-  }
-  return false;
-}
+// Google Apps Script 雲端上傳已依照需求移除，改直接同步儲存至 DB 圖檔下載目錄或本地下載
 
 async function copyOrderName() {
   const name = STATE.submittedFilename || '';
@@ -1081,23 +1058,65 @@ async function submitDesign() {
       const _layeredSVG = await get2DLayeredSVG();
       if (_layeredSVG) svg = _layeredSVG;
     }
-    if (svg && DRIVE_SCRIPT_URL && DRIVE_SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL') {
-      const fd = new FormData();
-      fd.append('filename', filename + '.svg');
-      fd.append('svg', svg);
+    if (svg) {
       const statusEl = document.getElementById('upload-status');
-      if (statusEl) { statusEl.textContent = '📤 傳送中...'; statusEl.style.color = 'var(--gray-500)'; }
-      _uploadWithRetry(DRIVE_SCRIPT_URL, fd).then(ok => {
-        if (!statusEl) return;
-        if (ok) {
-          statusEl.textContent = '';
-          if (btn) btn.style.display = 'none';
-        } else {
-          statusEl.textContent = '⚠️ 傳送失敗，請截圖序號後告知設計師手動處理';
-          statusEl.style.color = '#e53e3e';
-          if (btn) { btn.innerHTML = '✉ 重新送出'; btn.disabled = false; }
+      if (statusEl) { statusEl.textContent = '💾 檔案儲存/匯出中...'; statusEl.style.color = 'var(--gray-500)'; }
+      
+      const fd = new FormData();
+      fd.append('filename', filename);
+      fd.append('svg_content', svg);
+      if (STATE.designDataURL && STATE.designDataURL.startsWith('data:image/')) {
+        fd.append('png_b64', STATE.designDataURL);
+      }
+
+      // 優先嘗試呼叫 FastAPI 後端 (port 8000) 或 Node 後端 (port 3000) 將檔案直接存至 DB 小龍蝦目錄
+      let savedServer = false;
+      try {
+        const apiBase = (typeof REMBG_API_BASE !== 'undefined' && REMBG_API_BASE) ? REMBG_API_BASE : '';
+        const res = await fetch(apiBase + '/api/save_design_file', { method: 'POST', body: fd });
+        if (res.ok) {
+          savedServer = true;
+          if (statusEl) {
+            statusEl.textContent = '✅ 設計圖檔與 SVG 刀模已成功同步儲存至 DB 圖檔下載資料夾';
+            statusEl.style.color = '#15803d';
+          }
         }
-      });
+      } catch (err) {
+        console.warn('[submitDesign] /api/save_design_file 呼叫失敗，改用 Node 或瀏覽器直接下載', err);
+      }
+
+      if (!savedServer) {
+        try {
+          const res2 = await fetch('/api/save_design_file', { method: 'POST', body: fd });
+          if (res2.ok) {
+            savedServer = true;
+            if (statusEl) {
+              statusEl.textContent = '✅ 設計圖檔與 SVG 刀模已成功同步儲存至 DB 圖檔下載資料夾';
+              statusEl.style.color = '#15803d';
+            }
+          }
+        } catch (err2) {
+          console.warn('[submitDesign] Node /api/save_design_file 呼叫失敗', err2);
+        }
+      }
+
+      // 備援：若兩個後端皆未回應（純靜態網頁模式），則自動觸發瀏覽器下載 SVG 檔案
+      if (!savedServer) {
+        const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename + '.svg';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        if (statusEl) {
+          statusEl.textContent = '✅ 已自動觸發瀏覽器下載 SVG 檔案';
+          statusEl.style.color = '#15803d';
+        }
+      }
+      if (btn) btn.style.display = 'none';
     }
   } catch(e) {
     console.error('[submitDesign]', e);
