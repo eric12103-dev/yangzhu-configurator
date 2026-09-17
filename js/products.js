@@ -119,13 +119,13 @@ const PRODUCTS = {
 
   bizzone: {
     id: 'bizzone',
-    name: 'RAY專屬',
+    name: '業務專區',
     icon: '💼',
     image: 'assets/photos/easycard.png',
     badge: '業務專區',
     badgeColor: '#1a4a8a',
     password: '38',
-    description: '快速打樣專屬商品',
+    description: '',
     isCategory: true
   },
 
