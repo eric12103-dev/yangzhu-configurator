@@ -121,7 +121,7 @@ const PRODUCTS = {
     id: 'bizzone',
     name: '業務專區',
     icon: '💼',
-    image: 'assets/photos/easycard.png',
+    image: 'assets/photos/bizzone.png',
     badge: '業務專區',
     badgeColor: '#1a4a8a',
     password: '38',
