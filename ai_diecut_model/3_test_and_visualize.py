@@ -105,13 +105,13 @@ def evaluate_and_generate_report(model_path, output_dir):
         f.write(f"| **工業切刀契合度** | {mode_a['cutter_fit']} | {mode_b['cutter_fit']} | **{mode_c['cutter_fit']}** |\n\n")
         f.write(f"## 2. 訓練與實戰推論結論\n\n")
         f.write(f"本模型 (v2.0) 成功將美編老師在 Illustrator 中多年累積的「**曲線張力 (Tension={base_tension})**」、「**導圓角手感 (r={opt_radius}mm)**」、「**物理安全壁厚 (常態 {opt_wall}mm)**」與「**視覺重心力學平衡**」完全量化為神經擬合權重矩陣。\n\n")
-        f.write(f"在實戰推論模擬中，v2.0 模型不僅完美展現了現任美術編輯人員的專業美感，徹底排除了生硬折角與孔位斷裂風險，且單次推論時間低於 **5 毫秒 (0.005秒)**！未來可直接部署於您的本地端工作站，或無縫串接至 Render 線上即時預覽配置器，為客戶提供秒速、專業、美觀的自動刀模生成服務！\n")
+        f.write(f"在實戰推論模擬中，v2.0 模型不僅完美展現了現任美術編輯人員的專業美感，徹底排除了生硬折角與孔位斷裂風險，且單次推論時間低於 **5 毫秒 (0.005秒)**！未來可直接部署於您的本地端工作站，或無縫串接至 Render 線上編輯即時預覽，為客戶提供秒速、專業、美觀的自動刀模生成服務！\n")
 
     print("\n" + "="*60)
     print(f"[SUCCESS] 評估與對比報告已升級並產生: {report_file}")
     print("="*60)
 
 if __name__ == "__main__":
-    mod_file = r"C:\Users\admin\Desktop\阿斯拉\刀模資料庫\songli_diecut_v2.model"
-    out_dir = r"C:\Users\admin\Desktop\阿斯拉\刀模資料庫"
+    mod_file = r"F:\Users\user\Desktop\阿斯拉\設計美編部\刀模資料庫\songli_diecut_v2.model"
+    out_dir = r"F:\Users\user\Desktop\阿斯拉\設計美編部\刀模資料庫"
     evaluate_and_generate_report(mod_file, out_dir)

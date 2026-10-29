@@ -274,6 +274,6 @@ def process_ai_database(db_dir, output_dir):
     print("="*60)
 
 if __name__ == "__main__":
-    db_path = r"C:\Users\admin\Desktop\阿斯拉\刀模資料庫"
-    out_path = r"C:\Users\admin\Desktop\阿斯拉\刀模資料庫"
+    db_path = r"F:\Users\user\Desktop\阿斯拉\設計美編部\刀模資料庫"
+    out_path = r"F:\Users\user\Desktop\阿斯拉\設計美編部\刀模資料庫"
     process_ai_database(db_path, out_path)

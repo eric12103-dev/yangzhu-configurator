@@ -164,6 +164,6 @@ def train_songli_diecut_model(dataset_path, model_out_path):
     print("="*60)
 
 if __name__ == "__main__":
-    ds_file = r"C:\Users\admin\Desktop\阿斯拉\刀模資料庫\diecut_dataset_v2.json"
-    mod_file = r"C:\Users\admin\Desktop\阿斯拉\刀模資料庫\songli_diecut_v2.model"
+    ds_file = r"F:\Users\user\Desktop\阿斯拉\設計美編部\刀模資料庫\diecut_dataset_v2.json"
+    mod_file = r"F:\Users\user\Desktop\阿斯拉\設計美編部\刀模資料庫\songli_diecut_v2.model"
     train_songli_diecut_model(ds_file, mod_file)
